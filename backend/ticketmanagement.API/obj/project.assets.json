@@ -89,11 +89,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj",
-      "projectName": "ticketmanagement.API",
-      "projectPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj",
+      "projectUniqueName": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketManagement.API\\ticketManagement.API.csproj",
+      "projectName": "ticketManagement.API",
+      "projectPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketManagement.API\\ticketManagement.API.csproj",
       "packagesPath": "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\",
-      "outputPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\obj\\",
+      "outputPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketManagement.API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

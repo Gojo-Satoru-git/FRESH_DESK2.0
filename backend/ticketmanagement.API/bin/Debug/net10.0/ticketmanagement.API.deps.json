@@ -6,12 +6,12 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "ticketmanagement.API/1.0.0": {
+      "ticketManagement.API/1.0.0": {
         "dependencies": {
           "Microsoft.AspNetCore.OpenApi": "10.0.8"
         },
         "runtime": {
-          "ticketmanagement.API.dll": {}
+          "ticketManagement.API.dll": {}
         }
       },
       "Microsoft.AspNetCore.OpenApi/10.0.8": {
@@ -36,7 +36,7 @@
     }
   },
   "libraries": {
-    "ticketmanagement.API/1.0.0": {
+    "ticketManagement.API/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

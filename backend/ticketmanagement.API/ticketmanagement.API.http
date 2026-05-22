@@ -1,6 +1,6 @@
-@ticketmanagement.API_HostAddress = http://localhost:5037
+@ticketManagement.API_HostAddress = http://localhost:5115
 
-GET {{ticketmanagement.API_HostAddress}}/weatherforecast/
+GET {{ticketManagement.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj": {}
+    "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketManagement.API.csproj": {}
   },
   "projects": {
-    "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj": {
+    "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketManagement.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj",
-        "projectName": "ticketmanagement.API",
-        "projectPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj",
+        "projectUniqueName": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketManagement.API.csproj",
+        "projectName": "ticketManagement.API",
+        "projectPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketManagement.API.csproj",
         "packagesPath": "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\",
         "outputPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\obj\\",
         "projectStyle": "PackageReference",
