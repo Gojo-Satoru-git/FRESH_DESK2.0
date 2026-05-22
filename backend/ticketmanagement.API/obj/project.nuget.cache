@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Ev26CqoVV38=",
+  "success": true,
+  "projectFilePath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\ticketmanagement.API\\ticketmanagement.API.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.8\\microsoft.aspnetcore.openapi.10.0.8.nupkg.sha512",
+    "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
