@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a77eb7f20feeebbf84f70fa8a4c6d8ff86eb8ece")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+acdcfd40bd6643d5081518750b530aa12d4824ec")]
 [assembly: System.Reflection.AssemblyProductAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
