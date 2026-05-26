@@ -1,6 +1,0 @@
-@ticketManagement.API_HostAddress = http://localhost:5115
-
-GET {{ticketManagement.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
