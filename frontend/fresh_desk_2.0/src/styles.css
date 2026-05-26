@@ -1,3 +1,41 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
 
-@import 'tailwindcss';
+@theme {
+  --color-primary: rgb(37 99 235);
+  --color-primary-hover: rgb(29 78 216);
+  --color-surface: rgb(255 255 255);
+  --color-background: rgb(249 250 251);
+  --color-text: rgb(17 24 39);
+  --color-text-muted: rgb(107 114 128);
+
+  --colors-primary: var(--color-primary);
+  --colors-primary-hover: var(--color-primary-hover);
+  --colors-surface: var(--color-surface);
+  --colors-background: var(--color-background);
+  --colors-text: var(--color-text);
+  --colors-text-muted: var(--color-text-muted);
+}
+
+@layer base {
+  :root {
+    --color-primary: rgb(37 99 235);
+    --color-primary-hover: rgb(29 78 216);
+    --color-surface: rgb(255 255 255);
+    --color-background: rgb(249 250 251);
+    --color-text: rgb(17 24 39);
+    --color-text-muted: rgb(107 114 128);
+  }
+
+  .dark {
+    --color-primary: rgb(59 130 246);
+    --color-primary-hover: rgb(96 165 250);
+    --color-surface: rgb(31 41 55);
+    --color-background: rgb(17 24 39);
+    --color-text: rgb(243 244 246);
+    --color-text-muted: rgb(156 163 175);
+  }
+
+  body {
+    @apply bg-background text-text transition-colors duration-300;
+  }
+}

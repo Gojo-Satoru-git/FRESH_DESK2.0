@@ -3,9 +3,21 @@
   "singleQuote": true,
   "overrides": [
     {
-      "files": "*.html",
+      "files": ["*.html"],
       "options": {
         "parser": "angular"
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "options": {
+        "parser": "typescript"
+      }
+    },
+    {
+      "files": ["*.json"],
+      "options": {
+        "parser": "json"
       }
     }
   ]
