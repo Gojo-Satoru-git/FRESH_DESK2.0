@@ -1,4 +1,4 @@
-import { Component, Inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
 import { Router, RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ import { UiInputComponent } from '../../shared/components/ui-input/ui-input.comp
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
-  private router = Inject(Router);
+  private router = inject(Router);
   // Local UI State using Signals
   isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
