@@ -7,6 +7,10 @@ export const routes: Routes = [
     redirectTo: 'login',
     pathMatch: 'full',
   },
+  {
+    path: 'signup',
+    loadComponent: () => import('./features/auth/signup.component').then((m) => m.SignupComponent),
+  },
   // 2. The Login Route (Lazy loaded)
   {
     path: 'login',

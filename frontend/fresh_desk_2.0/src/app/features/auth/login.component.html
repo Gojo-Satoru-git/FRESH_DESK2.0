@@ -1,117 +1,76 @@
-<div class="min-h-screen flex justify-center bg-background transition-colors duration-300">
+<div
+  class="min-h-screen flex items-center justify-center bg-background p-4 relative transition-colors duration-300"
+>
+  <div class="absolute top-4 right-4">
+    <app-theme-switcher></app-theme-switcher>
+  </div>
 
-  <!-- MAX WIDTH WRAPPER (FIX FOR ALL SCREENS) -->
-  <div class="w-full  flex">
-
-    <!-- LEFT SIDE -->
-    <div
-      class="
-        hidden md:flex
-        w-1/2
-        bg-[#012A4A]
-        text-white
-        relative
-        p-12
-      "
-    >
-      <!-- LOGO -->
-      <header class="flex flex-col items-start px-4 sm:px-8 md:px-12 lg:px-8">
-        <img
-          src="img.png"
-          alt="Customer Portal Logo"
-          class="
-            object-contain
-            h-32 w-32
-            sm:h-40 sm:w-40
-            md:h-48 md:w-48
-            lg:h-64 lg:w-64
-            -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-16
-          "
-        />
-      </header>
-
-      <!-- CENTER CONTENT -->
-      <div class="flex flex-col justify-center items-start -ml-70 w-full space-y-4">
-        <h1 class="text-6xl font-medium tracking-tight leading-tight">
-          Enterprise support, built for Customers
-        </h1>
-
-        <p class="text-2xl text-gray-400">
-          Raise tickets, track resolution, and access knowledge in one secure portal.
-        </p>
-      </div>
+  <div
+    class="max-w-md w-full bg-surface rounded-xl shadow-lg p-8 space-y-6 transition-colors duration-300"
+  >
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-text-main">Support Center Login</h2>
+      <p class="text-sm text-text-muted mt-2">Enter your credentials to access your dashboard</p>
     </div>
 
-    <!-- RIGHT SIDE -->
-    <div class="w-full md:w-1/2 flex items-center justify-center p-4 relative">
-
-      <!-- Theme Switcher -->
-      <div class="absolute top-4 right-4">
-        <app-theme-switcher></app-theme-switcher>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+      <div class="my-3">
+        <app-ui-input
+          id="email"
+          label="Email Address"
+          type="email"
+          placeholder="test@adrenalin.com"
+          [control]="$any(loginForm.get('email'))"
+        ></app-ui-input>
       </div>
-
-      <!-- CENTER CONTENT -->
-      <div class="w-full max-w-md">
-
-        <!-- TEXT ABOVE FORM -->
-        <div class="mb-8 text-center">
-          <p class="text-4xl font-medium tracking-wide leading-tight text-[#012A4A]">
-            Sign in to your portal
-          </p>
-
-          <h3 class="text-xl text-gray-500 mt-2">
-            Use your mail to continue
-          </h3>
-        </div>
-
-        <!-- FORM -->
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
-
-          <!-- Email -->
-          <div class="space-y-1">
-            <label class="block text-xl font-medium text-text-main">
-              Email Address
-            </label>
-            <input
-              type="email"
-              formControlName="email"
-              placeholder="test@adrenalin.com"
-              class="w-full px-5 py-3 text-lg text-[#012A4A] shadow-2xl border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#012A4A] focus:border-[#012A4A] outline-none"
-            />
-          </div>
-
-          <!-- Password -->
-          <div class="space-y-1">
-            <label class="block text-xl font-medium text-text-main">
-              Password
-            </label>
-            <input
-              type="password"
-              formControlName="password"
-              placeholder="••••••••"
-              class="w-full px-5 py-3 text-lg text-[#012A4A] shadow-2xl border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#012A4A] focus:border-[#012A4A] outline-none"
-            />
-          </div>
-
-          <!-- Button -->
-          <button
-            type="submit"
-            class="w-full bg-[#012A4A] text-white font-semibold py-3 text-lg rounded-xl"
-          >
-            Sign in
-          </button>
-        </form>
-
-        <!-- SIGN UP -->
-        <p class="text-center text-lg text-text-muted mt-4">
-          Don’t have an account?
-          <a href="/signup" class="text-[#012A4A] font-medium hover:underline ml-1">
-            Sign up
-          </a>
-        </p>
-
+      <div class="my-3">
+        <app-ui-input
+          id="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          [control]="$any(loginForm.get('password'))"
+        ></app-ui-input>
       </div>
+      <div class="my-3">
+        <app-ui-button type="submit" [disabled]="isLoading() || loginForm.invalid">
+          @if (isLoading()) {
+            <svg
+              class="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          } @else {
+            <span>LOGIN</span>
+          }
+        </app-ui-button>
+      </div>
+    </form>
+    <div class="text-center mt-6">
+      <p class="text-sm text-text-muted">
+        Don't have an account?
+        <a
+          routerLink="/signup"
+          class="text-primary hover:text-primary-hover font-semibold transition-colors"
+        >
+          Sign up here
+        </a>
+      </p>
     </div>
-
   </div>
 </div>

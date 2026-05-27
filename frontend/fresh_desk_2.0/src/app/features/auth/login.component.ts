@@ -1,12 +1,13 @@
 import { Component, Inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
-import { Router } from '@angular/router';
-
+import { Router, RouterLink } from '@angular/router';
+import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
+import { UiInputComponent } from '../../shared/components/ui-input/ui-input.component';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, ThemeSwitcherComponent], // Built-in Angular package
+  imports: [ReactiveFormsModule, ThemeSwitcherComponent,UiButtonComponent,UiInputComponent,RouterLink], // Built-in Angular package
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
