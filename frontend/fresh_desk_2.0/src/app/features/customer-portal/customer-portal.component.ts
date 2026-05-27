@@ -1,33 +1,41 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-customer-portal',
   standalone: true,
-  imports: [RouterLink],
   template: `
-    <div
-      class="min-h-screen bg-background flex flex-col items-center justify-center p-4 transition-colors duration-300"
-    >
-      <div
-        class="bg-surface p-8 rounded-xl shadow-lg text-center max-w-md w-full border-t-4 border-primary"
-      >
-        <div
-          class="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"
-        >
-          🏢
-        </div>
-        <h1 class="text-2xl font-bold text-text-main mb-2">Customer Portal</h1>
-        <p class="text-text-muted mb-6">Welcome to the client self-service area.</p>
+    <!-- Company logo and title -->
+    <header class="flex flex-col items-start px-4 sm:px-8 md:px-12 lg:px-16">
+      
+      <!-- Logo -->
+      <img
+        src="log.png"
+        alt="Customer Portal Logo"
+        class="
+          object-contain
+          h-32 w-32
+          sm:h-40 sm:w-40
+          md:h-48 md:w-48
+          lg:h-64 lg:w-64
+          -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-14
+        "
+      />
 
-        <a
-          routerLink="/login"
-          class="text-primary hover:text-primary-hover font-semibold transition-colors"
-        >
-          &larr; Back to Login
-        </a>
-      </div>
-    </div>
+      <!-- Text below image -->
+      <p class="
+        -mt-22 px-2 text-bold
+        text-4xl
+        sm:text-base
+        md:text-lg
+        lg:text-3xl
+        font-medium
+        
+      
+      ">
+        Customer Portal
+      </p>
+
+    </header>
   `,
 })
 export class CustomerPortalComponent {}
