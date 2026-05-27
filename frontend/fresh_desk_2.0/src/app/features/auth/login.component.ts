@@ -7,7 +7,13 @@ import { UiInputComponent } from '../../shared/components/ui-input/ui-input.comp
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, ThemeSwitcherComponent,UiButtonComponent,UiInputComponent,RouterLink], // Built-in Angular package
+  imports: [
+    ReactiveFormsModule,
+    ThemeSwitcherComponent,
+    UiButtonComponent,
+    UiInputComponent,
+    RouterLink,
+  ], // Built-in Angular package
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
@@ -16,7 +22,7 @@ export class LoginComponent {
   isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
- 
+
   // Strongly typed Reactive Form
   loginForm = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
