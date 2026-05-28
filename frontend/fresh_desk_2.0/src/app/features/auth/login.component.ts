@@ -46,7 +46,7 @@ export class LoginComponent {
 
       // 1. Simulate an Agent Logging In
       if (enteredEmail === 'agent@adrenalin.com') {
-        this.router.navigate(['/agent-dashboard']);
+        this.router.navigate(['/agent/dashboard']);
       }
       // 2. Simulate a Customer Logging In
       else if (enteredEmail === 'customer@company.com') {
