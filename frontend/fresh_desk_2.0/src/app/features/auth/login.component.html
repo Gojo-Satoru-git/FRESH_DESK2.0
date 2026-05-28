@@ -1,46 +1,66 @@
-<div
-  class="min-h-screen flex items-center justify-center bg-background p-4 relative transition-colors duration-300"
->
-  <div class="absolute top-4 right-4">
-    <app-theme-switcher></app-theme-switcher>
-  </div>
-
-  <div
-    class="max-w-md w-full bg-surface rounded-xl shadow-lg p-8 space-y-6 transition-colors duration-300"
-  >
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-text-main">Support Center Login</h2>
-      <p class="text-sm text-text-muted mt-2">Enter your credentials to access your dashboard</p>
+<div class="min-h-screen flex bg-background transition-colors duration-300">
+  <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 sm:p-12 relative">
+    <div class="absolute top-6 left-6 lg:right-6 lg:left-auto">
+      <app-theme-switcher></app-theme-switcher>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
-      <div class="my-3">
-        <app-ui-input
-          id="email"
-          label="Email Address"
-          type="email"
-          placeholder="test@adrenalin.com"
-          [control]="$any(loginForm.get('email'))"
-        ></app-ui-input>
+    <div class="max-w-md w-full space-y-8">
+      <div>
+        <div
+          class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6"
+        >
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            ></path>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-extrabold text-text-main tracking-tight">Welcome to Adrenalin</h2>
+        <p class="text-sm text-text-muted mt-2">
+          Log in to submit requests, track progress, or assist users.
+        </p>
       </div>
-      <div class="my-3">
-        <app-ui-input
-          id="password"
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          [control]="$any(loginForm.get('password'))"
-        ></app-ui-input>
-      </div>
-      <div class="my-3">
+
+      @if (errorMessage()) {
+        <div class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded-md">
+          <p class="text-sm text-red-700 dark:text-red-400">{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="space-y-5">
+          <app-ui-input
+            id="email"
+            label="Email"
+            type="email"
+            placeholder="name@company.com"
+            [control]="$any(loginForm.get('email'))"
+          ></app-ui-input>
+
+          <div class="space-y-1">
+            <app-ui-input
+              id="password"
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              [control]="$any(loginForm.get('password'))"
+            ></app-ui-input>
+            <div class="flex justify-end mt-1">
+              <a
+                href="#"
+                class="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+                >Forgot password?</a
+              >
+            </div>
+          </div>
+        </div>
+
         <app-ui-button type="submit" [disabled]="isLoading() || loginForm.invalid">
           @if (isLoading()) {
-            <svg
-              class="animate-spin h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
+            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
               <circle
                 class="opacity-25"
                 cx="12"
@@ -56,20 +76,36 @@
               ></path>
             </svg>
           } @else {
-            <span>LOGIN</span>
+            <span>Sign In</span>
           }
         </app-ui-button>
+      </form>
+
+      <div class="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+        <p class="text-sm text-text-muted">
+          Don't have an account?
+          <a
+            routerLink="/signup"
+            class="text-primary hover:text-primary-hover font-semibold transition-colors"
+            >Sign up</a
+          >
+        </p>
       </div>
-    </form>
-    <div class="text-center mt-6">
-      <p class="text-sm text-text-muted">
-        Don't have an account?
-        <a
-          routerLink="/signup"
-          class="text-primary hover:text-primary-hover font-semibold transition-colors"
-        >
-          Sign up here
-        </a>
+    </div>
+  </div>
+
+  <div
+    class="hidden lg:flex lg:w-1/2 bg-surface relative overflow-hidden items-center justify-center border-l border-gray-200 dark:border-gray-800"
+  >
+    <div class="absolute inset-0 bg-primary/5"></div>
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-primary/20 rounded-full blur-3xl"></div>
+
+    <div class="relative z-10 text-center max-w-md px-8">
+      <h3 class="text-3xl font-bold text-text-main mb-4">Unified Support Hub</h3>
+      <p class="text-lg text-text-muted">
+        Seamless communication and faster resolutions. Experience a smarter way to connect,
+        collaborate, and solve.
       </p>
     </div>
   </div>

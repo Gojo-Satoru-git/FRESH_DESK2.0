@@ -83,31 +83,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\Lenovo\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
+      "projectUniqueName": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
       "projectName": "Adrenalin.unify.API",
-      "projectPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
-      "packagesPath": "C:\\Users\\HARIRAGAVENDRA\\.nuget\\packages\\",
-      "outputPath": "D:\\Projects\\Adrenaline\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\obj\\",
+      "projectPath": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
+      "packagesPath": "C:\\Users\\Lenovo\\.nuget\\packages\\",
+      "outputPath": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\HARIRAGAVENDRA\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\Lenovo\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
