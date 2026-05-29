@@ -25,7 +25,7 @@
 
   /* 3. Dark Mode Colors (Brightened for accessibility on dark backgrounds) */
   .dark {
-    --theme-primary: #023e8a;      
+    --theme-primary: #135ec0;      
     --theme-primary-hover: #0077b6; 
     --theme-surface: #1f2937;
     --theme-background: #111827;
