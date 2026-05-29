@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8d721b183d087d9eb094b32ed42289157ea6097b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8b6a3794a52de5f8f5b9e0149611f1f822f19f4a")]
 [assembly: System.Reflection.AssemblyProductAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Adrenalin.unify.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
