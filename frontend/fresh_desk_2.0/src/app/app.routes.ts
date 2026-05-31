@@ -40,18 +40,24 @@ export const routes: Routes = [
       },
     ],
   },
-  {
+   {
     path: 'customer-portal',
-    // canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/customer-portal/customer-portal.component').then(
-        (m) => m.CustomerPortalComponent,
-      ),
-  },
-
-  // 3. Catch-All Fallback (If they type a garbage URL, send to login)
-  {
-    path: '**',
-    redirectTo: 'login',
+      import('./layouts/customer-layout/customer-layout.component')
+        .then(m => m.CustomerLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/customer-portal/customer-portal.component')
+            .then(m => m.CustomerPortalComponent),
+      },
+      {
+        path: 'raise-ticket',
+        loadComponent: () =>
+          import('./features/customer-portal/raise-ticket.component')
+            .then(m => m.RaiseTicketComponent),
+      },
+    ],
   },
 ];
