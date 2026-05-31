@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj": {}
+    "C:\\Adreline_project\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj": {}
   },
   "projects": {
-    "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj": {
+    "C:\\Adreline_project\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
+        "projectUniqueName": "C:\\Adreline_project\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
         "projectName": "Adrenalin.unify.API",
-        "projectPath": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
-        "packagesPath": "C:\\Users\\Lenovo\\.nuget\\packages\\",
-        "outputPath": "D:\\FRESH_DESK\\backend\\Adrenalin.unify.API\\obj\\",
+        "projectPath": "C:\\Adreline_project\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\Adrenalin.unify.API.csproj",
+        "packagesPath": "C:\\Users\\acer\\.nuget\\packages\\",
+        "outputPath": "C:\\Adreline_project\\FRESH_DESK2.0\\backend\\Adrenalin.unify.API\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Lenovo\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -49,6 +49,20 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[10.0.8, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.8, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.8, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[10.0.2, )"
             }
           },
           "imports": [
