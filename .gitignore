@@ -1,6 +1,14 @@
+# Visual Studio
 .vs/
-bin/
-obj/
 *.user
 *.suo
+
+# Build outputs
+bin/
+obj/
+
+# Database files
 *.sqlite
+
+# VS Code
+.vscode/
