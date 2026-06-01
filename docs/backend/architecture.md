@@ -488,6 +488,20 @@ public void CreateEscalationUser(string name)
 
 ---
 
+### 📖 Adrenalin.Modules.Lookup
+
+- **Purpose**: Manages all system-wide reference data and master data lists used across modules (e.g. ticket types, priority levels, statuses, categories, departments).
+- **Should Contain**:
+  - `LookupType`, `LookupValue` aggregates
+  - Commands and queries for CRUD operations on lookup data
+  - Seeding and caching of static reference values
+- **Should NOT Contain**:
+  - Business logic specific to any module (e.g. ticket processing, SLA rules)
+  - Authentication or user management
+  - Workflow or escalation triggers
+
+---
+
 ## 🧪 Testing Projects
 
 To keep our applications reliable, we structure tests into two layers:
