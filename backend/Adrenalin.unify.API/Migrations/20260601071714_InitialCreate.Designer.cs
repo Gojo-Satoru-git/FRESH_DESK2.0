@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Adrenalin.unify.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260531081430_VerifySchema")]
-    partial class VerifySchema
+    [Migration("20260601071714_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
