@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.Persistence\Adrenalin.Persistence.csproj" />
+    <ProjectReference Include="..\Adrenalin.Infrastructure\Adrenalin.Infrastructure.csproj" />
+    <ProjectReference Include="..\Adrenalin.EventBus\Adrenalin.EventBus.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Company\Adrenalin.Modules.Company.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Ticketing\Adrenalin.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Workflow\Adrenalin.Modules.Workflow.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.SLA\Adrenalin.Modules.SLA.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.KnowledgeBase\Adrenalin.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Middleware\" />
+    <Folder Include="Filters\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Configurations\" />
+  </ItemGroup>
+
+</Project>

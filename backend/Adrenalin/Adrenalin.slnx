@@ -1,0 +1,18 @@
+<Solution>
+  <Project Path="Adrenalin.EventBus/Adrenalin.EventBus.csproj" />
+  <Project Path="Adrenalin.Infrastructure/Adrenalin.Infrastructure.csproj" />
+  <Project Path="Adrenalin.IntegrationTests/Adrenalin.IntegrationTests.csproj" />
+  <Project Path="Adrenalin.Modules.AI/Adrenalin.Modules.AI.csproj" />
+  <Project Path="Adrenalin.Modules.Auth/Adrenalin.Modules.Auth.csproj" />
+  <Project Path="Adrenalin.Modules.Company/Adrenalin.Modules.Company.csproj" />
+  <Project Path="Adrenalin.Modules.Gamification/Adrenalin.Modules.Gamification.csproj" Id="49056076-0b88-4408-a2a5-a06e1ab7b10a" />
+  <Project Path="Adrenalin.Modules.KnowledgeBase/Adrenalin.Modules.KnowledgeBase.csproj" />
+  <Project Path="Adrenalin.Modules.Notification/Adrenalin.Modules.Notification.csproj" />
+  <Project Path="Adrenalin.Modules.SLA/Adrenalin.Modules.SLA.csproj" />
+  <Project Path="Adrenalin.Modules.Ticketing/Adrenalin.Modules.Ticketing.csproj" />
+  <Project Path="Adrenalin.Modules.Workflow/Adrenalin.Modules.Workflow.csproj" />
+  <Project Path="Adrenalin.Persistence/Adrenalin.Persistence.csproj" />
+  <Project Path="Adrenalin.SharedKernel/Adrenalin.SharedKernel.csproj" />
+  <Project Path="Adrenalin.unify.API/Adrenalin.unify.API.csproj" />
+  <Project Path="Adrenalin.UnitTests/Adrenalin.UnitTests.csproj" />
+</Solution>

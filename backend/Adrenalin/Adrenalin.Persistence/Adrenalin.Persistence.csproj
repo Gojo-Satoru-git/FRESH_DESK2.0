@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Company\Adrenalin.Modules.Company.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Ticketing\Adrenalin.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Workflow\Adrenalin.Modules.Workflow.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.SLA\Adrenalin.Modules.SLA.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.KnowledgeBase\Adrenalin.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Configurations\Auth\" />
+    <Folder Include="Configurations\Company\" />
+    <Folder Include="Configurations\KnowledgeBase\" />
+    <Folder Include="Configurations\AI\" />
+    <Folder Include="Configurations\Notification\" />
+    <Folder Include="Configurations\SLA\" />
+    <Folder Include="Configurations\Workflow\" />
+    <Folder Include="Configurations\Ticketing\" />
+    <Folder Include="Context\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Interceptors\" />
+    <Folder Include="Seed\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
