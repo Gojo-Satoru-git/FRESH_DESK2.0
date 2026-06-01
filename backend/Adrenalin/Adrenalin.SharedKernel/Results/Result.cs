@@ -1,6 +1,4 @@
-
-
-namespace Adrenalin.SharedKernel.Results;
+namespace Adrenalin.SharedKernel.Results
 {
     // Adrenalin.SharedKernel/Results/Result.cs
     public class Result
