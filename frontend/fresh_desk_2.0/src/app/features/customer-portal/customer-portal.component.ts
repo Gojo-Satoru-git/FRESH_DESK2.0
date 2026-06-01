@@ -28,14 +28,17 @@ import { Router, RouterLink } from '@angular/router';
 
         <!-- Notification Button -->
         <button
-          class="
-            h-10 w-10
-            rounded-full
-            bg-gray-100 mr-2
-            hover:bg-gray-200
+           class="
+            h-10 w-12
+            rounded-xl
+            bg-gray-100
+            hover:bg-blue-500
+            active:bg-blue-500
             flex items-center justify-center
+            mr-2
             -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-20
-            transition
+            transition-colors duration-200
+            focus:outline-none
           "
         >
           <img src="notification.png" alt="Notifications" class="h-5 w-5" />
