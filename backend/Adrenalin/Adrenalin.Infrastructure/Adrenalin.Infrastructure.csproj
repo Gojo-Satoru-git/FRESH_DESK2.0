@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Authentication\" />
+    <Folder Include="Authorization\" />
+    <Folder Include="Email\" />
+    <Folder Include="Cache\" />
+    <Folder Include="Logging\" />
+    <Folder Include="Monitoring\" />
+    <Folder Include="ExternalServices\" />
+    <Folder Include="BackgroundJobs\" />
+    <Folder Include="Storage\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

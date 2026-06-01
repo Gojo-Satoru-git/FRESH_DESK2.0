@@ -1,6 +1,0 @@
-@Adrenalin.unify.API_HostAddress = http://localhost:5219
-
-GET {{Adrenalin.unify.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
