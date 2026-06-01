@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Adrenalin.Modules.KnowledgeBase\Adrenalin.Modules.KnowledgeBase.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
   </ItemGroup>
 
   <ItemGroup>
