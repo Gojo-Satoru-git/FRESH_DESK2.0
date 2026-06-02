@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
