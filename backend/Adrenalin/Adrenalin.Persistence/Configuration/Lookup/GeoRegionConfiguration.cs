@@ -1,9 +1,9 @@
-
 using Adrenalin.Modules.Lookup.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Adrenalin.Persistence.Configuration.Lookup;
+namespace Adrenalin.unify.API.Data.Configuration.Lookup;
 
 public class GeoRegionConfiguration
     : IEntityTypeConfiguration<GeoRegion>

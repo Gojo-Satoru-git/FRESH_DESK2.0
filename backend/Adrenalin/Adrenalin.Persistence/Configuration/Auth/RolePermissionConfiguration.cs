@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -57,19 +57,7 @@ public class RolePermissionConfiguration
 
         // Created By
 
-        builder.HasOne(x => x.CreatedByNavigation)
-               .WithMany(x => x.RolePermissionCreatedByNavigations)
-               .HasForeignKey(x => x.CreatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("role_permissions_created_by_fkey");
-
-        // Updated By
-
-        builder.HasOne(x => x.UpdatedByNavigation)
-               .WithMany(x => x.RolePermissionUpdatedByNavigations)
-               .HasForeignKey(x => x.UpdatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("role_permissions_updated_by_fkey");
+       
 
         // Permission
 

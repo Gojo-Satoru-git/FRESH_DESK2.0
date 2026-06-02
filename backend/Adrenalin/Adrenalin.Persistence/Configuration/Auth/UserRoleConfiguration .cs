@@ -64,31 +64,17 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
                .HasColumnName("updated_by");
 
         builder.Property(x => x.RowVersion)
-               .HasColumnName("row_version");
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
 
         // Assigned By
 
-        builder.HasOne(x => x.AssignedByNavigation)
-               .WithMany(x => x.UserRoleAssignedByNavigations)
-               .HasForeignKey(x => x.AssignedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("user_roles_assigned_by_fkey");
+        
 
         // Created By
 
-        builder.HasOne(x => x.CreatedByNavigation)
-               .WithMany(x => x.UserRoleCreatedByNavigations)
-               .HasForeignKey(x => x.CreatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("user_roles_created_by_fkey");
-
-        // Updated By
-
-        builder.HasOne(x => x.UpdatedByNavigation)
-               .WithMany(x => x.UserRoleUpdatedByNavigations)
-               .HasForeignKey(x => x.UpdatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("user_roles_updated_by_fkey");
+        
 
         // User
 

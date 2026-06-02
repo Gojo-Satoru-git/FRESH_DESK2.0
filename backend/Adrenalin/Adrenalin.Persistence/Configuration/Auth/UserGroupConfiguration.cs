@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -55,15 +55,13 @@ public class UserGroupConfiguration
                .HasDefaultValueSql("now()");
 
         builder.Property(x => x.RowVersion)
-               .HasColumnName("row_version");
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
 
         // Created By
 
-        builder.HasOne(x => x.CreatedByNavigation)
-               .WithMany(x => x.UserGroupCreatedByNavigations)
-               .HasForeignKey(x => x.CreatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("user_groups_created_by_fkey");
+      
 
         // User
 

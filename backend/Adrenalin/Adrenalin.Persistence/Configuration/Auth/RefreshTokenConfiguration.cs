@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -48,7 +48,7 @@ public class RefreshTokenConfiguration
                .HasColumnName("device_info");
 
         builder.Property(x => x.IpAddress)
-               .HasColumnName("ip_address");
+       .HasColumnType("inet");
 
         builder.Property(x => x.IssuedAt)
                .HasColumnName("issued_at")
@@ -60,8 +60,7 @@ public class RefreshTokenConfiguration
         builder.Property(x => x.LastUsedAt)
                .HasColumnName("last_used_at");
 
-        builder.Property(x => x.RotatedAt)
-               .HasColumnName("rotated_at");
+       
 
         builder.Property(x => x.IsRevoked)
                .HasColumnName("is_revoked");
@@ -72,18 +71,12 @@ public class RefreshTokenConfiguration
         builder.Property(x => x.ReplacedByTokenId)
                .HasColumnName("replaced_by_token_id");
 
-        builder.Property(x => x.CreatedByIp)
-               .HasColumnName("created_by_ip");
+       
 
-        builder.Property(x => x.RevokedByIp)
-               .HasColumnName("revoked_by_ip");
 
-        builder.Property(x => x.UserAgent)
-               .HasColumnName("user_agent");
+        
 
-        builder.Property(x => x.CreatedAt)
-               .HasColumnName("created_at")
-               .HasDefaultValueSql("now()");
+      
 
         // User Relationship
 

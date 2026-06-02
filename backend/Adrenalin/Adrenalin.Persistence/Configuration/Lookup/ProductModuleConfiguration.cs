@@ -1,13 +1,14 @@
+
 using Adrenalin.Modules.Lookup.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Adrenalin.Persistence.Configuration.Lookup;
+namespace Adrenalin.unify.API.Data.Configuration.Lookup;
 
 public class ProductModuleConfiguration
-    : IEntityTypeConfiguration<ProductModule>
+    : IEntityTypeConfiguration<Module>
 {
-    public void Configure(EntityTypeBuilder<ProductModule> builder)
+    public void Configure(EntityTypeBuilder<Module> builder)
     {
         builder.ToTable(
             "modules",
@@ -54,22 +55,14 @@ public class ProductModuleConfiguration
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
 
-        builder.Property(x => x.ModifiedAt)
-            .HasColumnName("modified_at");
+        
 
-        builder.Property(x => x.ModifiedBy)
-            .HasColumnName("modified_by");
-
-        builder.HasOne(x => x.CreatedByNavigation)
-            .WithMany(x => x.ModuleCreatedByNavigations)
-            .HasForeignKey(x => x.CreatedBy);
-
-        builder.HasOne(x => x.UpdatedByNavigation)
-            .WithMany(x => x.ModuleUpdatedByNavigations)
-            .HasForeignKey(x => x.UpdatedBy);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
+        builder.HasQueryFilter(x => !x.IsDeleted);
 
         builder.HasMany(x => x.SubModules)
-            .WithOne(x => x.ProductModule)
+            .WithOne(x => x.Module)
             .HasForeignKey(x => x.ModuleId);
     }
 }

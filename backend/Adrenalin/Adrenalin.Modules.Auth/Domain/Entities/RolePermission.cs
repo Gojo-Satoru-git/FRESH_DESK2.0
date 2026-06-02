@@ -1,33 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-public partial class RolePermission
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class RolePermission :SoftDeleteEntity
+{
+    public Guid RoleId { get; private set; }
 
-    public Guid RoleId { get; set; }
+    public Guid PermissionId { get; private set; }
 
-    public Guid PermissionId { get; set; }
+   
 
-    public bool IsDeleted { get; set; }
+    public Role Role { get; private set; } = null!;
 
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
-
-    public Guid? CreatedBy { get; set; }
-
-    public Guid? UpdatedBy { get; set; }
-
-    public byte[]? RowVersion { get; set; }
-
-    public virtual User? CreatedByNavigation { get; set; }
-
-    public virtual Permission Permission { get; set; } = null!;
-
-    public virtual Role Role { get; set; } = null!;
-
-    public virtual User? UpdatedByNavigation { get; set; }
+    public Permission Permission { get; private set; } = null!;
+}
 }

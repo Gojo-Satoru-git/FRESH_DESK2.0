@@ -1,25 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// Revoked JWT IDs.
-/// Auth middleware performs O(1) lookup on Jti before accepting any token.
-/// </summary>
-public partial class TokenBlacklist
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class TokenBlacklist : BaseEntity
+{
+    public string Jti { get; private set; } = string.Empty;
 
-    public string Jti { get; set; } = null!;
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public string? Reason { get; private set; }
 
-    public string? Reason { get; set; }
-
-    public DateTime BlacklistedAt { get; set; }
-
-    public virtual User User { get; set; } = null!;
+    public DateTimeOffset BlacklistedAt { get; private set; }
+    public User User { get; private set; } = null!;
+}
 }

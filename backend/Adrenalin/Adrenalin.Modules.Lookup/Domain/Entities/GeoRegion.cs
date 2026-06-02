@@ -1,32 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using Adrenalin.Modules.Auth.Domain.Entities;
-
+﻿using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-/// <summary>
-/// Region-specific business hours and timezone.
-/// SLA clock runs only within these windows.
-/// </summary>
-public partial class GeoRegion
+public sealed class GeoRegion :SoftDeleteEntity
 {
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = string.Empty;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = string.Empty;
 
-    public string Timezone { get; set; } = null!;
+    public string Timezone { get; private set; } = string.Empty;
 
-    public TimeOnly BusinessStart { get; set; }
+    public TimeOnly BusinessStart { get; private set; }
 
-    public TimeOnly BusinessEnd { get; set; }
+    public TimeOnly BusinessEnd { get; private set; }
 
-    public string WorkingDays { get; set; } = null!;
+    public string WorkingDays { get; private set; } = string.Empty;
 
-    public bool IsActive { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public virtual ICollection<Group> Groups { get; set; }
-        = new List<Group>();
+    private GeoRegion() { }
 }

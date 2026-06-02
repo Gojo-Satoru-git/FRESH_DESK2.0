@@ -1,34 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// Hashed OTP codes for email/phone verification and 2FA.
-/// FailedAttempts incremented on wrong guess.
-/// IsUsed=true on successful verification.
-/// </summary>
-public partial class UserOtpCode
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class UserOtpCode : BaseEntity
+{
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public string CodeHash { get; private set; } = string.Empty;
 
-    public string CodeHash { get; set; } = null!;
+    public string Purpose { get; private set; } = string.Empty;
 
-    public string Purpose { get; set; } = null!;
+    public string? DeliveryTarget { get; private set; }
 
-    public string? DeliveryTarget { get; set; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset? VerifiedAt { get; private set; }
 
-    public DateTime? VerifiedAt { get; set; }
+    public int FailedAttempts { get; private set; }
 
-    public int FailedAttempts { get; set; }
-
-    public bool IsUsed { get; set; }
-
-    public virtual User User { get; set; } = null!;
+    public bool IsUsed { get; private set; }
+    public User User { get; private set; } = null!;
+}
 }

@@ -1,8 +1,9 @@
 using Adrenalin.Modules.Lookup.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Adrenalin.Persistence.Configuration.Lookup;
+namespace Adrenalin.unify.API.Data.Configuration.Lookup;
 
 public class ProductVersionConfiguration
     : IEntityTypeConfiguration<ProductVersion>
@@ -48,13 +49,8 @@ public class ProductVersionConfiguration
 
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
-
-        builder.HasOne(x => x.CreatedByNavigation)
-            .WithMany(x => x.ProductVersionCreatedByNavigations)
-            .HasForeignKey(x => x.CreatedBy);
-
-        builder.HasOne(x => x.UpdatedByNavigation)
-            .WithMany(x => x.ProductVersionUpdatedByNavigations)
-            .HasForeignKey(x => x.UpdatedBy);
+        builder.HasQueryFilter(x => !x.IsDeleted);
+        builder.Property(x => x.CreatedBy);
+        builder.Property(x => x.UpdatedBy);
     }
 }

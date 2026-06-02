@@ -1,29 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-public partial class UserGroup
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class UserGroup :SoftDeleteEntity
+{
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public Guid GroupId { get; private set; }
 
-    public Guid GroupId { get; set; }
+    public bool IsLead { get; private set; }
 
-    public bool IsLead { get; set; }
+    
 
-    public bool IsDeleted { get; set; }
+    public User User { get; private set; } = null!;
 
-    public Guid? CreatedBy { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public byte[]? RowVersion { get; set; }
-
-    public virtual User? CreatedByNavigation { get; set; }
-
-    public virtual Group Group { get; set; } = null!;
-
-    public virtual User User { get; set; } = null!;
+    public Group Group { get; private set; } = null!;
+}
 }

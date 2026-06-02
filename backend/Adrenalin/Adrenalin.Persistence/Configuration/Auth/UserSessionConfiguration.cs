@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -40,7 +40,7 @@ public class UserSessionConfiguration
                .HasMaxLength(255);
 
         builder.Property(x => x.IpAddress)
-               .HasColumnName("ip_address");
+       .HasColumnType("inet");
 
         builder.Property(x => x.GeoLocation)
                .HasColumnName("geo_location")

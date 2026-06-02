@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Domain.Entities;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Adrenalin.Persistence.Configuration.Auth
-{
+namespace Adrenalin.Persistence.Configuration.Auth;
+
     public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
@@ -19,7 +18,8 @@ namespace Adrenalin.Persistence.Configuration.Auth
                    .HasName("users_pkey");
 
             builder.Property(x => x.Id)
-                   .HasColumnName("id");
+                   .HasColumnName("id")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
             builder.Property(x => x.CreatedBy)
                    .HasColumnName("created_by");
@@ -79,31 +79,27 @@ namespace Adrenalin.Persistence.Configuration.Auth
                    .HasColumnName("last_login_at");
 
             builder.Property(x => x.RowVersion)
-                   .HasColumnName("row_version");
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
 
             builder.Property(x => x.IsDeleted)
                    .HasColumnName("is_deleted");
 
             builder.Property(x => x.CreatedAt)
-                   .HasColumnName("created_at");
+                   .HasColumnName("created_at")
+                   .HasDefaultValueSql("now()");
 
             builder.Property(x => x.UpdatedAt)
                    .HasColumnName("updated_at");
 
-
+       builder.HasQueryFilter(x => !x.IsDeleted);
             // SELF REFERENCE #1
 
-            builder.HasOne(x => x.CreatedByNavigation)
-                   .WithMany(x => x.InverseCreatedByNavigation)
-                   .HasForeignKey(x => x.CreatedBy)
-                   .OnDelete(DeleteBehavior.SetNull);
+           builder.Property(x => x.CreatedBy)
+       .HasColumnName("created_by");
 
-            // SELF REFERENCE #2
-
-            builder.HasOne(x => x.UpdatedByNavigation)
-                   .WithMany(x => x.InverseUpdatedByNavigation)
-                   .HasForeignKey(x => x.UpdatedBy)
-                   .OnDelete(DeleteBehavior.SetNull);
+builder.Property(x => x.UpdatedBy)
+       .HasColumnName("updated_by");
         }
     }
-}

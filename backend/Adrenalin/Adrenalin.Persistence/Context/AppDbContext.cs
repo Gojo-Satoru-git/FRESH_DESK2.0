@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Adrenalin.Modules.Auth.Domain.Entities;
+using Adrenalin.Modules.Lookup.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 namespace Adrenalin.Persistence.Context
 {
     public class AppDbContext : DbContext
@@ -50,8 +52,8 @@ namespace Adrenalin.Persistence.Context
     public DbSet<GeoRegion> GeoRegions
         => Set<GeoRegion>();
 
-    public DbSet<ProductModule> Modules
-        => Set<ProductModule>();
+    public DbSet<Module> Modules
+        => Set<Module>();
 
     public DbSet<ProductVersion> ProductVersions
         => Set<ProductVersion>();

@@ -1,27 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Adrenalin.SharedKernel.Entities;
 
-using Adrenalin.Modules.Auth.Domain.Entities;
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-/// <summary>
-/// M1-M4 customer tiers. PriorityBump is used by SLA engine
-/// to elevate priority at creation.
-/// </summary>
-public partial class CustomerTier
+public sealed class CustomerTier : SoftDeleteEntity
 {
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = string.Empty;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = string.Empty;
 
-    public string? Description { get; set; }
+    public string? Description { get; private set; }
 
-    public int PriorityBump { get; set; }
+    public int PriorityBump { get; private set; }
 
-    public bool IsActive { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public virtual ICollection<Group> Groups { get; set; }
-        = new List<Group>();
+    private CustomerTier() { }
 }

@@ -45,31 +45,27 @@ namespace Adrenalin.Persistence.Configuration.Auth
             .HasColumnName("is_deleted");
 
         builder.Property(x => x.RowVersion)
-            .HasColumnName("row_version");
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
         builder.Property(x => x.IsActive)
             .HasColumnName("is_active");
 
         // Audit Relationships
+        builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.CreatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(x => x.CreatedByNavigation)
-            .WithMany(x => x.GroupCreatedByNavigations)
-            .HasForeignKey(x => x.CreatedBy)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        builder.HasOne(x => x.UpdatedByNavigation)
-            .WithMany(x => x.GroupUpdatedByNavigations)
-            .HasForeignKey(x => x.UpdatedBy)
-            .OnDelete(DeleteBehavior.SetNull);
+builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.UpdatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
+      
 
         // Lookup Relationships
 
-        builder.HasOne(x => x.RegionCodeNavigation)
-            .WithMany(x => x.Groups)
-            .HasForeignKey(x => x.RegionCode);
-
-        builder.HasOne(x => x.TierCodeNavigation)
-            .WithMany(x => x.Groups)
-            .HasForeignKey(x => x.TierCode);
+       
 
         // User Groups
 

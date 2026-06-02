@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

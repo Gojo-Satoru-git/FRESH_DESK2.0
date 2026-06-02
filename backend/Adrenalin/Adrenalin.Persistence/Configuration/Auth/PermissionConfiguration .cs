@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -59,22 +59,23 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(x => x.UpdatedBy)
                .HasColumnName("updated_by");
 
-        builder.Property(x => x.RowVersion)
-               .HasColumnName("row_version");
+       builder.Property(x => x.RowVersion)
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
+       builder.HasQueryFilter(x => !x.IsDeleted);
 
         // Audit Relationships
 
-        builder.HasOne(x => x.CreatedByNavigation)
-               .WithMany(x => x.PermissionCreatedByNavigations)
-               .HasForeignKey(x => x.CreatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("permissions_created_by_fkey");
+        builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.CreatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(x => x.UpdatedByNavigation)
-               .WithMany(x => x.PermissionUpdatedByNavigations)
-               .HasForeignKey(x => x.UpdatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("permissions_updated_by_fkey");
+builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.UpdatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
 
         // RolePermission Relationship
 

@@ -1,5 +1,5 @@
-using Adrenalin.Modules.Auth.Domain.Entities;
 
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -54,21 +54,21 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
                .HasColumnName("updated_at");
 
         builder.Property(x => x.RowVersion)
-               .HasColumnName("row_version");
-
+       .HasColumnName("row_version")
+       .IsRowVersion()
+       .IsConcurrencyToken();
+       builder.HasQueryFilter(x => !x.IsDeleted);
         // Audit Relationships
 
-        builder.HasOne(x => x.CreatedByNavigation)
-               .WithMany(x => x.RoleCreatedByNavigations)
-               .HasForeignKey(x => x.CreatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("roles_created_by_fkey");
+        builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.CreatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(x => x.UpdatedByNavigation)
-               .WithMany(x => x.RoleUpdatedByNavigations)
-               .HasForeignKey(x => x.UpdatedBy)
-               .OnDelete(DeleteBehavior.SetNull)
-               .HasConstraintName("roles_updated_by_fkey");
+builder.HasOne<User>()
+       .WithMany()
+       .HasForeignKey(x => x.UpdatedBy)
+       .OnDelete(DeleteBehavior.SetNull);
 
         // Collections
 
