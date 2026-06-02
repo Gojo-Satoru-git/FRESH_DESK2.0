@@ -85,10 +85,17 @@ export const routes: Routes = [
             (m) => m.RaiseTicketComponent,
           ),
       },
+      {
+        path: 'ticket/:id',
+        loadComponent: () =>
+          import('./features/customer-portal/ticket-details.component')
+            .then(m => m.TicketDetailsComponent),
+      },
     ],
   },
   {
     path: '**',
     redirectTo: 'login',
   },
+  
 ];

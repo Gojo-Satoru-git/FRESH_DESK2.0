@@ -162,6 +162,172 @@ import { Router, RouterLink } from '@angular/router';
   </div>
 
 </section>
+  <!-- 🔽 MY TICKETS SECTION (ADDED BELOW BANNER) -->
+<section class="px-8 sm:px-12 md:px-16 lg:px-20 ml-10 mt-16">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h2 class="text-5xl font-bold text-[#012A4A]">
+      My Tickets
+    </h2>
+    <p class="font-medium text-gray-500 text-xl mt-4">
+      View all open, pending, and resolved tickets
+    </p>
+  </div>
+
+  <!-- TABLE CONTAINER -->
+  <div class="overflow-x-auto bg-white rounded-2xl shadow-md border border-gray-200">
+
+    <table class="w-full text-left border-collapse">
+      
+      <!-- TABLE HEAD -->
+      <thead class="bg-gray-100 text-gray-700 text-lg">
+        <tr>
+          <th class="px-6 py-4 font-bold">ID</th>
+          <th class="px-6 py-4 font-bold">Subject</th>
+          <th class="px-6 py-4 font-bold">Priority</th>
+          <th class="px-6 py-4 font-bold">Status</th>
+          <th class="px-6 py-4 font-bold">Last Updated</th>
+        </tr>
+      </thead>
+
+      <!-- TABLE BODY -->
+      <tbody class="divide-y divide-gray-200">
+
+        <!-- ROW 1 -->
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-6 py-4 font-medium text-[#012A4A]">
+            #TCK-1023
+          </td>
+
+          <td class="px-6 py-4">
+  <a
+    [routerLink]="['/customer-portal/ticket', 'TKT-1042']"
+    class="text-blue-600 font-semibold hover:underline cursor-pointer"
+  >
+    Payroll calculation mismatch for May cycle
+  </a>
+</td>
+
+          <!-- PRIORITY -->
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-red-100 text-red-700
+              "
+            >
+              High
+            </span>
+          </td>
+
+          <!-- STATUS -->
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-green-100 text-green-700
+              "
+            >
+              Open
+            </span>
+          </td>
+
+          <td class="px-6 py-4 text-gray-500">
+            2 hours ago
+          </td>
+        </tr>
+
+        <!-- ROW 2 -->
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-6 py-4 font-medium text-[#012A4A]">
+            #TCK-0987
+          </td>
+
+          <td class="px-6 py-4">
+            Invoice mismatch for April
+          </td>
+
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-yellow-100 text-yellow-700
+              "
+            >
+              Medium
+            </span>
+          </td>
+
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-yellow-100 text-yellow-700
+              "
+            >
+              Pending
+            </span>
+          </td>
+
+          <td class="px-6 py-4 text-gray-500">
+            Yesterday
+          </td>
+        </tr>
+
+        <!-- ROW 3 -->
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-6 py-4 font-medium text-[#012A4A]">
+            #TCK-0911
+          </td>
+
+          <td class="px-6 py-4">
+            Password reset request
+          </td>
+
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-green-100 text-green-700
+              "
+            >
+              Low
+            </span>
+          </td>
+
+          <td class="px-6 py-4">
+            <span
+              class="
+                px-3 py-1
+                rounded-full
+                text-sm font-semibold
+                bg-gray-200 text-gray-700
+              "
+            >
+              Resolved
+            </span>
+          </td>
+
+          <td class="px-6 py-4 text-gray-500">
+            3 days ago
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</section>
   `,
 })
 export class CustomerPortalComponent {
