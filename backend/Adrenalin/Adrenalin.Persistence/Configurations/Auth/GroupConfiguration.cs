@@ -55,7 +55,7 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("groups_created_by_fkey");
@@ -68,7 +68,7 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .HasForeignKey(d => d.TierCode)
             .HasConstraintName("groups_tier_code_fkey");
 
-        builder.HasOne(d => d.UpdatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("groups_updated_by_fkey");

@@ -1,53 +1,50 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.Modules.Auth.Domain.Enums;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// Stores hashed refresh tokens with family-based rotation tracking. On token reuse detection (possible theft), entire family_id is revoked immediately. token_hash is SHA-256 of raw token.
-/// </summary>
-public partial class RefreshToken
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class RefreshToken : AuditableEntity
+{
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public string TokenHash { get; private set; } = string.Empty;
 
-    public string TokenHash { get; set; } = null!;
+    public Guid FamilyId { get; private set; }
 
-    public Guid FamilyId { get; set; }
+    public string? DeviceInfo { get; private set; }
 
-    public string? DeviceInfo { get; set; }
+    public string? IpAddress { get; private set; }
 
-    public IPAddress? IpAddress { get; set; }
+    public DateTimeOffset IssuedAt { get; private set; }
 
-    public DateTime IssuedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset? LastUsedAt { get; private set; }
 
-    public DateTime? LastUsedAt { get; set; }
+    public bool IsRevoked { get; private set; }
 
-    public DateTime? RotatedAt { get; set; }
+    public DateTimeOffset? RevokedAt { get; private set; }
 
-    public bool IsRevoked { get; set; }
+    public RevocationReason? RevokedReason { get; private set; }
 
-    public DateTime? RevokedAt { get; set; }
+    public Guid? ReplacedByTokenId { get; private set; }
 
-    public Guid? ReplacedByTokenId { get; set; }
+    public User User { get; private set; } = null!;
+    public RefreshToken? ReplacedByToken { get; private set; }
 
-    public string? CreatedByIp { get; set; }
-
-    public string? RevokedByIp { get; set; }
-
-    public string? UserAgent { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public virtual ICollection<RefreshToken> InverseReplacedByToken { get; set; } = new List<RefreshToken>();
-
-    public virtual RefreshToken? ReplacedByToken { get; set; }
-
-    public virtual User User { get; set; } = null!;
-
-    public virtual ICollection<UserSession> UserSessions { get; set; } = new List<UserSession>();
+    public ICollection<RefreshToken> InverseReplacedByToken
+    {
+        get;
+        private set;
+    } = [];
+    public ICollection<UserSession> UserSessions
+    {
+        get;
+        private set;
+    } = [];
+}
 }

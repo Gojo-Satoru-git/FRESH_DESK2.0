@@ -1,43 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// 13 geo/tier groups. region_code and tier_code determine SLA policy and routing scope. Admin can create additional groups as org scales.
-/// </summary>
-public partial class Group
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class Group : ActiveSoftDeleteEntity
+{
+    public string Name { get; private set; } = string.Empty;
 
-    public string Name { get; set; } = null!;
+    public string? RegionCode { get; private set; }
 
-    public string? RegionCode { get; set; }
+    public string? TierCode { get; private set; }
 
-    public string? TierCode { get; set; }
+    public int UnattendedAlertMinutes { get; private set; }
 
-    public bool IsActive { get; set; }
-
-    public bool IsDeleted { get; set; }
-
-    public Guid? CreatedBy { get; set; }
-
-    public Guid? UpdatedBy { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
-
-    public byte[]? RowVersion { get; set; }
-
-    /// <summary>
-    /// Minutes after which an unassigned ticket in this group triggers the GROUP_UNATTENDED notification to group leads. Default 30 minutes. Automation rule reads this value.
-    /// </summary>
-    public int UnattendedAlertMinutes { get; set; }
-
-    public virtual User? CreatedByNavigation { get; set; }
-
-    public virtual User? UpdatedByNavigation { get; set; }
-
-    public virtual ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
+    public ICollection<UserGroup> UserGroups { get; private set; } = [];
+}
 }

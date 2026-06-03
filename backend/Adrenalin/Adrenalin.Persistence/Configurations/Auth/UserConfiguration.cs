@@ -93,12 +93,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(100)
             .HasColumnName("username");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany(p => p.InverseCreatedByNavigation)
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("users_created_by_fkey");
 
-        builder.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.InverseUpdatedByNavigation)
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("users_updated_by_fkey");

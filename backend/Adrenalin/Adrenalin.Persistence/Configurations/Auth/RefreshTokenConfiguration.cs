@@ -28,10 +28,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasDefaultValueSql("now()")
             .HasColumnName("created_at");
 
-        builder.Property(e => e.CreatedByIp)
-            .HasMaxLength(45)
-            .HasColumnName("created_by_ip");
-
         builder.Property(e => e.DeviceInfo)
             .HasMaxLength(255)
             .HasColumnName("device_info");
@@ -53,17 +49,11 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(e => e.ReplacedByTokenId).HasColumnName("replaced_by_token_id");
         builder.Property(e => e.RevokedAt).HasColumnName("revoked_at");
 
-        builder.Property(e => e.RevokedByIp)
-            .HasMaxLength(45)
-            .HasColumnName("revoked_by_ip");
-
-        builder.Property(e => e.RotatedAt).HasColumnName("rotated_at");
-
         builder.Property(e => e.TokenHash)
             .HasMaxLength(255)
             .HasColumnName("token_hash");
 
-        builder.Property(e => e.UserAgent).HasColumnName("user_agent");
+
         builder.Property(e => e.UserId).HasColumnName("user_id");
 
         builder.HasOne(d => d.ReplacedByToken).WithMany(p => p.InverseReplacedByToken)

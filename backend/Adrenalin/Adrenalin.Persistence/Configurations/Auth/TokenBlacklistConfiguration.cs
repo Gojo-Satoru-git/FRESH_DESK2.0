@@ -24,9 +24,12 @@ public class TokenBlacklistConfiguration : IEntityTypeConfiguration<TokenBlackli
 
         builder.Property(e => e.BlacklistedAt)
             .HasDefaultValueSql("now()")
+            .HasColumnType("timestamptz")
             .HasColumnName("blacklisted_at");
 
-        builder.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+        builder.Property(e => e.ExpiresAt)
+            .HasColumnType("timestamptz")
+            .HasColumnName("expires_at");
 
         builder.Property(e => e.Jti)
             .HasMaxLength(36)

@@ -1,34 +1,28 @@
-using System;
-using System.Net;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// One row per device/login. Enables security dashboard with all active devices. last_active_at updated by API middleware on each authenticated call.
-/// </summary>
-public partial class UserSession
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class UserSession : BaseEntity
+{
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public Guid? RefreshTokenId { get; private set; }
 
-    public Guid? RefreshTokenId { get; set; }
+    public string? DeviceName { get; private set; }
 
-    public string? DeviceName { get; set; }
+    public string? IpAddress { get; private set; }
 
-    public IPAddress? IpAddress { get; set; }
+    public string? GeoLocation { get; private set; }
 
-    public string? GeoLocation { get; set; }
+    public DateTimeOffset StartedAt { get; private set; }
 
-    public DateTime StartedAt { get; set; }
+    public DateTimeOffset LastActiveAt { get; private set; }
 
-    public DateTime LastActiveAt { get; set; }
+    public DateTimeOffset? EndedAt { get; private set; }
 
-    public DateTime? EndedAt { get; set; }
+    public bool IsActive { get; private set; }
+    public User User { get; private set; } = null!;
 
-    public bool IsActive { get; set; }
-
-    public virtual RefreshToken? RefreshToken { get; set; }
-
-    public virtual User User { get; set; } = null!;
+    public RefreshToken? RefreshToken { get; private set; }
+}
 }

@@ -35,7 +35,7 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
         builder.Property(e => e.RowVersion).HasColumnName("row_version");
         builder.Property(e => e.UserId).HasColumnName("user_id");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany(p => p.UserGroupCreatedByNavigations)
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("user_groups_created_by_fkey");
@@ -44,7 +44,7 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
             .HasForeignKey(d => d.GroupId)
             .HasConstraintName("user_groups_group_id_fkey");
 
-        builder.HasOne(d => d.User).WithMany(p => p.UserGroupUsers)
+        builder.HasOne(d => d.User).WithMany(p => p.UserGroups)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("user_groups_user_id_fkey");
     }

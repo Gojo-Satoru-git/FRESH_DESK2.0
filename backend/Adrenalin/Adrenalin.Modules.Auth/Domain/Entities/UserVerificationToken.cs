@@ -1,29 +1,22 @@
-using System;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// Hashed URL tokens for email verification and password reset flows. is_used=true after first use (tokens are single-use). Expired rows purged by nightly cleanup job alongside refresh_tokens.
-/// </summary>
-public partial class UserVerificationToken
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class UserVerificationToken : AuditableEntity
+{
+    public Guid UserId { get; private set; }
 
-    public Guid UserId { get; set; }
+    public string TokenHash { get; private set; } = string.Empty;
 
-    public string TokenHash { get; set; } = null!;
+    public string Purpose { get; private set; } = string.Empty;
 
-    public string Purpose { get; set; } = null!;
+    public DateTimeOffset ExpiresAt { get; private set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset? VerifiedAt { get; private set; }
 
-    public DateTime CreatedAt { get; set; }
+    public bool IsUsed { get; private set; }
 
-    public DateTime? VerifiedAt { get; set; }
-
-    public bool IsUsed { get; set; }
-
-    public string? CreatedByIp { get; set; }
-
-    public virtual User User { get; set; } = null!;
+    public string? CreatedByIp { get; private set; }
+    public User User { get; private set; } = null!;
+}
 }

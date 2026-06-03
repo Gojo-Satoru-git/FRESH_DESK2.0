@@ -1,23 +1,38 @@
-using System;
+using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities;
 
-/// <summary>
-/// Revoked JWT IDs. Auth middleware performs O(1) lookup on jti before accepting any token. Rows pruned nightly: DELETE FROM auth.token_blacklist WHERE expires_at &lt; NOW().
-/// </summary>
-public partial class TokenBlacklist
+public sealed class TokenBlacklist : BaseEntity
 {
-    public Guid Id { get; set; }
+    private TokenBlacklist() { }
 
-    public string Jti { get; set; } = null!;
+    public static TokenBlacklist Revoke(
+        string jti,
+        Guid userId,
+        DateTimeOffset expiresAt,
+        string? reason = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jti);
 
-    public Guid UserId { get; set; }
+        return new TokenBlacklist
+        {
+            Jti = jti,
+            UserId = userId,
+            ExpiresAt = expiresAt,
+            BlacklistedAt = DateTimeOffset.UtcNow,
+            Reason = reason
+        };
+    }
 
-    public DateTime ExpiresAt { get; set; }
+    public string Jti { get; private set; } = null!;
 
-    public string? Reason { get; set; }
+    public Guid UserId { get; private set; }
 
-    public DateTime BlacklistedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
-    public virtual User User { get; set; } = null!;
+    public string? Reason { get; private set; }
+
+    public DateTimeOffset BlacklistedAt { get; private set; }
+
+    public User User { get; private set; } = null!;
 }

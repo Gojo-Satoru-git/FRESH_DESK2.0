@@ -57,12 +57,12 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(e => e.UpdatedBy)
             .HasColumnName("updated_by");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("permissions_created_by_fkey");
 
-        builder.HasOne(d => d.UpdatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("permissions_updated_by_fkey");

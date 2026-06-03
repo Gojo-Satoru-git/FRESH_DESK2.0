@@ -1,4 +1,4 @@
-﻿namespace Adrenalin.SharedKernel.Enums.Auth;
+namespace Adrenalin.Modules.Auth.Domain.Enums;
 
 public enum RevocationReason
 {

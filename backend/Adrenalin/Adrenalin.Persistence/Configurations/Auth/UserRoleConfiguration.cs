@@ -40,12 +40,12 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         builder.Property(e => e.UserId).HasColumnName("user_id");
 
-        builder.HasOne(d => d.AssignedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.AssignedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("user_roles_assigned_by_fkey");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("user_roles_created_by_fkey");
@@ -54,12 +54,12 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             .HasForeignKey(d => d.RoleId)
             .HasConstraintName("user_roles_role_id_fkey");
 
-        builder.HasOne(d => d.UpdatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("user_roles_updated_by_fkey");
 
-        builder.HasOne(d => d.User).WithMany()
+        builder.HasOne(d => d.User).WithMany(p => p.UserRoles)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("user_roles_user_id_fkey");
     }

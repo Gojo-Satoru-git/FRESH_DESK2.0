@@ -35,12 +35,12 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 
-        builder.HasOne(d => d.CreatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("roles_created_by_fkey");
 
-        builder.HasOne(d => d.UpdatedByNavigation).WithMany()
+        builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("roles_updated_by_fkey");

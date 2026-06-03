@@ -1,32 +1,32 @@
-using System;
+using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities;
 
-public partial class RolePermission
+public sealed class RolePermission : SoftDeleteEntity
 {
-    public Guid Id { get; set; }
+    private RolePermission() { }
 
-    public Guid RoleId { get; set; }
+    public static RolePermission Assign(Guid roleId, Guid permissionId)
+    {
+        if (roleId == Guid.Empty) throw new ArgumentException("roleId must not be empty.", nameof(roleId));
+        if (permissionId == Guid.Empty) throw new ArgumentException("permissionId must not be empty.", nameof(permissionId));
 
-    public Guid PermissionId { get; set; }
+        return new RolePermission
+        {
+            RoleId = roleId,
+            PermissionId = permissionId
+        };
+    }
 
-    public bool IsDeleted { get; set; }
+    public Guid RoleId { get; private set; }
 
-    public DateTime CreatedAt { get; set; }
+    public Guid PermissionId { get; private set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public User? CreatedByNavigation { get; private set; }
 
-    public Guid? CreatedBy { get; set; }
+    public Permission Permission { get; private set; } = null!;
 
-    public Guid? UpdatedBy { get; set; }
+    public Role Role { get; private set; } = null!;
 
-    public byte[]? RowVersion { get; set; }
-
-    public virtual User? CreatedByNavigation { get; set; }
-
-    public virtual Permission Permission { get; set; } = null!;
-
-    public virtual Role Role { get; set; } = null!;
-
-    public virtual User? UpdatedByNavigation { get; set; }
+    public User? UpdatedByNavigation { get; private set; }
 }

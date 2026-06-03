@@ -1,38 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.SharedKernel.Entities;
 
-namespace Adrenalin.Modules.Auth.Domain.Entities;
-
-/// <summary>
-/// Named roles: junior_agent, team_lead, manager, admin, collaborator, pmo. System roles (is_system_role=true) cannot be deleted via admin UI.
-/// </summary>
-public partial class Role
+namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public Guid Id { get; set; }
+public sealed class Role : SoftDeleteEntity
+{
+    public string Name { get; private set; } = string.Empty;
 
-    public string Name { get; set; } = null!;
+    public string? Description { get; private set; }
 
-    public string? Description { get; set; }
+    public bool IsSystemRole { get; private set; }
 
-    public bool IsSystemRole { get; set; }
+    public ICollection<UserRole> UserRoles { get; private set; } = [];
 
-    public bool IsDeleted { get; set; }
-
-    public Guid? CreatedBy { get; set; }
-
-    public Guid? UpdatedBy { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
-
-    public byte[]? RowVersion { get; set; }
-
-    public virtual User? CreatedByNavigation { get; set; }
-
-    public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
-
-    public virtual User? UpdatedByNavigation { get; set; }
-
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<RolePermission> RolePermissions { get; private set; } = [];
+}
 }

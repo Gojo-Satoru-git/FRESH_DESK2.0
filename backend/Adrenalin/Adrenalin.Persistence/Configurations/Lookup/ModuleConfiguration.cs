@@ -53,12 +53,6 @@ public class ModuleConfiguration : IEntityTypeConfiguration<Module>
             .HasMaxLength(150)
             .HasColumnName("label");
 
-        builder.Property(e => e.ModifiedAt).HasColumnName("modified_at");
-
-        builder.Property(e => e.ModifiedBy)
-            .HasMaxLength(100)
-            .HasColumnName("modified_by");
-
         builder.Property(e => e.UpdatedAt)
             .HasDefaultValueSql("now()")
             .HasColumnName("updated_at");
