@@ -181,11 +181,11 @@ public partial class AdrenalinDbContext : DbContext
                 .HasForeignKey(d => d.AgentId)
                 .HasConstraintName("agent_badges_agent_id_fkey");
 
-            entity.HasOne(d => d.Badge).WithMany()
+            entity.HasOne(d => d.Badge).WithMany(p => p.AgentBadges)
                 .HasForeignKey(d => d.BadgeId)
                 .HasConstraintName("agent_badges_badge_id_fkey");
 
-            entity.HasOne(d => d.Ticket).WithMany()
+            entity.HasOne(d => d.Ticket).WithMany(p => p.AgentBadges)
                 .HasForeignKey(d => d.TicketId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("agent_badges_ticket_id_fkey");
@@ -217,7 +217,7 @@ public partial class AdrenalinDbContext : DbContext
                 .HasForeignKey(d => d.AgentId)
                 .HasConstraintName("agent_challenges_agent_id_fkey");
 
-            entity.HasOne(d => d.Challenge).WithMany()
+            entity.HasOne(d => d.Challenge).WithMany(p => p.AgentChallenges)
                 .HasForeignKey(d => d.ChallengeId)
                 .HasConstraintName("agent_challenges_challenge_id_fkey");
         });
@@ -260,7 +260,7 @@ public partial class AdrenalinDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("agent_points_rule_id_fkey");
 
-            entity.HasOne(d => d.Ticket).WithMany()
+            entity.HasOne(d => d.Ticket).WithMany(p => p.AgentPoints)
                 .HasForeignKey(d => d.TicketId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("agent_points_ticket_id_fkey");
@@ -316,7 +316,7 @@ public partial class AdrenalinDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("ai_suggestion_logs_agent_id_fkey");
 
-            entity.HasOne(d => d.Ticket).WithMany()
+            entity.HasOne(d => d.Ticket).WithMany(p => p.AiSuggestionLogs)
                 .HasForeignKey(d => d.TicketId)
                 .HasConstraintName("ai_suggestion_logs_ticket_id_fkey");
         });
@@ -617,7 +617,7 @@ public partial class AdrenalinDbContext : DbContext
                 .HasMaxLength(200)
                 .HasColumnName("title");
 
-            entity.HasOne(d => d.Badge).WithMany()
+            entity.HasOne(d => d.Badge).WithMany(p => p.Challenges)
                 .HasForeignKey(d => d.BadgeId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("challenges_badge_id_fkey");
@@ -1650,12 +1650,12 @@ public partial class AdrenalinDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("tickets_audited_by_fkey");
 
-            entity.HasOne(d => d.Company).WithMany()
+            entity.HasOne(d => d.Company).WithMany(p => p.Tickets)
                 .HasForeignKey(d => d.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("tickets_company_id_fkey");
 
-            entity.HasOne(d => d.Contact).WithMany()
+            entity.HasOne(d => d.Contact).WithMany(p => p.Tickets)
                 .HasForeignKey(d => d.ContactId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("tickets_contact_id_fkey");
@@ -1787,7 +1787,7 @@ public partial class AdrenalinDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("ticket_attachments_created_by_fkey");
 
-            entity.HasOne(d => d.Ticket).WithMany()
+            entity.HasOne(d => d.Ticket).WithMany(p => p.TicketAttachments)
                 .HasForeignKey(d => d.TicketId)
                 .HasConstraintName("ticket_attachments_ticket_id_fkey");
         });
@@ -2136,7 +2136,7 @@ public partial class AdrenalinDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("ticket_status_history_changed_by_fkey");
 
-            entity.HasOne(d => d.Ticket).WithMany()
+            entity.HasOne(d => d.Ticket).WithMany(p => p.TicketStatusHistories)
                 .HasForeignKey(d => d.TicketId)
                 .HasConstraintName("ticket_status_history_ticket_id_fkey");
         });

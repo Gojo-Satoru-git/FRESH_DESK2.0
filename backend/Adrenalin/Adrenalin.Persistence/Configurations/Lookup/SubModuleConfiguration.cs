@@ -76,7 +76,7 @@ public class SubModuleConfiguration : IEntityTypeConfiguration<SubModule>
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("fk_sub_modules_created_by");
 
-        builder.HasOne(d => d.Module).WithMany()
+        builder.HasOne(d => d.Module).WithMany(p => p.SubModules)
             .HasForeignKey(d => d.ModuleId)
             .OnDelete(DeleteBehavior.ClientSetNull)
             .HasConstraintName("sub_modules_module_id_fkey");
