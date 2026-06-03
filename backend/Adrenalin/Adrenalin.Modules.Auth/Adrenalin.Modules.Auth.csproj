@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
-    <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
   </ItemGroup>
 
   <ItemGroup>

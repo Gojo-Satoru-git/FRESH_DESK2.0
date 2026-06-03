@@ -60,11 +60,11 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("groups_created_by_fkey");
 
-        builder.HasOne(d => d.RegionCodeNavigation).WithMany()
+        builder.HasOne<GeoRegion>().WithMany()
             .HasForeignKey(d => d.RegionCode)
             .HasConstraintName("groups_region_code_fkey");
 
-        builder.HasOne(d => d.TierCodeNavigation).WithMany()
+        builder.HasOne<CustomerTier>().WithMany()
             .HasForeignKey(d => d.TierCode)
             .HasConstraintName("groups_tier_code_fkey");
 

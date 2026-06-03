@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Adrenalin.Modules.Lookup.Domain.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities;
 
@@ -39,10 +38,6 @@ public partial class Group
     public virtual User? CreatedByNavigation { get; set; }
 
     public virtual User? UpdatedByNavigation { get; set; }
-
-    public virtual GeoRegion? RegionCodeNavigation { get; set; }
-
-    public virtual CustomerTier? TierCodeNavigation { get; set; }
 
     public virtual ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
 }
