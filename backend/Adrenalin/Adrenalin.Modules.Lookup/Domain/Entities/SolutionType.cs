@@ -1,15 +1,12 @@
+using System;
+using System.Collections.Generic;
 using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public sealed class SolutionType : BaseEntity
+public partial class SolutionType : ActiveSoftDeleteEntity
 {
-    public string Code { get; private set; } = string.Empty;
+    public string Code { get; set; } = null!;
 
-    public string Label { get; private set; } = string.Empty;
-
-    public bool IsActive { get; private set; }
-     public DateTimeOffset CreatedAt { get; private set; }
-
-    private SolutionType() { }
+    public string Label { get; set; } = null!;
 }

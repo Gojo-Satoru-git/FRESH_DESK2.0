@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +7,7 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-public sealed class RefreshToken : BaseEntity
+public sealed class RefreshToken : AuditableEntity
 {
     public Guid UserId { get; private set; }
 

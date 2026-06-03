@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
@@ -8,8 +8,8 @@
     <Folder Include="Application\Commands\" />
     <Folder Include="Application\DTOs\" />
     <Folder Include="Application\Handlers\" />
-    <Folder Include="Application\Validators\" />
     <Folder Include="Application\Queries\" />
+    <Folder Include="Application\Validators\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\Enums\" />
     <Folder Include="Domain\Events\" />

@@ -1,16 +1,15 @@
-﻿using Adrenalin.SharedKernel.Entities;
+using System;
+using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public sealed class CustomerTier : SoftDeleteEntity
+public partial class CustomerTier : ActiveSoftDeleteEntity
 {
-    public string Code { get; private set; } = string.Empty;
+    public string Code { get; set; } = null!;
 
-    public string Label { get; private set; } = string.Empty;
+    public string Label { get; set; } = null!;
 
-    public string? Description { get; private set; }
+    public string? Description { get; set; }
 
-    public int PriorityBump { get; private set; }
-
-    private CustomerTier() { }
+    public int PriorityBump { get; set; }
 }

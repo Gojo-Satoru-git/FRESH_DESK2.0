@@ -1,20 +1,19 @@
-﻿using Adrenalin.SharedKernel.Entities;
+using System;
+using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public sealed class GeoRegion :SoftDeleteEntity
+public partial class GeoRegion : ActiveSoftDeleteEntity
 {
-    public string Code { get; private set; } = string.Empty;
+    public string Code { get; set; } = null!;
 
-    public string Label { get; private set; } = string.Empty;
+    public string Label { get; set; } = null!;
 
-    public string Timezone { get; private set; } = string.Empty;
+    public string Timezone { get; set; } = null!;
 
-    public TimeOnly BusinessStart { get; private set; }
+    public TimeOnly BusinessStart { get; set; }
 
-    public TimeOnly BusinessEnd { get; private set; }
+    public TimeOnly BusinessEnd { get; set; }
 
-    public string WorkingDays { get; private set; } = string.Empty;
-
-    private GeoRegion() { }
+    public string WorkingDays { get; set; } = null!;
 }

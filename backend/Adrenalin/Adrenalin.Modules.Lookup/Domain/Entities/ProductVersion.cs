@@ -1,16 +1,15 @@
-﻿using Adrenalin.SharedKernel.Entities;
+using System;
+using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public sealed class ProductVersion :SoftDeleteEntity
+public partial class ProductVersion : ActiveSoftDeleteEntity
 {
-    public string Code { get; private set; } = string.Empty;
+    public string Code { get; set; } = null!;
 
-    public string Label { get; private set; } = string.Empty;
+    public string Label { get; set; } = null!;
 
-    public DateOnly? ReleaseDate { get; private set; }
+    public DateOnly? ReleaseDate { get; set; }
 
-    public bool IsLegacy { get; private set; }
-
-    private ProductVersion() { }
+    public bool IsLegacy { get; set; }
 }

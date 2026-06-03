@@ -5,9 +5,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Events\" />
     <Folder Include="Consumers\" />
     <Folder Include="Contracts\" />
+    <Folder Include="Events\" />
     <Folder Include="Publishers\" />
   </ItemGroup>
 
