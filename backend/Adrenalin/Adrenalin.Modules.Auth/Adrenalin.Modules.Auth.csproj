@@ -2,14 +2,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Application\Commands\" />
     <Folder Include="Application\DTOs\" />
     <Folder Include="Application\Handlers\" />
-    <Folder Include="Application\Validators\" />
     <Folder Include="Application\Queries\" />
+    <Folder Include="Application\Validators\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\Enums\" />
     <Folder Include="Domain\Events\" />

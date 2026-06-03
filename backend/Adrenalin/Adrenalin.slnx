@@ -2,7 +2,6 @@
   <Project Path="Adrenalin.EventBus/Adrenalin.EventBus.csproj" />
   <Project Path="Adrenalin.Infrastructure/Adrenalin.Infrastructure.csproj" />
   <Project Path="Adrenalin.IntegrationTests/Adrenalin.IntegrationTests.csproj" />
-  <Project Path="Adrenalin.Module.LookUp/Adrenalin.Module.LookUp.csproj" Id="be47a8a6-bfd6-4391-9625-f9dd52b44dcf" />
   <Project Path="Adrenalin.Modules.AI/Adrenalin.Modules.AI.csproj" />
   <Project Path="Adrenalin.Modules.Auth/Adrenalin.Modules.Auth.csproj" />
   <Project Path="Adrenalin.Modules.Company/Adrenalin.Modules.Company.csproj" />

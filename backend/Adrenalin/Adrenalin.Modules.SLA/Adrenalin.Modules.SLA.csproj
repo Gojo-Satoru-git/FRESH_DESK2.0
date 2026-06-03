@@ -9,6 +9,7 @@
     <Folder Include="Application\DTOs\" />
     <Folder Include="Application\Handlers\" />
     <Folder Include="Application\Queries\" />
+    <Folder Include="Application\Services\" />
     <Folder Include="Application\Validators\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\Enums\" />
@@ -16,7 +17,6 @@
     <Folder Include="Domain\Interfaces\" />
     <Folder Include="Domain\ValueObjects\" />
     <Folder Include="Jobs\" />
-    <Folder Include="Application\Services\" />
   </ItemGroup>
 
   <PropertyGroup>
