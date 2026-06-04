@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,6 +49,37 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
         public ICollection<UserOtpCode> UserOtpCodes { get; private set; } = [];
 
         public ICollection<UserVerificationToken> UserVerificationTokens { get; private set; } = [];
-        public ICollection<TokenBlacklist> TokenBlacklists{get;private set;} = [];
+        public ICollection<TokenBlacklist> TokenBlacklists { get; private set; } = [];
+        public static User Create(
+                string email,
+                string passwordHash,
+                string firstName,
+                string lastName,
+                string? username,
+                string? phone)
+        {
+            return new User
+            {
+                Id = Guid.NewGuid(),
+                Email = email,
+                NormalizedEmail =
+                    email.ToUpperInvariant(),
+
+                Username = username,
+
+                NormalizedUsername =
+                    username?.ToUpperInvariant(),
+
+                PasswordHash = passwordHash,
+
+                FirstName = firstName,
+
+                LastName = lastName,
+                Phone=phone,
+
+                EmailVerified = false
+            };
+        }
     }
+
 }

@@ -30,7 +30,7 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
             .HasMaxLength(100)
             .HasColumnName("geo_location");
 
-        builder.Property(e => e.IpAddress).HasColumnName("ip_address");
+        builder.Property(e => e.IpAddress).HasColumnName("ip_address").HasColumnType("inet");
 
         builder.Property(e => e.IsActive)
             .HasDefaultValue(true)
