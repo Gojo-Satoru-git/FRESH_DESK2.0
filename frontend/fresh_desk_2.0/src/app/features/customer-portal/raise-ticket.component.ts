@@ -1,92 +1,32 @@
-import { Component, HostListener, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CustomerHeaderComponent } from '../../features/customer-portal/customer-header.component';
 
 @Component({
   selector: 'app-raise-ticket',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomerHeaderComponent],
   templateUrl: './raise-ticket.component.html',
 })
 export class RaiseTicketComponent implements OnInit {
-
-  // ===== HEADER LOGIC =====
-  private router = inject(Router);
-  isMenuOpen = signal(false);
-
-  toggleMenu() {
-    this.isMenuOpen.update(v => !v);
-  }
-
-  goToProfile() {
-    this.isMenuOpen.set(false);
-    this.router.navigate(['/customer/profile']);
-  }
-
-  logout() {
-    this.isMenuOpen.set(false);
-    this.router.navigate(['/login']);
-  }
-
-  @HostListener('document:click', ['$event'])
-  closeOnOutsideClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('button') && !target.closest('.shadow-lg')) {
-      this.isMenuOpen.set(false);
-    }
-  }
-
-  // ===== FORM LOGIC =====
+  private fb = inject(FormBuilder);
+  
   ticketForm!: FormGroup;
   attachedFiles: File[] = [];
   isDragOver = false;
   isSubmitting = false;
   submitted = false;
 
-  modules = [
-    'Authentication',
-    'Billing',
-    'Dashboard',
-    'Reporting',
-    'Integrations',
-    'Settings',
-    'Other',
-  ];
-
+  modules = ['Change Request', 'Clarification', 'Environment Issues', 'New Requirements', 'Service Requests', 'Software Enchancement','Software Problem', 'Other'];
   priorities = ['Low', 'Medium', 'High', 'Critical'];
-
-  constructor(private fb: FormBuilder) {}
-
-  // ===== KB ARTICLES (ADDED) =====
   kbSuggestions = signal<any[]>([]);
 
   private kbArticles = [
-    {
-      title: 'How to reset your password',
-      description: 'Steps to reset login password',
-      keywords: ['password', 'login', 'authentication'],
-    },
-    {
-      title: 'Billing and invoice issues',
-      description: 'Fix billing and payment problems',
-      keywords: ['billing', 'invoice', 'payment'],
-    },
-    {
-      title: 'Dashboard not loading',
-      description: 'Resolve dashboard loading issues',
-      keywords: ['dashboard', 'loading', 'slow'],
-    },
-    {
-      title: 'Report export failed',
-      description: 'Fix report download problems',
-      keywords: ['report', 'export', 'download'],
-    },
+    { title: 'How to reset your password', description: 'Steps to reset login password', keywords: ['password', 'login', 'authentication'] },
+    { title: 'Billing and invoice issues', description: 'Fix billing and payment problems', keywords: ['billing', 'invoice', 'payment'] },
+    { title: 'Dashboard not loading', description: 'Resolve dashboard loading issues', keywords: ['dashboard', 'loading', 'slow'] },
+    { title: 'Report export failed', description: 'Fix report download problems', keywords: ['report', 'export', 'download'] },
   ];
 
   ngOnInit(): void {
@@ -97,7 +37,6 @@ export class RaiseTicketComponent implements OnInit {
       description: ['', [Validators.required, Validators.minLength(20)]],
     });
 
-    // 🔥 Subject → KB suggestions
     this.ticketForm.get('subject')!.valueChanges.subscribe(value => {
       this.updateKbSuggestions(value);
     });
@@ -108,21 +47,17 @@ export class RaiseTicketComponent implements OnInit {
       this.kbSuggestions.set([]);
       return;
     }
-
     const text = subject.toLowerCase();
-
     const matches = this.kbArticles.filter(article =>
       article.keywords.some(k => text.includes(k)) ||
       article.title.toLowerCase().includes(text)
     );
-
     this.kbSuggestions.set(matches);
   }
 
   onFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-    this.attachedFiles.push(...Array.from(input.files));
+    if (input.files) this.attachedFiles.push(...Array.from(input.files));
   }
 
   onFileDrop(event: DragEvent) {
@@ -149,7 +84,6 @@ export class RaiseTicketComponent implements OnInit {
       this.ticketForm.markAllAsTouched();
       return;
     }
-
     this.isSubmitting = true;
     setTimeout(() => {
       alert('Ticket submitted successfully!');
