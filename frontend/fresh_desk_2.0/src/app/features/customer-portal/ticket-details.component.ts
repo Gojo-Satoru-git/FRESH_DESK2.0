@@ -1,223 +1,148 @@
-import { Component, signal, inject } from '@angular/core';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Component, inject, signal, computed } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CustomerHeaderComponent } from './customer-header.component';
+
+// Define a structured interface for clean data modification
+interface TicketDetails {
+  id: string;
+  subject: string;
+  status: 'Open' | 'Pending' | 'Resolved';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  createdDate: string;
+  module: string;
+  lastUpdated: string;
+  description: string;       
+  attachments: string[];     
+}
 
 @Component({
   standalone: true,
   selector: 'app-ticket-details',
-  imports: [RouterLink],
+  imports: [RouterLink, CustomerHeaderComponent],
   template: `
-   <header class="flex items-center justify-between px-4 sm:px-8 md:px-12 lg:px-16 py-4">
-
-      <!-- LEFT: LOGO -->
-      <img
-        src="log.png"
-        alt="Customer Portal Logo"
-        class="
-          object-contain
-          h-32 w-32
-          sm:h-40 sm:w-40
-          md:h-48 md:w-48
-          lg:h-64 lg:w-64
-          -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-14
-        "
-      />
-
-      <!-- RIGHT: ACTIONS -->
-      <div class="flex items-center gap-4 relative">
-
-        <!-- Notification Button -->
-        <button
-           class="
-            h-10 w-12
-            rounded-xl
-            bg-gray-100
-            hover:bg-blue-500
-            active:bg-blue-500
-            flex items-center justify-center
-            mr-2
-            -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-20
-            transition-colors duration-200
-            focus:outline-none
-          "
-        >
-          <img src="notification.png" alt="Notifications" class="h-5 w-5" />
-        </button>
-
-        <!-- Avatar -->
-        <button
-          (click)="toggleMenu()"
-          class="
-            h-14 w-14
-            rounded-full
-            bg-[#012A4A]
-            text-white
-            flex items-center justify-center
-            font-semibold text-lg
-            -mt-6 sm:-mt-8 md:-mt-10 lg:-mt-20
-            focus:outline-none
-          "
-        >
-          A
-        </button>
-
-        <!-- DROPDOWN -->
-        @if (isMenuOpen()) {
-          <div
-            class="
-              absolute right-0 top-2
-              w-44
-              bg-white
-              rounded-lg
-              shadow-lg
-              border
-              z-50
-            "
-          >
-           <!-- My Profile -->
-          <button
-            class="
-              w-full px-4 py-2
-              flex items-center gap-3
-              text-left
-              hover:bg-gray-100
-            "
-            (click)="goToProfile()"
-          >
-            <img
-              src="profile.png"
-              alt="Profile"
-              class="h-6 w-6 object-contain"
-            />
-            <span class="font-bold">My Profile</span>
-          </button>
-
-
-
-            <!-- Logout -->
-            <button
-              class="
-                w-full px-4 py-2
-                flex items-center gap-3
-                text-left
-                text-red-600
-                hover:bg-gray-100
-              "
-              (click)="logout()"
-            >
-              <img
-                src="logout.png"
-                alt="Logout"
-                class="h-6 w-6 object-contain"
-              />
-              <span class = "font-bold">Logout</span>
-            </button>
-            
-          </div>
-        }
-        
-      </div>
-    </header>
-    <!-- BACK -->
+    <app-customer-header></app-customer-header>
+    
     <div class="px-10 mt-8">
       <a
         routerLink="/customer-portal"
-        class="flex items-center gap-2 ml-108  text-black font-bold text-2xl
+        class="inline-flex items-center gap-2 ml-116 text-black font-bold text-2xl
                px-4 py-2 rounded-lg
-               hover:bg-blue-600 hover:text-white transition"
+               hover:bg-blue-500 hover:text-white transition"
       >
         ← Back to tickets
       </a>
     </div>
 
-    <!-- TICKET CARD -->
-    <div class="max-w-4xl mx-auto mt-6 bg-white p-8 rounded-2xl shadow-xl border">
-
-      <!-- HEADER -->
-      <div class="flex justify-between items-start mb-6">
-        <div>
-          <p class="text-gray-400 text-lg font-semibold">TKT-1042</p>
-          <h1 class="text-3xl font-bold text-[#012A4A]">
-            Payroll calculation mismatch for May cycle
-          </h1>
-        </div>
-
-        <!-- CLOSE TICKET -->
-        <button
-          (click)="openFeedback()"
-          class="px-5 py-2 rounded-xl bg-red-100 text-red-700 font-bold hover:bg-red-200"
-        >
-          Close Ticket
-        </button>
-      </div>
-
-      <!-- STATUS -->
-      <div class="flex gap-4 mb-6">
-        <span class="px-4 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
-          Open
-        </span>
-        <span class="px-4 py-1 rounded-full bg-red-100 text-red-700 font-semibold">
-          High
-        </span>
+    @if (currentTicket()) {
+      <div class="max-w-4xl mx-auto mt-6 flex flex-col gap-6">
         
+        <div class="bg-white p-8 rounded-2xl shadow-xl border">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <p class="text-gray-400 text-xl mb-2 font-semibold">{{ currentTicket()?.id }}</p>
+              <h1 class="text-3xl font-bold text-[#012A4A]">
+                {{ currentTicket()?.subject }}
+              </h1>
+            </div>
+
+            <button
+              (click)="openFeedback()"
+              class="px-5 py-2 rounded-xl bg-red-100 text-red-700 font-bold hover:bg-red-200"
+            >
+              Close Ticket
+            </button>
+          </div>
+
+          <div class="flex gap-4 mb-6">
+            <span 
+              class="px-4 py-1 rounded-full font-semibold"
+              [class.bg-green-100]="currentTicket()?.status === 'Open'"
+              [class.text-green-700]="currentTicket()?.status === 'Open'"
+              [class.bg-yellow-100]="currentTicket()?.status === 'Pending'"
+              [class.text-yellow-700]="currentTicket()?.status === 'Pending'"
+              [class.bg-gray-200]="currentTicket()?.status === 'Resolved'"
+              [class.text-gray-700]="currentTicket()?.status === 'Resolved'"
+            >
+              {{ currentTicket()?.status }}
+            </span>
+
+            <span 
+              class="px-4 py-1 rounded-full font-semibold"
+              [class.bg-red-100]="currentTicket()?.priority === 'High' || currentTicket()?.priority === 'Critical'"
+              [class.text-red-700]="currentTicket()?.priority === 'High' || currentTicket()?.priority === 'Critical'"
+              [class.bg-yellow-100]="currentTicket()?.priority === 'Medium'"
+              [class.text-yellow-700]="currentTicket()?.priority === 'Medium'"
+              [class.bg-green-100]="currentTicket()?.priority === 'Low'"
+              [class.text-green-700]="currentTicket()?.priority === 'Low'"
+            >
+              {{ currentTicket()?.priority }}
+            </span>
+          </div>
+          
+          <hr class="my-6 border-t border-gray-400">
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-lg">
+            <div>
+              <p class="text-gray-400 mb-2 text-2xl font-semibold">Created</p>
+              <p class="font-bold text-xl">{{ currentTicket()?.createdDate }}</p>
+            </div>
+            <div>
+              <p class="text-gray-400 mb-2 text-2xl font-semibold">Module</p>
+              <p class="font-bold text-xl">{{ currentTicket()?.module }}</p>
+            </div>
+            <div>
+              <p class="text-gray-400 mb-2 text-2xl font-semibold">Last Updated</p>
+              <p class="font-bold text-xl">{{ currentTicket()?.lastUpdated }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow-xl border">
+          <p class="text-[#012A4A] mb-4 text-2xl font-bold">Description</p>
+          <div class="text-xl text-gray-800  whitespace-pre-line leading-relaxed">
+            {{ currentTicket()?.description }}
+          </div>
+           <hr class="my-6 border-t border-gray-400">
+
+          <p class="text-[#012A4A] mb-4 text-2xl font-bold">Attachments</p>
+          @if (currentTicket()?.attachments && currentTicket()!.attachments.length > 0) {
+            <div class="grid grid-cols-1 sm:grid-cols-1 gap-3">
+              @for (file of currentTicket()?.attachments; track file) {
+                <div class="flex items-center gap-3 bg-slate-50 border border-gray-200 px-4 py-3 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+                  
+                  <span class="text-gray-700 font-bold truncate text-base">{{ file }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="p-4 border border-dashed rounded-xl text-center text-gray-400 text-base">
+              No attached files found for this ticket.
+            </div>
+          }
+        </div>
+        </div>
+
+        
+
+      
+    } @else {
+      <div class="max-w-4xl mx-auto mt-12 bg-white p-12 rounded-2xl shadow-xl border text-center text-gray-500">
+        <p class="text-2xl font-bold">Ticket data could not be found.</p>
+        <p class="mt-2 text-lg">Please check the URL or select an existing item from the list.</p>
       </div>
-      <hr class="my-6 border-t border-gray-400">
+    }
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
-
-        <div>
-
-          <p class="text-gray-400 font-semibold">Created</p>
-
-          <p class="font-bold">2026-05-22</p>
-
-        </div>
-
-
-
-        <div>
-
-          <p class="text-gray-400 font-semibold">Module</p>
-
-          <p class="font-bold">Payroll</p>
-
-        </div>
-
-
-
-        <div>
-
-          <p class="text-gray-400 font-semibold">Last Updated</p>
-
-          <p class="font-bold">2 hours ago</p>
-
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ================= MODAL ================= -->
     @if (showFeedback()) {
       <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
         <div class="bg-white w-full max-w-xl rounded-2xl p-6 relative">
-
-          <!-- CLOSE ICON -->
           <button
             (click)="closeFeedback()"
             class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl"
-          >
-            ✕
-          </button>
+          >✕</button>
 
-          <!-- TITLE -->
-          <h2 class="text-2xl font-bold mb-1">
-            How was your support experience?
-          </h2>
-          <p class="text-gray-500 mb-6">
-            Your feedback helps us improve. Closing ticket TKT-1042.
-          </p>
+          <h2 class="text-2xl font-bold mb-1">How was your support experience?</h2>
+          <p class="text-gray-500 mb-6">Your feedback helps us improve. Closing ticket {{ currentTicket()?.id }}.</p>
 
-          <!-- STARS -->
           <div class="flex gap-2 mb-6">
             @for (star of [1,2,3,4,5]; track star) {
               <span
@@ -225,67 +150,76 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
                 class="text-4xl cursor-pointer"
                 [class.text-yellow-400]="rating() >= star"
                 [class.text-gray-300]="rating() < star"
-              >
-                ★
-              </span>
+              >★</span>
             }
           </div>
 
-          <!-- COMMENT -->
           <textarea
             placeholder="Add an optional comment..."
             class="w-full h-28 p-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
           ></textarea>
 
-          <!-- ACTIONS -->
           <div class="flex justify-end gap-4">
-            <button
-              (click)="closeFeedback()"
-              class="px-6 py-2 rounded-xl border font-semibold hover:bg-gray-100"
-            >
+            <button (click)="closeFeedback()" class="px-6 py-2 rounded-xl border font-semibold hover:bg-gray-100">
               Cancel
             </button>
-
-            <button
-              (click)="submitFeedback()"
-              class="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
-            >
+            <button (click)="submitFeedback()" class="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
               Submit and Close
             </button>
           </div>
-          
-
-
         </div>
-        
-        
-
       </div>
-      
     }
   `
 })
 export class TicketDetailsComponent {
+  private route = inject(ActivatedRoute);
 
   showFeedback = signal(false);
-    private router = inject(Router);
-  private route = inject(ActivatedRoute);
   rating = signal(0);
-  isMenuOpen = signal(false);
 
-  toggleMenu() {
-    this.isMenuOpen.update(v => !v);
-  }
+  ticketsData = signal<TicketDetails[]>([
+    {
+      id: 'TKT-1042',
+      subject: 'Payroll calculation mismatch for May cycle',
+      status: 'Open',
+      priority: 'High',
+      createdDate: '2026-05-22',
+      module: 'Payroll',
+      lastUpdated: '2 hours ago',
+      description: 'The automated payroll system calculated the standard deductions incorrectly for the May billing cycle. The gross payment matches, but the overall tax breakdown contains clear discrepancies that require immediate engineering attention.',
+      attachments: ['may_payslip_error.pdf', 'calculation_mismatch_log.xlsx']
+    },
+    {
+      id: 'TCK-0987',
+      subject: 'Invoice mismatch for April',
+      status: 'Pending',
+      priority: 'Medium',
+      createdDate: '2026-04-18',
+      module: 'Billing',
+      lastUpdated: 'Yesterday',
+      description: 'The final invoiced amount displays an extra balance charge that was not communicated during our plan modification setup. Requesting support to review and adjust line items.',
+      attachments: ['april_invoice_draft.pdf']
+    },
+    {
+      id: 'TCK-0911',
+      subject: 'Password reset request',
+      status: 'Resolved',
+      priority: 'Low',
+      createdDate: '2026-03-05',
+      module: 'Authentication',
+      lastUpdated: '3 days ago',
+      description: 'Unable to receive the verification OTP on the registered mobile endpoint while attempts were made to update credentials via security settings panel.',
+      attachments: []
+    }
+  ]);
 
-  goToProfile() {
-    this.isMenuOpen.set(false);
-    this.router.navigate(['/customer/profile']);
-  }
+  private activeId = computed(() => this.route.snapshot.paramMap.get('id'));
 
-  logout() {
-    this.isMenuOpen.set(false);
-    this.router.navigate(['/login']);
-  }
+  currentTicket = computed(() => {
+    const id = this.activeId();
+    return this.ticketsData().find(t => t.id === id) || null;
+  });
 
   openFeedback() {
     this.showFeedback.set(true);
@@ -297,8 +231,7 @@ export class TicketDetailsComponent {
   }
 
   submitFeedback() {
-    console.log('Rating:', this.rating());
+    console.log('Rating:', this.rating(), 'Ticket ID:', this.currentTicket()?.id);
     this.closeFeedback();
-    // here later call API + mark ticket closed
   }
 }
