@@ -2,7 +2,7 @@ using Adrenalin.Modules.KB.Domain.Enums;
 using Adrenalin.Modules.KB.Domain.Events;
 using Adrenalin.Modules.KB.Domain.ValueObjects;
 using Adrenalin.SharedKernel.Entities;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.KB.Domain.Entities;
 

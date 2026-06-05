@@ -1,10 +1,9 @@
 using Adrenalin.Modules.KB.Application.Commands;
 using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.DependencyInjection;
-using Adrenalin.SharedKernel.Results;
+using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.unify.API.Pipeline;
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
@@ -19,11 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsql => npgsql.MigrationsAssembly("Adrenalin.Persistence")));
 
-// ── 2. MediatR ────────────────────────────────────────────────────────────────
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssembly(typeof(CreateKbArticleCommand).Assembly);
-});
+// ── 2. SharedKernel Dispatcher (replaces MediatR) ─────────────────────────────
+builder.Services.AddCustomDispatcher(typeof(CreateKbArticleCommand).Assembly);
 
 // ── 3. FluentValidation pipeline ──────────────────────────────────────────────
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehaviour<,>));
@@ -93,5 +89,3 @@ catch (ReflectionTypeLoadException ex)
     throw;
 }
 app.Run();
-
-

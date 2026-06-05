@@ -2,7 +2,7 @@ using Adrenalin.Modules.KB.Application.Commands;
 using Adrenalin.Modules.KB.Application.DTOs;
 using Adrenalin.Modules.KB.Application.Queries;
 using Adrenalin.Modules.KB.Domain.Enums;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,9 +13,9 @@ namespace Adrenalin.unify.API.Controllers;
 [Produces("application/json")]
 public sealed class KbArticlesController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IDispatcher _sender;
 
-    public KbArticlesController(ISender sender) => _sender = sender;
+    public KbArticlesController(IDispatcher sender) => _sender = sender;
 
     // ── GET /api/kb/articles ──────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 using Adrenalin.Modules.KB.Domain.Enums;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.KB.Domain.Events;
 

@@ -1,19 +1,19 @@
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.KB.Domain.Entities;
 using Adrenalin.Modules.Lookup.Domain.Entities;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace Adrenalin.Persistence.Context;
 
 public class AppDbContext : DbContext
 {
-    private readonly IMediator _mediator;
+    private readonly IPublisher _publisher;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, IMediator mediator)
+    public AppDbContext(DbContextOptions<AppDbContext> options, IPublisher publisher)
         : base(options)
     {
-        _mediator = mediator;
+        _publisher = publisher;
     }
 
     #region AUTH
@@ -80,6 +80,6 @@ public class AppDbContext : DbContext
         ChangeTracker.Entries<KbFolder>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
 
         foreach (var evt in articleEvents.Concat(folderEvents))
-            await _mediator.Publish(evt, ct);
+            await _publisher.Publish(evt, ct);
     }
 }

@@ -3,7 +3,7 @@ using Adrenalin.Modules.KB.Domain.Entities;
 using Adrenalin.Modules.KB.Domain.Interfaces;
 using Adrenalin.Modules.KB.Domain.ValueObjects;
 using Adrenalin.SharedKernel.Results;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.KB.Application.Handlers;
 

@@ -1,7 +1,7 @@
 using Adrenalin.Modules.KB.Application.DTOs;
 using Adrenalin.Modules.KB.Domain.Enums;
+using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
-using MediatR;
 
 namespace Adrenalin.Modules.KB.Application.Queries;
 

@@ -1,6 +1,6 @@
 using Adrenalin.Modules.KB.Domain.Enums;
+using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
-using MediatR;
 
 namespace Adrenalin.Modules.KB.Application.Commands;
 

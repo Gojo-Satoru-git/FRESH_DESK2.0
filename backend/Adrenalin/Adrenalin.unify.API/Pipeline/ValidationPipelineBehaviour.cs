@@ -1,10 +1,9 @@
-﻿using Adrenalin.SharedKernel.Results;
+using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Results;
 using FluentValidation;
-using MediatR;
 
 namespace Adrenalin.unify.API.Pipeline
 {
-
     public sealed class ValidationPipelineBehaviour<TRequest, TResponse>
         : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
