@@ -3,13 +3,13 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public partial class CustomerTier : ActiveSoftDeleteEntity
+public sealed class CustomerTier : ActiveSoftDeleteEntity
 {
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = null!;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = null!;
 
-    public string? Description { get; set; }
+    public string? Description { get; private set; }
 
-    public int PriorityBump { get; set; }
+    public int PriorityBump { get; private set; }
 }

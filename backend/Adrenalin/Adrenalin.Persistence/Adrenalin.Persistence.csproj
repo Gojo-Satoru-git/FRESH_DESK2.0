@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
@@ -11,6 +11,7 @@
     <ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Gamification\Adrenalin.Modules.Gamification.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,15 +22,15 @@
     <Folder Include="Configurations\Notification\" />
     <Folder Include="Configurations\SLA\" />
     <Folder Include="Configurations\Workflow\" />
-    <Folder Include="Configurations\Ticketing\" />
     <Folder Include="Context\" />
     <Folder Include="Interceptors\" />
     <Folder Include="Migrations\" />
     <Folder Include="Seed\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

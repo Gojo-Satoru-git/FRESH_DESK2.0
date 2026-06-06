@@ -1,2 +1,12 @@
 global using Adrenalin.Modules.Auth.Domain.Entities;
 global using Adrenalin.Modules.Lookup.Domain.Entities;
+global using Adrenalin.Modules.Ticketing.Domain.Entities;
+global using Adrenalin.Modules.Ticketing.Domain.Enums;
+global using Adrenalin.Modules.Workflow.Domain.Entities;
+global using Adrenalin.Modules.Company.Domain.Entities;
+global using Adrenalin.Modules.SLA.Domain.Entities;
+global using Adrenalin.Modules.Gamification.Domain.Entities;
+global using Adrenalin.Modules.Gamification.Domain.Enums;
+global using Adrenalin.Modules.AI.Domain.Entities;
+global using Adrenalin.Modules.Notification.Domain.Entities;
+global using Adrenalin.Modules.KnowledgeBase.Domain.Entities;

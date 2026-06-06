@@ -33,5 +33,7 @@ public class CustomerTierConfiguration : IEntityTypeConfiguration<CustomerTier>
             .HasColumnName("label");
 
         builder.Property(e => e.PriorityBump).HasColumnName("priority_bump");
+
+        builder.Ignore(e => e.RowVersion);
     }
 }

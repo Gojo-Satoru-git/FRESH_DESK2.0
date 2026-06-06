@@ -3,17 +3,17 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public partial class GeoRegion : ActiveSoftDeleteEntity
+public sealed class GeoRegion : ActiveSoftDeleteEntity
 {
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = null!;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = null!;
 
-    public string Timezone { get; set; } = null!;
+    public string Timezone { get; private set; } = null!;
 
-    public TimeOnly BusinessStart { get; set; }
+    public TimeOnly BusinessStart { get; private set; }
 
-    public TimeOnly BusinessEnd { get; set; }
+    public TimeOnly BusinessEnd { get; private set; }
 
-    public string WorkingDays { get; set; } = null!;
+    public string WorkingDays { get; private set; } = null!;
 }
