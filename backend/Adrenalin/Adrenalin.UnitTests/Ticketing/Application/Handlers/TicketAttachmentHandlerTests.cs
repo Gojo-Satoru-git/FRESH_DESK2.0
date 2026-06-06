@@ -6,7 +6,7 @@ using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
 
-namespace Adrenalin.UnitTests.Ticketing;
+namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
 // Tests for ticket attachment commands and queries:
 // Upload (validator + handler), Download (company mismatch guard).

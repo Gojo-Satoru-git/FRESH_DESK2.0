@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Adrenalin.UnitTests;
+namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
 public class WatcherCommandHandlerTests
 {

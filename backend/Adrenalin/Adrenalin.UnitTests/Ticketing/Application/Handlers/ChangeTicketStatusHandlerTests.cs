@@ -4,7 +4,7 @@ using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
 
-namespace Adrenalin.UnitTests.Ticketing;
+namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
 // Tests for <see cref="ChangeTicketStatusCommandHandler"/>.
 // Covers: valid transitions, invalid transitions, resolve guards.
