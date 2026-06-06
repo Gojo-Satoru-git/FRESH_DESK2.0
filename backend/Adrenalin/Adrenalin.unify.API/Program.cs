@@ -89,6 +89,17 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+if (args.Contains("--seed"))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AdrenalinDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await Adrenalin.Persistence.Seed.DbSeeder.SeedAsync(context, hasher);
+    }
+    return;
+}
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using Adrenalin.SharedKernel.Mediator;
@@ -26,7 +26,13 @@ namespace Adrenalin.SharedKernel.Behaviors
                                       .ToList();
                 if (failure.Count != 0)
                 {
-                    throw new ValidationException(failure);
+                    var errorsDictionary = failure
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    throw new Adrenalin.SharedKernel.Exceptions.ValidationException(errorsDictionary);
                 }
             }
             return await next();

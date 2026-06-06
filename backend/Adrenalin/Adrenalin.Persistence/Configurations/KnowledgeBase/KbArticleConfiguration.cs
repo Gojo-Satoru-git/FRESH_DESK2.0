@@ -11,14 +11,12 @@ public sealed class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
     {
         builder.ToTable("kb_articles", "kb");
 
-        // ── Primary key ───────────────────────────────────────────────────────
         builder.HasKey(a => a.Id);
+        
+        builder.Property(a => a.Id).HasColumnName("id");
 
-        // ── Concurrency token — NOT in schema, ignore ─────────────────────────
-        // kb.kb_articles has no row_version column.
         builder.Ignore(a => a.RowVersion);
 
-        // ── Core columns ──────────────────────────────────────────────────────
         builder.Property(a => a.Title)
             .IsRequired()
             .HasMaxLength(300)

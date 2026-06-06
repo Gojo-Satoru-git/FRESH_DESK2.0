@@ -13,10 +13,13 @@ public sealed class KbAttachmentConfiguration : IEntityTypeConfiguration<KbAttac
         builder.ToTable("kb_attachments", "kb");
 
         builder.HasKey(a => a.Id);
+        builder.Property(a => a.Id)
+            .HasColumnName("id");
 
         // Schema: id, article_id, file_url, file_name, file_size_bytes, mime_type,
         //         is_deleted, created_at
         // No: row_version, updated_at, updated_by, created_by, is_active
+        builder.Ignore(a => a.RowVersion);
 
         builder.Property(a => a.ArticleId)
             .IsRequired()
@@ -62,10 +65,9 @@ public sealed class PortalBannerConfiguration : IEntityTypeConfiguration<PortalB
         builder.ToTable("portal_banners", "kb");
 
         builder.HasKey(b => b.Id);
+        builder.Property(b => b.Id).HasColumnName("id");
 
-        // Schema: id, title, message, active_from, active_to, is_active,
-        //         created_by, updated_by, created_at, updated_at
-        // No: is_deleted, row_version
+        builder.Ignore(b => b.RowVersion);
 
         builder.Property(b => b.Title)
             .IsRequired()
@@ -100,7 +102,5 @@ public sealed class PortalBannerConfiguration : IEntityTypeConfiguration<PortalB
 
         builder.HasIndex(b => b.IsActive)
             .HasDatabaseName("ix_portal_banners_is_active");
-
-        // No soft-delete filter — portal_banners has no is_deleted column
     }
 }
