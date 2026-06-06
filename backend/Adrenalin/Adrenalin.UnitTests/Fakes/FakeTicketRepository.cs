@@ -22,8 +22,8 @@ public class FakeTicketRepository : ITicketRepository
     public Task<Ticket?> GetByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
     {
         // Prefer the pinned ticket when set, otherwise search the list
-        if (TicketToReturn is not null)
-            return Task.FromResult(TicketToReturn.Id == ticketId ? TicketToReturn : null);
+        if (TicketToReturn is not null && TicketToReturn.Id == ticketId)
+            return Task.FromResult<Ticket?>(TicketToReturn);
 
         return Task.FromResult(Tickets.FirstOrDefault(x => x.Id == ticketId));
     }

@@ -9,12 +9,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddTicketingApplication(this IServiceCollection services)
     {
-        services.AddCustomDispatcher(Assembly.GetExecutingAssembly());
-
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
-
-        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
+         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         return services;
     }
 }

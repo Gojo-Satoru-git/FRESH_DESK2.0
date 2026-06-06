@@ -1,42 +1,70 @@
+using Adrenalin.Modules.KB.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Adrenalin.Modules.KnowledgeBase.Domain.Entities;
-using Adrenalin.Modules.Auth.Domain.Entities;
 
 namespace Adrenalin.Persistence.Configurations.KnowledgeBase;
 
-public class KbFolderConfiguration : IEntityTypeConfiguration<KbFolder>
+public sealed class KbFolderConfiguration : IEntityTypeConfiguration<KbFolder>
 {
     public void Configure(EntityTypeBuilder<KbFolder> builder)
     {
-        builder.HasKey(e => e.Id).HasName("kb_folders_pkey");
+        builder.ToTable("kb_folders", "kb");
 
-        builder.ToTable("kb_folders", "kb", tb => tb.HasComment("Self-referencing folder hierarchy. parent_id=NULL for root folders. Use WITH RECURSIVE CTE to retrieve full tree. Depth limit enforced in API layer."));
+        // ── Primary key (from BaseEntity) ─────────────────────────────────────
+        builder.HasKey(f => f.Id);
 
-        builder.HasIndex(e => e.ParentId, "idx_kb_folders_parent").HasFilter("(is_deleted = false)");
+        // ── Concurrency token — NOT present in schema, ignore ─────────────────
+        // kb.kb_folders has no row_version column.
+        builder.Ignore(f => f.RowVersion);
 
-        builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
+        // ── Columns ───────────────────────────────────────────────────────────
+        builder.Property(f => f.Name)
+            .IsRequired()
+            .HasMaxLength(150)
+            .HasColumnName("name");
 
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
+        builder.Property(f => f.ParentId)
+            .HasColumnName("parent_id");
 
-        builder.Property(e => e.CreatedBy).HasColumnName("created_by");
+        builder.Property(f => f.DisplayOrder)
+            .HasColumnName("display_order")
+            .HasDefaultValue(0);
 
-        builder.Property(e => e.DisplayOrder).HasColumnName("display_order");
+        builder.Property(f => f.IsDeleted)
+            .HasColumnName("is_deleted")
+            .HasDefaultValue(false);
 
-        builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+        builder.Property(f => f.CreatedBy)
+            .HasColumnName("created_by");
 
-        builder.Property(e => e.Name).HasMaxLength(150).HasColumnName("name");
+        builder.Property(f => f.UpdatedBy)
+            .HasColumnName("updated_by");
 
-        builder.Property(e => e.ParentId).HasColumnName("parent_id");
+        builder.Property(f => f.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()");
 
-        builder.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").HasColumnName("updated_at");
+        builder.Property(f => f.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()");
 
-        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        // ── Self-referencing relationship ─────────────────────────────────────
+        builder.HasOne(f => f.Parent)
+            .WithMany()
+            .HasForeignKey(f => f.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_folders_created_by_fkey");
+        // ── Indexes ───────────────────────────────────────────────────────────
+        builder.HasIndex(f => f.ParentId)
+            .HasDatabaseName("ix_kb_folders_parent_id");
 
-        builder.HasOne(d => d.Parent).WithMany(p => p.InverseParent).HasForeignKey(d => d.ParentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_folders_parent_id_fkey");
+        builder.HasIndex(f => new { f.ParentId, f.DisplayOrder })
+            .HasDatabaseName("ix_kb_folders_parent_display_order");
 
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.UpdatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_folders_updated_by_fkey");
+        // ── Global query filter — hide soft-deleted rows by default ───────────
+        builder.HasQueryFilter(f => !f.IsDeleted);
+
+        // ── Ignore domain events (not persisted) ──────────────────────────────
+        builder.Ignore(f => f.DomainEvents);
     }
 }

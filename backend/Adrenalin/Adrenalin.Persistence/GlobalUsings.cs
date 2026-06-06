@@ -9,4 +9,4 @@ global using Adrenalin.Modules.Gamification.Domain.Entities;
 global using Adrenalin.Modules.Gamification.Domain.Enums;
 global using Adrenalin.Modules.AI.Domain.Entities;
 global using Adrenalin.Modules.Notification.Domain.Entities;
-global using Adrenalin.Modules.KnowledgeBase.Domain.Entities;
+global using Adrenalin.Modules.KB.Domain.Entities;
