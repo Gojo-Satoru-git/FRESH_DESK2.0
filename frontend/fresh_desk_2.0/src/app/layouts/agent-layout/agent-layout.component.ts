@@ -2,11 +2,12 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'; // <-- Added RouterLink & RouterLinkActive
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
 import { SidebarLinkComponent } from './components/sidebar-link.component';
+import { CreateTicketModalComponent } from '../../features/tickets/components/create-ticket-modal.component';
 
 @Component({
   selector: 'app-agent-layout',
   standalone: true,
-  imports: [RouterOutlet, ThemeSwitcherComponent, SidebarLinkComponent],
+  imports: [RouterOutlet, ThemeSwitcherComponent, SidebarLinkComponent, CreateTicketModalComponent],
   template: `
     <div
       class="h-screen w-full flex flex-col bg-background text-text-main overflow-hidden transition-colors duration-300"
@@ -133,7 +134,22 @@ import { SidebarLinkComponent } from './components/sidebar-link.component';
               <h1 class="text-lg font-semibold">Dashboard</h1>
             </div>
 
-            <div class="flex items-center gap-5">
+            <div class="flex items-center gap-4 lg:gap-5">
+              <button
+                (click)="isCreateTicketModalOpen.set(true)"
+                class="hidden sm:flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
+                New Ticket
+              </button>
+
               <div class="relative hidden md:block w-64">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg
@@ -180,6 +196,11 @@ import { SidebarLinkComponent } from './components/sidebar-link.component';
               </button>
             </div>
           </header>
+          <app-create-ticket-modal
+            [isOpen]="isCreateTicketModalOpen()"
+            (closeModal)="isCreateTicketModalOpen.set(false)"
+          >
+          </app-create-ticket-modal>
 
           <div class="flex-1 overflow-y-auto p-6 bg-background">
             <router-outlet></router-outlet>
@@ -191,6 +212,7 @@ import { SidebarLinkComponent } from './components/sidebar-link.component';
 })
 export class AgentLayoutComponent {
   showActivationAlert = signal<boolean>(true);
+  isCreateTicketModalOpen = signal<boolean>(false);
 
   dismissAlert() {
     this.showActivationAlert.set(false);
