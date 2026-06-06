@@ -10,8 +10,8 @@ public sealed class KbFolderConfiguration : IEntityTypeConfiguration<KbFolder>
     {
         builder.ToTable("kb_folders", "kb");
 
-        // ── Primary key (from BaseEntity) ─────────────────────────────────────
         builder.HasKey(f => f.Id);
+        builder.Property(f => f.Id).HasColumnName("id");
 
         // ── Concurrency token — NOT present in schema, ignore ─────────────────
         // kb.kb_folders has no row_version column.

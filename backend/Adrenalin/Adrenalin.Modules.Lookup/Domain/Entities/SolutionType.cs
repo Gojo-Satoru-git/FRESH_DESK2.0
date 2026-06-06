@@ -4,9 +4,9 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public partial class SolutionType : ActiveSoftDeleteEntity
+public sealed class SolutionType : ActiveSoftDeleteEntity
 {
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = null!;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = null!;
 }

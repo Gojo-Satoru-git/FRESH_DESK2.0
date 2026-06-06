@@ -10,9 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Adrenalin.Persistence.DependencyInjection;
 
 /// <summary>
-/// Registers all KB repositories, validators, and services.
+/// Registers KB application-layer services (file storage, validators, app services).
+/// Repository registrations are handled by AddPersistence() in DependencyInjection.cs.
 /// Call builder.Services.AddKbModule() from Program.cs.
-/// MediatR handlers are picked up by MediatR's assembly scan automatically.
 /// </summary>
 public static class KbServiceRegistration
 {

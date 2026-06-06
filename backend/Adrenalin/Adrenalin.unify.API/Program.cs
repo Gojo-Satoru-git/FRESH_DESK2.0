@@ -1,47 +1,79 @@
-using Adrenalin.Modules.KB.Application.Commands;
+using Adrenalin.Infrastructure.Authentication;
+using Adrenalin.Infrastructure.Storage;
+using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.Modules.Ticketing.Application;
+using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Persistence;
 using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.DependencyInjection;
+using Adrenalin.SharedKernel.Behaviors;
+using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
-using Adrenalin.unify.API.Pipeline;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Npgsql;
 using Scalar.AspNetCore;
-using System.Reflection;
-
-using Adrenalin.Infrastructure.Authentication;
-using Adrenalin.Modules.Auth.Application.Commands;
-using Adrenalin.Modules.Auth.Domain.Interfaces;
-using Adrenalin.Persistence.Repositories;
-using FluentValidation.AspNetCore;
-using Adrenalin.Modules.Auth.Application.Validators;
-using Adrenalin.SharedKernel.Behaviors;
-using Adrenalin.unify.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── 1. DbContext ──────────────────────────────────────────────────────────────
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsql => npgsql.MigrationsAssembly("Adrenalin.Persistence")));
+// ── 1. Database — single AdrenalinDbContext ───────────────────────────────────
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
+dataSourceBuilder.EnableUnmappedTypes();
+var dataSource = dataSourceBuilder.Build();
 
-// ── 2. SharedKernel Dispatcher (replaces MediatR) ─────────────────────────────
-builder.Services.AddCustomDispatcher(typeof(CreateKbArticleCommand).Assembly);
+builder.Services.AddDbContext<AdrenalinDbContext>(options =>
+    options.UseNpgsql(dataSource,
+        npgsql => npgsql
+            .MigrationsAssembly("Adrenalin.Persistence")
+            .MapEnum<TicketStatus>("ticket_status", "ticket")));
 
-// ── 3. FluentValidation pipeline ──────────────────────────────────────────────
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehaviour<,>));
+// ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
+builder.Services.AddCustomDispatcher(
+    typeof(Adrenalin.Modules.Auth.Application.Commands.RegisterUserCommand).Assembly,
+    typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
+    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
 
-// ── 4. KB module ──────────────────────────────────────────────────────────────
+// ── 3. Pipeline behaviors (order matters — outermost registered first) ────────
+// Validation runs first, then UnitOfWork commits on success
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+
+// ── 4. FluentValidation — scan all validator assemblies ──────────────────────
+builder.Services.AddValidatorsFromAssembly(
+    typeof(Adrenalin.Modules.Auth.Application.Validators.RegisterUserValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(
+    typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly);
+builder.Services.AddValidatorsFromAssembly(
+    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
+
+// ── 5. All repositories — single extension ───────────────────────────────────
+builder.Services.AddPersistence();
+
+// ── 6. Module application layer registrations ────────────────────────────────
+builder.Services.AddTicketingApplication();
 builder.Services.AddKbModule();
 
-// ── 5. Controllers + OpenAPI (Scalar — compatible with .NET 10) ───────────────
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+// ── 7. Auth infrastructure ───────────────────────────────────────────────────
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+// ── 8. Shared infrastructure ─────────────────────────────────────────────────
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.CurrentUserService>();
+
+// ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(
+        new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
+builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ── 10. Auth/authz ───────────────────────────────────────────────────────────
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization(options =>
 {
@@ -50,70 +82,54 @@ builder.Services.AddAuthorization(options =>
         .Build();
     options.FallbackPolicy = null;
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
-
-// builder.Services.AddDbContext<AdrenalinDbContext>(options =>
-// {
-//     options.UseNpgsql(
-//         builder.Configuration.GetConnectionString("DefaultConnection"));
-// });
-builder.Services.AddCustomDispatcher(
-    typeof(RegisterUserCommand).Assembly);
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>),typeof(ValidationBehavior<,>));
-builder.Services.AddScoped<IUserRepository,UserRepository>();
-builder.Services.AddScoped<IPasswordHasher,PasswordHasher>();
+// ── 11. Exception handling — single handler via IExceptionHandler ─────────────
+builder.Services.AddExceptionHandler<Adrenalin.unify.API.Infrastructure.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// ── 6. Middleware ─────────────────────────────────────────────────────────────
+if (args.Contains("--seed"))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AdrenalinDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await Adrenalin.Persistence.Seed.DbSeeder.SeedAsync(context, hasher);
+    }
+    return;
+}
+
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // Scalar UI at /scalar/v1
-    app.MapScalarApiReference();
+    app.MapScalarApiReference();   // /scalar/v1
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(o =>
+    {
+        o.SwaggerEndpoint("/openapi/v1.json", "Adrenalin Unify API v1");
+        o.RoutePrefix = "swagger";
+    });
 }
-
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
 app.UseAuthorization();
 
-var kbStoragePath = builder.Configuration["KbStorage:BasePath"];
+// Static files for KB attachments
+var kbStoragePath = builder.Configuration["KbStorage:BasePath"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "uploads", "kb-attachments");
+
+if (!Directory.Exists(kbStoragePath))
+    Directory.CreateDirectory(kbStoragePath);
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(kbStoragePath!),
+    FileProvider = new PhysicalFileProvider(kbStoragePath),
     RequestPath = "/kb-attachments"
 });
 
-
-try
-{
-    app.MapControllers();
-}
-catch (ReflectionTypeLoadException ex)
-{
-    Console.WriteLine("ReflectionTypeLoadException: " + ex.Message);
-    Console.WriteLine("Types that were loaded (null for failed):");
-    foreach (var t in ex.Types)
-    {
-        Console.WriteLine(t?.FullName ?? "<null>");
-    }
-    Console.WriteLine("Loader exceptions:");
-    foreach (var le in ex.LoaderExceptions)
-    {
-        Console.WriteLine(le.GetType().FullName + ": " + le.Message);
-        Console.WriteLine(le.ToString());
-    }
-    // rethrow so normal behavior remains
-    throw;
-}
+app.MapControllers();
 app.Run();
-    

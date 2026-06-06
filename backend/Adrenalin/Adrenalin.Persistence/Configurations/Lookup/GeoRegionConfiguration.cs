@@ -41,5 +41,7 @@ public class GeoRegionConfiguration : IEntityTypeConfiguration<GeoRegion>
             .HasMaxLength(20)
             .HasDefaultValueSql("'Mon-Fri'::character varying")
             .HasColumnName("working_days");
+
+        builder.Ignore(e => e.RowVersion);
     }
 }

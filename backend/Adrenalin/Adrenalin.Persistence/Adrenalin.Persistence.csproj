@@ -1,9 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
-	<ProjectReference Include="..\Adrenalin.Infrastructure\Adrenalin.Infrastructure.csproj" />
-	<ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
+    <ProjectReference Include="..\Adrenalin.Infrastructure\Adrenalin.Infrastructure.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Company\Adrenalin.Modules.Company.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Ticketing\Adrenalin.Modules.Ticketing.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Workflow\Adrenalin.Modules.Workflow.csproj" />
@@ -12,6 +18,18 @@
     <ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
     <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Gamification\Adrenalin.Modules.Gamification.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,29 +40,10 @@
     <Folder Include="Configurations\Notification\" />
     <Folder Include="Configurations\SLA\" />
     <Folder Include="Configurations\Workflow\" />
-    <Folder Include="Configurations\Ticketing\" />
     <Folder Include="Context\" />
     <Folder Include="Interceptors\" />
     <Folder Include="Migrations\" />
     <Folder Include="Seed\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
-	</ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 </Project>

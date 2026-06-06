@@ -59,5 +59,7 @@ public class ProductVersionConfiguration : IEntityTypeConfiguration<ProductVersi
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("fk_product_versions_updated_by");
+
+        builder.Ignore(e => e.RowVersion);
     }
 }

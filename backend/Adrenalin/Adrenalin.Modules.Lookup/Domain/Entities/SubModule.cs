@@ -3,19 +3,19 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Lookup.Domain.Entities;
 
-public partial class SubModule : ActiveSoftDeleteEntity
+public sealed class SubModule : ActiveSoftDeleteEntity
 {
-    public Guid ModuleId { get; set; }
+    public Guid ModuleId { get; private set; }
 
-    public string Code { get; set; } = null!;
+    public string Code { get; private set; } = null!;
 
-    public string Label { get; set; } = null!;
+    public string Label { get; private set; } = null!;
 
-    public string? Description { get; set; }
+    public string? Description { get; private set; }
 
-    public bool RequiresDualConfirm { get; set; }
+    public bool RequiresDualConfirm { get; private set; }
 
-    public bool RequiresComplianceReview { get; set; }
+    public bool RequiresComplianceReview { get; private set; }
 
-    public virtual Module Module { get; set; } = null!;
+    public Module Module { get; private set; } = null!;
 }

@@ -85,7 +85,7 @@ public sealed class KbFoldersController : ControllerBase
         Guid id, [FromBody] RenameFolderRequest req, CancellationToken ct)
     {
         var actorId = GetActorId();
-        //if (!actorId.HasValue) return Unauthorized();
+        if (!actorId.HasValue) return Unauthorized();
 
         var result = await _sender.Send(
             new RenameKbFolderCommand(id, req.NewName, actorId.Value), ct);

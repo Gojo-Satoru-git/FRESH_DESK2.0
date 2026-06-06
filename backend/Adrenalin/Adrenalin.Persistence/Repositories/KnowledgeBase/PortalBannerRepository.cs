@@ -7,9 +7,9 @@ namespace Adrenalin.Persistence.Repositories.KnowledgeBase;
 
 public sealed class PortalBannerRepository : IPortalBannerRepository
 {
-    private readonly AppDbContext _ctx;
+    private readonly AdrenalinDbContext _ctx;
 
-    public PortalBannerRepository(AppDbContext ctx) => _ctx = ctx;
+    public PortalBannerRepository(AdrenalinDbContext ctx) => _ctx = ctx;
 
     public async Task<PortalBanner?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _ctx.PortalBanners

@@ -33,5 +33,7 @@ public class SolutionTypeConfiguration : IEntityTypeConfiguration<SolutionType>
         builder.Property(e => e.Label)
             .HasMaxLength(100)
             .HasColumnName("label");
+
+        builder.Ignore(e => e.RowVersion);
     }
 }

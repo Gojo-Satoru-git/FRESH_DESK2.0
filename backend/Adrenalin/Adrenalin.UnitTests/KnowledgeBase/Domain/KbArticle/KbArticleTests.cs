@@ -298,7 +298,8 @@ public sealed class KbArticleTests
             ConfidenceThreshold.Create(0.8m), actor);
 
         Assert.True(a.AutoResolve);
-        Assert.Equal(["login", "password"], a.Keywords);
+        Assert.NotNull(a.Keywords);
+        Assert.Equal(["login", "password"], a.Keywords!);
         Assert.Equal("reset your password", a.ResolutionText); // trimmed
         Assert.Equal(0.8m, a.ConfidenceThresholdValue);
         Assert.Equal(actor, a.UpdatedBy);

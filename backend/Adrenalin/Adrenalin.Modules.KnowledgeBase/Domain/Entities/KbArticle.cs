@@ -208,6 +208,7 @@ public sealed class KbArticle : SoftDeleteEntity
     }
 
     public void ClearDomainEvents() => _domainEvents.Clear();
+
     private void EnsureNotDeleted()
     {
         if (IsDeleted) throw new InvalidOperationException("Cannot modify a deleted article.");

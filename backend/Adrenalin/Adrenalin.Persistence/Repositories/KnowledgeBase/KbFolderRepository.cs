@@ -7,9 +7,9 @@ namespace Adrenalin.Persistence.Repositories.KnowledgeBase;
 
 public sealed class KbFolderRepository : IKbFolderRepository
 {
-    private readonly AppDbContext _ctx;
+    private readonly AdrenalinDbContext _ctx;
 
-    public KbFolderRepository(AppDbContext ctx) => _ctx = ctx;
+    public KbFolderRepository(AdrenalinDbContext ctx) => _ctx = ctx;
 
     // ── Queries ───────────────────────────────────────────────────────────────
 

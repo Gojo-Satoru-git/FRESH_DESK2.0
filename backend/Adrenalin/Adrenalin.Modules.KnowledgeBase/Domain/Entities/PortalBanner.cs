@@ -73,11 +73,13 @@ public sealed class PortalBanner : BaseEntity
         if (from.HasValue && to.HasValue && to.Value <= from.Value)
             throw new ArgumentException("active_to must be after active_from.");
     }
+
     private static void ValidateTitle(string t)
     {
         if (string.IsNullOrWhiteSpace(t)) throw new ArgumentException("Banner title cannot be blank.");
         if (t.Length > 200) throw new ArgumentException("Banner title cannot exceed 200 characters.");
     }
+
     private static void ValidateMessage(string m)
     {
         if (string.IsNullOrWhiteSpace(m)) throw new ArgumentException("Banner message cannot be blank.");

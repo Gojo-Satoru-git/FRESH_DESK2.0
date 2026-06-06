@@ -85,5 +85,7 @@ public class SubModuleConfiguration : IEntityTypeConfiguration<SubModule>
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("fk_sub_modules_updated_by");
+
+        builder.Ignore(e => e.RowVersion);
     }
 }
