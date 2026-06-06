@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
 	<ProjectReference Include="..\Adrenalin.Modules.KnowledgeBase\Adrenalin.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +22,9 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
 	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

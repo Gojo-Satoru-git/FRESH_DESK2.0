@@ -9,6 +9,14 @@ using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
 using System.Reflection;
 
+using Adrenalin.Infrastructure.Authentication;
+using Adrenalin.Modules.Auth.Application.Commands;
+using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.Persistence.Repositories;
+using FluentValidation.AspNetCore;
+using Adrenalin.Modules.Auth.Application.Validators;
+using Adrenalin.SharedKernel.Behaviors;
+using Adrenalin.unify.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +50,22 @@ builder.Services.AddAuthorization(options =>
         .Build();
     options.FallbackPolicy = null;
 });
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+
+// builder.Services.AddDbContext<AdrenalinDbContext>(options =>
+// {
+//     options.UseNpgsql(
+//         builder.Configuration.GetConnectionString("DefaultConnection"));
+// });
+builder.Services.AddCustomDispatcher(
+    typeof(RegisterUserCommand).Assembly);
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>),typeof(ValidationBehavior<,>));
+builder.Services.AddScoped<IUserRepository,UserRepository>();
+builder.Services.AddScoped<IPasswordHasher,PasswordHasher>();
+
 var app = builder.Build();
 
 // ── 6. Middleware ─────────────────────────────────────────────────────────────
@@ -54,8 +78,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseAuthorization();
 
 var kbStoragePath = builder.Configuration["KbStorage:BasePath"];
@@ -89,3 +116,4 @@ catch (ReflectionTypeLoadException ex)
     throw;
 }
 app.Run();
+    

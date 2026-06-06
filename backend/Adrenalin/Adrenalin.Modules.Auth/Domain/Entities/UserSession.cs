@@ -1,3 +1,4 @@
+﻿using System.Net;
 using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities
@@ -10,7 +11,7 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
 
         public string? DeviceName { get; private set; }
 
-        public string? IpAddress { get; private set; }
+        public IPAddress? IpAddress { get; private set; }
 
         public string? GeoLocation { get; private set; }
 

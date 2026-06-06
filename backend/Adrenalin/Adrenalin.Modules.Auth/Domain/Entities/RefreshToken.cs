@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Domain.Enums;
 using Adrenalin.SharedKernel.Entities;
@@ -17,7 +18,7 @@ public sealed class RefreshToken : AuditableEntity
 
     public string? DeviceInfo { get; private set; }
 
-    public string? IpAddress { get; private set; }
+  public IPAddress? IpAddress { get; private set; }
 
     public DateTimeOffset IssuedAt { get; private set; }
 

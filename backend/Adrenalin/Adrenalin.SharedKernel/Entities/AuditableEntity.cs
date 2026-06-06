@@ -1,5 +1,6 @@
 namespace Adrenalin.SharedKernel.Entities;
 
+
 public abstract class AuditableEntity : BaseEntity
 {
     public DateTimeOffset CreatedAt { get; protected set; } = DateTimeOffset.UtcNow;
