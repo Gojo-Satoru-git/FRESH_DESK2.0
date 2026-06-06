@@ -4,11 +4,11 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using FluentValidation;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.SharedKernel.Behaviors
 {
-    public sealed class ValidationBehavior<TRequest,TResponse>:IPipelineBehavior<TRequest,TResponse> where TRequest:notnull
+    public sealed class ValidationBehavior<TRequest,TResponse>:IPipelineBehavior<TRequest,TResponse> where TRequest:IRequest<TResponse>
     {
         private readonly IEnumerable< IValidator<TRequest>> _validator;
         public ValidationBehavior(IEnumerable< IValidator<TRequest>> validators)

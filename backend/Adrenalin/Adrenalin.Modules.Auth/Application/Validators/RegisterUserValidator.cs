@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Application.Commands;
 using FluentValidation;
 using FluentValidation.Validators;
-
+using Adrenalin.SharedKernel.Mediator;
 namespace Adrenalin.Modules.Auth.Application.Validators
 {
     public class RegisterUserValidator:AbstractValidator<RegisterUserCommand>

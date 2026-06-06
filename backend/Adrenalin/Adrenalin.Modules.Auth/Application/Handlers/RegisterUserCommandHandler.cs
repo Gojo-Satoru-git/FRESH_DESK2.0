@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
-using MediatR;
+using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.Auth.Application.Handlers
 {
