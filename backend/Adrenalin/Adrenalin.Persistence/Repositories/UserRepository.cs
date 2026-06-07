@@ -24,4 +24,28 @@ public sealed class UserRepository : IUserRepository
         await _db.AddAsync(user, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
+    public async Task<List<string>> GetUserRolesAsync(
+    Guid userId,
+    CancellationToken cancellationToken)
+{
+    return await _db.UserRoles
+        .Where(x => x.UserId == userId && !x.IsDeleted)
+        .Select(x => x.Role.Name)
+        .ToListAsync(cancellationToken);
+}
+public async Task<List<string>> GetUserPermissionsAsync(
+    Guid userId,
+    CancellationToken cancellationToken)
+{
+    return await _db.UserRoles
+        .Where(x => x.UserId == userId && !x.IsDeleted)
+        .SelectMany(x => x.Role.RolePermissions)
+        .Where(x => !x.IsDeleted)
+        .Select(x =>
+            x.Permission.Resource +
+            ":" +
+            x.Permission.Action)
+        .Distinct()
+        .ToListAsync(cancellationToken);
+}
 }

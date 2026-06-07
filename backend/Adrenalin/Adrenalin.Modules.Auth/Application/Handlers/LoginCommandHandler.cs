@@ -1,25 +1,30 @@
 using Adrenalin.Modules.Auth.Application.Commands;
+using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.Auth.Application.Handlers;
 
 public sealed class LoginCommandHandler
-    : IRequestHandler<LoginCommand, Guid>
+    : IRequestHandler<LoginCommand, LoginResponseDTO>
 {
     private readonly IUserRepository _users;
 
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IJwtProvider _jwtProvider;
 
     public LoginCommandHandler(
         IUserRepository users,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IJwtProvider jwtProvider)
     {
         _users = users;
         _passwordHasher = passwordHasher;
+         _jwtProvider = jwtProvider;
     }
 
-    public async Task<Guid> Handle(
+    public async Task<LoginResponseDTO> Handle(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
@@ -44,7 +49,24 @@ public sealed class LoginCommandHandler
             throw new Exception(
                 "Invalid email or password");
         }
+         var roles =
+        await _users.GetUserRolesAsync(
+            user.Id,
+            cancellationToken);
+         var permissions =
+        await _users.GetUserPermissionsAsync(
+            user.Id,
+            cancellationToken);
 
-        return user.Id;
+        
+         var token =
+        _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,roles,
+            permissions);
+
+        return new LoginResponseDTO(
+        token,
+        DateTime.UtcNow.AddHours(1));
     }
 }
