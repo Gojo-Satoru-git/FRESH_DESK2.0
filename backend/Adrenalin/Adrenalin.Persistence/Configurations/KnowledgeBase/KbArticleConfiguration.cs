@@ -27,12 +27,11 @@ public sealed class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
             .HasColumnType("text");
 
         builder.Property(a => a.ArticleType)
-            .IsRequired()
-            .HasColumnName("article_type")
-            .HasConversion(
-                v => v.ToString().ToSnakeCase(),
-                v => Enum.Parse<ArticleType>(v, ignoreCase: true));
-
+                .IsRequired()
+                .HasColumnName("article_type")
+                .HasConversion(
+                    v => v.ToString().ToSnakeCase(),
+                    v => ParseArticleType(v));
         builder.Property(a => a.Status)
             .IsRequired()
             .HasColumnName("status")
@@ -129,6 +128,15 @@ public sealed class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
         // ── Global query filter ───────────────────────────────────────────────
         builder.HasQueryFilter(a => !a.IsDeleted);
     }
+
+    private static ArticleType ParseArticleType(string value)
+    {
+        // "release_note" → "ReleaseNote", "faq" → "Faq", etc.
+        var pascal = string.Concat(
+            value.Split('_')
+                 .Select(w => char.ToUpper(w[0]) + w.Substring(1)));
+        return Enum.Parse<ArticleType>(pascal, ignoreCase: true);
+    }
 }
 
 /// <summary>
@@ -145,3 +153,5 @@ internal static class StringExtensions
             .ToLower();
     }
 }
+
+
