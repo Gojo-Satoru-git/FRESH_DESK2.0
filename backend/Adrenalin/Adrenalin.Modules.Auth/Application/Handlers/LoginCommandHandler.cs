@@ -1,6 +1,10 @@
+
+using System.Net;
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Application.DTOs;
+using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.SharedKernel.Exceptions;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 
@@ -13,15 +17,25 @@ public sealed class LoginCommandHandler
 
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtProvider _jwtProvider;
+    private readonly IRefreshTokenRepository _refreshTokens;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+
+    private readonly ITokenHasher _tokenHasher;
 
     public LoginCommandHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
-        IJwtProvider jwtProvider)
+        IJwtProvider jwtProvider,
+    IRefreshTokenRepository refreshTokens,
+    IRefreshTokenGenerator refreshTokenGenerator,
+    ITokenHasher tokenHasher)
     {
         _users = users;
         _passwordHasher = passwordHasher;
-         _jwtProvider = jwtProvider;
+        _jwtProvider = jwtProvider;
+        _refreshTokens = refreshTokens;
+        _refreshTokenGenerator = refreshTokenGenerator;
+        _tokenHasher = tokenHasher;
     }
 
     public async Task<LoginResponseDTO> Handle(
@@ -46,27 +60,49 @@ public sealed class LoginCommandHandler
 
         if (!isValid)
         {
-            throw new Exception(
-                "Invalid email or password");
+            throw new InvalidCredentialsException();
         }
-         var roles =
-        await _users.GetUserRolesAsync(
-            user.Id,
-            cancellationToken);
-         var permissions =
-        await _users.GetUserPermissionsAsync(
-            user.Id,
-            cancellationToken);
+        var roles =
+       await _users.GetUserRolesAsync(
+           user.Id,
+           cancellationToken);
+        var permissions =
+       await _users.GetUserPermissionsAsync(
+           user.Id,
+           cancellationToken);
+
+
+        var accessToken =
+       _jwtProvider.GenerateToken(
+           user.Id,
+           user.Email, roles,
+           permissions);
+        var refreshToken =
+     _refreshTokenGenerator.Generate();
+
+        var tokenHash =
+            _tokenHasher.Hash(refreshToken);
+        string? ipAddress = request.IpAddress;
 
         
-         var token =
-        _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,roles,
-            permissions);
+        var refreshTokenEntity = new RefreshToken(
+         user.Id,
+         tokenHash,
+         Guid.NewGuid(),                // familyId
+         DateTimeOffset.UtcNow.AddDays(7),
+          request.DeviceInfo,
+         ipAddress);
 
+        await _refreshTokens.AddAsync(
+        refreshTokenEntity,
+        cancellationToken);
+
+        await _refreshTokens.SaveChangesAsync(
+            cancellationToken);
         return new LoginResponseDTO(
-        token,
-        DateTime.UtcNow.AddHours(1));
+        accessToken,
+    refreshToken,
+    DateTime.UtcNow.AddMinutes(15),
+    DateTime.UtcNow.AddDays(7));
     }
 }

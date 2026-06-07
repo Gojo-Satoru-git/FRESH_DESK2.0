@@ -8,6 +8,8 @@ namespace Adrenalin.Modules.Auth.Application.DTOs
     public sealed record  LoginResponseDTO
     (
         string AccessToken,
-    DateTime ExpiresAt
+    string RefreshToken,
+    DateTime AccessTokenExpiresAt,
+    DateTime RefreshTokenExpiresAt
     );
 }

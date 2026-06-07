@@ -1,4 +1,5 @@
-using FluentValidation;
+using Adrenalin.SharedKernel.Exceptions;
+
 using System.Net;
 namespace Adrenalin.unify.API.Middlewares
 {
@@ -21,7 +22,7 @@ namespace Adrenalin.unify.API.Middlewares
         {
             await _next(context);
         }
-        catch (ValidationException ex)
+        catch (FluentValidation.ValidationException ex)
         {
             _logger.LogWarning(ex, "Validation error");
 
@@ -39,6 +40,19 @@ namespace Adrenalin.unify.API.Middlewares
                     })
                 });
         }
+        catch (InvalidCredentialsException ex)
+{
+    _logger.LogWarning(ex, "Invalid credentials");
+
+    context.Response.StatusCode =
+        (int)HttpStatusCode.Unauthorized;
+
+    await context.Response.WriteAsJsonAsync(
+        new
+        {
+            Error = ex.Message
+        });
+}
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");

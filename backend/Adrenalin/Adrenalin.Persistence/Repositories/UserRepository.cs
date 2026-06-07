@@ -48,4 +48,13 @@ public async Task<List<string>> GetUserPermissionsAsync(
         .Distinct()
         .ToListAsync(cancellationToken);
 }
+public async Task<User?> GetByIdAsync(
+    Guid userId,
+    CancellationToken cancellationToken)
+{
+    return await _db.Users
+        .FirstOrDefaultAsync(
+            x => x.Id == userId,
+            cancellationToken);
+}
 }
