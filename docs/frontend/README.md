@@ -1,96 +1,51 @@
 # Frontend Documentation
 
-## Quick Start
+Fresh Desk 2.0 is a **modern Angular 21 HR ticketing system** built with Tailwind CSS. This guide helps you understand the codebase, make changes, and extend features.
+
+## Quick Start (5 minutes)
 
 ```bash
 cd frontend/fresh_desk_2.0
 npm install
 npm start
-# Available at http://localhost:4200
+# Open http://localhost:4200
 ```
 
-## Project Structure
+**Tech Stack:** Angular 21 + Tailwind CSS v4 + TypeScript 5.9 + RxJS
 
-```
-src/
-├── main.ts                    # Entry point
-├── app.routes.ts              # Routes
-├── styles.css                 # Global styles & theme
-├── app/
-│   ├── features/auth/         # Login page
-│   ├── core/theme/            # Theme service & switcher
-│   └── shared/                # Shared components
-├── environments/
-│   ├── environment.ts         # Production
-│   └── environment.development.ts  # Development (localhost:5001)
-└── assets/                    # Static files
-```
+## What This App Does
 
-## Key Features
+- 🔐 **Auth Module** - Login/signup with JWT authentication
+- 📊 **Agent Dashboard** - Agents view tickets, contacts, and manage workload
+- 👥 **Customer Portal** - Customers raise tickets and view history
+- 🎟️ **Ticket System** - Full ticket lifecycle (create, assign, resolve)
+- 📚 **Knowledge Base** - Self-service articles for customers
+- 📈 **Reports** - Analytics dashboards for managers
+- ⚙️ **Admin Panel** - System configuration and settings
 
-### 1. Login Page
-- Email/password validation
-- Real-time error messages
-- Theme switcher button (top-right)
-- Location: `src/app/features/auth/login.component.ts`
-
-### 2. Theme System
-- Light/dark mode toggle
-- Persists to localStorage
-- CSS variables for colors
-- Service: `src/app/core/theme/theme.service.ts`
-
-### 3. Environment Config
-- **Dev**: `https://localhost:5001` (local .NET API)
-- **Prod**: `https://api.adrenalin-support.com`
-- Auto-selected by Angular CLI based on build mode
-
-## Available Commands
+## Common Commands
 
 ```bash
-npm start              # Dev server (localhost:4200)
-npm run build          # Production build
-npm run watch          # Continuous build
-npm test               # Run tests
+npm start      # Dev server with hot reload (http://localhost:4200)
+npm run build  # Production build
+npm run watch  # Continuous compilation
+npm test       # Run unit tests
 ```
 
-## Environment Setup
+## Architecture Highlights
 
-Auto-configured based on build mode:
-- `npm start` → uses `environment.development.ts`
-- `npm build` → uses `environment.ts`
+**Why we chose this structure:**
+- **Lazy-loaded features** → Fast initial load, load modules on demand
+- **Standalone components** → No NgModule boilerplate, cleaner code
+- **Separate layouts** → Different UI shells for agents vs customers
+- **Service-based auth** → JWT tokens stored, automatic API injection via interceptor
 
-## Styling
+## Quick Navigation
 
-Using **Tailwind CSS v4** with custom colors:
-- `bg-background` - Page background
-- `text-text` - Main text
-- `text-text-muted` - Secondary text
-- `bg-primary` - Primary color (buttons)
-
-Colors defined in `src/styles.css` and change automatically in dark mode.
-
-## Troubleshooting
-
-**Port 4200 in use?**
-```bash
-netstat -ano | findstr :4200
-taskkill /PID <PID> /F
-```
-
-**Build errors?**
-```bash
-npm ci
-npm start
-```
-
-**API not connecting?**
-- Verify .NET backend running on `https://localhost:5001`
-- Check Network tab in DevTools
-
-## Next Steps
-
-1. Add more routes in `app.routes.ts`
-2. Create components in `src/app/features/`
-3. Connect login to real backend API
-4. Add routing guards for authenticated routes
+| Page | Purpose | Route |
+|------|---------|-------|
+| Login | User authentication | `/login` |
+| Agent Dashboard | Main agent workspace | `/agent/dashboard` |
+| Tickets | Ticket management | `/agent/tickets` |
+| Customer Portal | Self-service area | `/customer/portal` |
+| Admin Panel | Settings & config | `/admin` |

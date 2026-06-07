@@ -1,102 +1,248 @@
-# Theme System & Styling
+# Theme System
 
-## Overview
-Fresh Desk 2.0 uses a modern theming system built on Tailwind CSS v4 with custom CSS variables, Signals for state management, and localStorage persistence. The application supports light and dark themes that switch dynamically.
+## Why Dark Mode?
 
-## Architecture
+Users spend 8+ hours a day in Fresh Desk. Dark mode at night:
+- 😴 Reduces eye strain (less blue light)
+- 🔋 Saves battery on OLED screens (~15% power savings)
+- 🎨 Looks professional
+- ♿ Helps dyslexic/low-vision users
 
-### Technology Stack
-- **Tailwind CSS v4**: Utility-first CSS framework
-- **PostCSS**: CSS processing with Tailwind directives
-- **CSS Variables**: Dynamic theme color management
-- **Angular Signals**: Reactive state management
-- **localStorage**: Theme preference persistence
+Fresh Desk auto-detects your system preference and switches when you toggle the theme button.
 
-### File Structure
-```
-src/
-├── styles.css                 # Global styles & theme variables
-├── tailwind.config.js         # Tailwind configuration
-├── app/
-│   └── core/
-│       └── theme/
-│           ├── theme.service.ts
-│           └── theme-switcher.component.ts
-```
+## How It Works (Simple Version)
 
-## CSS Variables & Color Palette
-
-### Variable Definitions (`src/styles.css`)
-
-#### Light Theme (Default)
+### 1. Light Mode (Default)
 ```css
 :root {
-  --color-primary: rgb(37 99 235);           /* Blue 600 */
-  --color-primary-hover: rgb(29 78 216);     /* Blue 700 */
-  --color-surface: rgb(255 255 255);         /* White */
-  --color-background: rgb(249 250 251);      /* Gray 50 */
-  --color-text: rgb(17 24 39);               /* Gray 900 */
-  --color-text-muted: rgb(107 114 128);      /* Gray 500 */
+  --color-primary: rgb(37 99 235);      /* Blue */
+  --color-background: rgb(249 250 251); /* Light gray */
+  --color-text: rgb(17 24 39);          /* Dark gray (for contrast) */
 }
 ```
 
-#### Dark Theme
+### 2. Dark Mode
 ```css
 .dark {
-  --color-primary: rgb(59 130 246);          /* Blue 500 */
-  --color-primary-hover: rgb(96 165 250);    /* Blue 400 */
-  --color-surface: rgb(31 41 55);            /* Gray 800 */
-  --color-background: rgb(17 24 39);         /* Gray 900 */
-  --color-text: rgb(243 244 246);            /* Gray 100 */
-  --color-text-muted: rgb(156 163 175);      /* Gray 400 */
+  --color-primary: rgb(59 130 246);     /* Lighter blue */
+  --color-background: rgb(17 24 39);    /* Almost black */
+  --color-text: rgb(243 244 246);       /* Light gray (for contrast) */
 }
 ```
 
-### Color Meanings
-| Variable | Purpose | Light | Dark |
-|----------|---------|-------|------|
-| `--color-primary` | Main action color | Blue 600 | Blue 500 |
-| `--color-surface` | Cards, modals | White | Gray 800 |
-| `--color-background` | Page background | Gray 50 | Gray 900 |
-| `--color-text` | Main text | Gray 900 | Gray 100 |
-| `--color-text-muted` | Secondary text | Gray 500 | Gray 400 |
+### 3. The Toggle
+User clicks theme button → JavaScript adds/removes `.dark` class on `<html>` → CSS variables change → All colors update instantly.
 
-## Tailwind Configuration
+**Why CSS variables?** 
+- Single source of truth (one place to change blue)
+- No need to update every component
+- Fast (no JavaScript re-rendering)
+- Easy to debug (open DevTools → Styles tab)
 
-### Configuration File (`tailwind.config.js`)
-```javascript
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./src/**/*.{html,ts}",
-  ],
-  darkMode: 'class', // Uses .dark class on html element
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
-          hover: 'rgb(var(--color-primary-hover) / <alpha-value>)',
-        },
-        surface: 'rgb(var(--color-surface) / <alpha-value>)',
-        background: 'rgb(var(--color-background) / <alpha-value>)',
-        text: {
-          DEFAULT: 'rgb(var(--color-text) / <alpha-value>)',
-          muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
-        }
-      }
-    },
-  },
-  plugins: [],
-}
+## File Structure
+
+```
+src/
+├── styles.css                 ← All color variables & Tailwind setup
+├── app/
+│   └── core/theme/
+│       ├── theme.service.ts   ← Logic (get/set theme, detect OS preference)
+│       └── theme-switcher.component.ts  ← Toggle button (visible in corner)
 ```
 
-### Dark Mode Configuration
-- **Mode**: `'class'` - Uses `.dark` class selector
-- **Activation**: Add `dark` class to `<html>` element
-- **Child Elements**: All children inherit dark theme styles
+## Color Palette
+
+### Light Theme Colors
+| Name | Purpose | Color |
+|------|---------|-------|
+| Primary | Buttons, links | Blue 600 |
+| Surface | Cards, modals | White |
+| Background | Page background | Gray 50 (light) |
+| Text | Main text | Gray 900 (dark) |
+| Text Muted | Secondary text | Gray 500 |
+
+### Dark Theme Colors (Same Names, Different Values)
+| Name | Purpose | Color |
+|------|---------|-------|
+| Primary | Buttons, links | Blue 500 (lighter) |
+| Surface | Cards, modals | Gray 800 (dark) |
+| Background | Page background | Gray 900 (almost black) |
+| Text | Main text | Gray 100 (light) |
+| Text Muted | Secondary text | Gray 400 |
+
+**Why different shades?** Contrast. In light mode, dark text on white is readable. In dark mode, light text on dark gray is readable.
+
+## Using Colors in Components
+
+### Tailwind Utility Classes
+```html
+<!-- Easy way: Use Tailwind classes -->
+<button class="bg-primary text-white">Login</button>
+<div class="bg-surface text-text">Card content</div>
+<p class="text-text-muted">Optional field</p>
+```
+
+Tailwind automatically swaps colors based on dark mode.
+
+### Direct CSS
+```css
+.my-card {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+```
 
 ## Theme Service
+
+Located in `src/app/core/theme/theme.service.ts`
+
+### Check Current Theme
+```typescript
+constructor(private theme: ThemeService) {}
+
+isDarkMode() {
+  return this.theme.isDarkMode();  // true or false
+}
+```
+
+### Toggle Theme
+```typescript
+toggleTheme() {
+  this.theme.toggle();  // Switches dark ↔ light
+}
+```
+
+### Detect System Preference
+```typescript
+ngOnInit() {
+  this.theme.initializeFromSystemPreference(); // Dark if OS is dark
+}
+```
+
+## Persistence
+
+### How It Persists
+1. User toggles theme
+2. Service saves to `localStorage.setItem('theme', 'dark')`
+3. On page reload, service reads localStorage
+4. Applies theme immediately (no flash)
+
+**Result:** Users return tomorrow, their theme preference is remembered.
+
+## Customizing Colors
+
+### Change Primary Color (Blue → Purple)
+
+Edit `src/styles.css`:
+```css
+:root {
+  --color-primary: rgb(147 51 234);       /* Purple instead of Blue */
+  --color-primary-hover: rgb(126 34 206); /* Darker purple for hover */
+}
+```
+
+**Where will it change?**
+- Every button
+- Every link
+- Primary text
+- Anything using `.bg-primary` or `.text-primary`
+
+### Add a New Color
+
+```css
+:root {
+  --color-success: rgb(34 197 94);  /* Green */
+  --color-error: rgb(239 68 68);    /* Red */
+  --color-warning: rgb(217 119 6);  /* Orange */
+}
+
+.dark {
+  --color-success: rgb(74 222 128);  /* Lighter green */
+  --color-error: rgb(248 113 113);   /* Lighter red */
+  --color-warning: rgb(253 164 40);  /* Lighter orange */
+}
+```
+
+Then use in Tailwind config and components.
+
+## Theme Architecture
+
+### Why Signals Instead of RxJS?
+```typescript
+// Old way (RxJS Subject)
+themeChanged$ = new Subject<'light' | 'dark'>();
+
+// New way (Angular Signal)
+currentTheme = signal<'light' | 'dark'>('light');
+```
+
+**Why signals?** 
+- Cleaner syntax (no subscribe/unsubscribe)
+- Automatic change detection (faster)
+- Smaller bundle size
+- More modern Angular approach
+
+### Dark Mode Implementation
+
+#### Method 1: Class-Based (Current)
+```html
+<!-- Light mode -->
+<html>
+
+<!-- Dark mode -->
+<html class="dark">
+```
+
+CSS:
+```css
+:root { /* light colors */ }
+.dark { /* dark colors */ }
+```
+
+**Pros:** Works everywhere, CSS-based, fast
+
+**Cons:** Requires class management
+
+#### Method 2: CSS Media Query (Alternative)
+```css
+@media (prefers-color-scheme: dark) {
+  /* automatic dark mode */
+}
+```
+
+**Why we didn't use this:** Limited control, can't override user preference
+
+## Troubleshooting
+
+### Theme Not Saving
+- Check localStorage: Open DevTools → Application → Storage → localStorage
+- Look for key `theme`
+- If missing, theme service might not have loaded yet
+
+### Colors Look Wrong in Dark Mode
+1. Check CSS variable is defined in `.dark` block
+2. Verify Tailwind class uses the variable: `bg-primary`, not `bg-blue-600`
+3. Hard refresh browser: `Ctrl+Shift+R`
+
+### Flash of Wrong Color on Page Load
+This can happen if:
+- localStorage read is slow
+- Default colors conflict with system theme
+
+**Fix:** Add theme detection script in `src/index.html` before app loads.
+
+## Dark Mode Best Practices
+
+✅ **Do:**
+- Test both light & dark modes before merging
+- Use theme colors, not hardcoded colors
+- Ensure text contrast is readable (WCAG AA standard)
+
+❌ **Don't:**
+- Hardcode colors in components (`style="color: blue"`)
+- Use pure black on pure white (too harsh)
+- Forget to test on mobile (where dark mode is most useful)
 
 ### Service Implementation (`core/theme/theme.service.ts`)
 ```typescript
