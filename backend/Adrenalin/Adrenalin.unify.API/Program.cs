@@ -14,6 +14,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Npgsql;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,41 @@ builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly);
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
+
+var jwtSection =
+    builder.Configuration.GetSection("Jwt");
+
+builder.Services
+    .AddAuthentication(
+        JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer =
+                    jwtSection["Issuer"],
+
+                ValidAudience =
+                    jwtSection["Audience"],
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(
+                            jwtSection["SecretKey"]!))
+            };
+    });
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt"));
+
+builder.Services.AddScoped<
+    IJwtProvider,
+    JwtProvider>();
 
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
