@@ -6,7 +6,7 @@ import { CustomerHeaderComponent } from '../../features/customer-portal/customer
 @Component({
   selector: 'app-raise-ticket',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CustomerHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './raise-ticket.component.html',
 })
 export class RaiseTicketComponent implements OnInit {

@@ -1,5 +1,6 @@
 using Adrenalin.Infrastructure.Authentication;
 using Adrenalin.Infrastructure.Storage;
+using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Application;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
@@ -9,9 +10,14 @@ using Adrenalin.Persistence.DependencyInjection;
 using Adrenalin.SharedKernel.Behaviors;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.unify.API.Authorization;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -54,6 +60,9 @@ builder.Services.AddValidatorsFromAssembly(
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
 
+builder.Services.AddValidatorsFromAssembly(
+    typeof(Adrenalin.Modules.Auth.Application.Validators.CreateRoleCommandValidator).Assembly);
+
 var jwtSection =
     builder.Configuration.GetSection("Jwt");
 
@@ -79,7 +88,8 @@ builder.Services
                 IssuerSigningKey =
                     new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(
-                            jwtSection["SecretKey"]!))
+                            jwtSection["SecretKey"]!)),
+                ClockSkew = TimeSpan.Zero
             };
     });
 builder.Services.Configure<JwtOptions>(
@@ -120,17 +130,40 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "Adrenalin Unify API",
+        Description = "API for Adrenalin Unify, the all-in-one ITSM platform.",
+        Contact = new OpenApiContact
+        {
+            Name = "Adrenalin Software",
+            Email = "info@adrenalin.com"
+        }
+    });
+
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
+
+});
 
 // ── 10. Auth/authz ───────────────────────────────────────────────────────────
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization(options =>
-{
-    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-        .RequireAssertion(_ => true)
-        .Build();
-    options.FallbackPolicy = null;
-});
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddAuthorization();
 
 // ── 11. Exception handling — single handler via IExceptionHandler ─────────────
 builder.Services.AddExceptionHandler<Adrenalin.unify.API.Infrastructure.GlobalExceptionHandler>();
@@ -158,7 +191,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(o =>
     {
-        o.SwaggerEndpoint("/openapi/v1.json", "Adrenalin Unify API v1");
+        o.SwaggerEndpoint("/swagger/v1/swagger.json", "Adrenalin Unify API v1");
         o.RoutePrefix = "swagger";
     });
 }

@@ -14,7 +14,6 @@ public sealed class LoginCommandHandler
     : IRequestHandler<LoginCommand, LoginResponseDTO>
 {
     private readonly IUserRepository _users;
-
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtProvider _jwtProvider;
     private readonly IRefreshTokenRepository _refreshTokens;
@@ -42,21 +41,12 @@ public sealed class LoginCommandHandler
         LoginCommand request,
         CancellationToken cancellationToken)
     {
-        var user =
-            await _users.GetByEmailAsync(
-                request.Email,
-                cancellationToken);
+        var user = await _users.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user is null)
-        {
-            throw new Exception(
-                "Invalid email or password");
-        }
+            throw new Exception("Invalid email or password");
 
-        var isValid =
-            _passwordHasher.Verify(
-                request.Password,
-                user.PasswordHash);
+        var isValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
 
         if (!isValid)
         {
