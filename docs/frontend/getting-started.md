@@ -1,103 +1,209 @@
-# Frontend Getting Started Guide
+# Getting Started
 
-## Quick Start
+## Before You Start (2 minutes)
 
-### Prerequisites
-- **Node.js**: v18+ (comes with npm)
-- **.NET Backend**: Running on `https://localhost:5001` (development only)
-- **VS Code**: Recommended IDE
+Make sure you have:
+- **Node.js 18+** ([Download](https://nodejs.org/)) — comes with npm
+- **.NET backend running** on `https://localhost:5001` — frontend won't work without it
+- **VS Code** ([Download](https://code.visualstudio.com/)) — optional but recommended
+- **Git** — already used it to clone the repo
 
-### Installation (5 minutes)
+**Check your setup:**
 ```bash
-# Navigate to frontend directory
+node -v      # Should be 18+
+npm -v       # Should be 8+
+```
+
+## Installation (5 minutes)
+
+### Step 1: Navigate to Frontend
+```bash
 cd frontend/fresh_desk_2.0
+```
 
-# Install dependencies
+### Step 2: Install Dependencies
+```bash
 npm install
+```
+This downloads ~300MB of libraries. ☕ Grab a coffee, it takes 1-3 minutes on first run.
 
-# Start development server
+### Step 3: Start Dev Server
+```bash
 npm start
 ```
 
-✅ **Done!** Your application is running at `http://localhost:4200`
+**Expected output:**
+```
+✔ Browser application bundle generation complete. (45.2 seconds)
+✔ Compiled successfully.
+```
 
-## First Run Checklist
+Browser automatically opens `http://localhost:4200` → You see login page ✅
 
-### Before Starting (`npm start`)
-- [ ] Backend .NET API is running on `https://localhost:5001`
-- [ ] No other process using port 4200
-- [ ] Node.js and npm installed (`npm -v`, `node -v`)
-- [ ] Dependencies installed (`npm install` completed)
+## After Setup
 
-### After Starting
-- [ ] Browser opens at `http://localhost:4200`
-- [ ] Login page displays correctly
-- [ ] Theme switcher visible in top-right corner
-- [ ] API calls go to `https://localhost:5001` (check Network tab)
+### First Test: Can I Login?
 
-## Understanding the Project
+1. Make sure **.NET backend** is running on `https://localhost:5001`
+2. Open DevTools: `F12` → **Network** tab
+3. Try logging in with test credentials
+4. In Network tab, look for POST request to `/api/auth/login`
+5. Should return `200 OK` with a JWT token
 
-### Key Files
-| File | Purpose |
-|------|---------|
-| `package.json` | Project metadata, dependencies, scripts |
-| `angular.json` | Angular build configuration |
-| `tailwind.config.js` | Tailwind CSS configuration |
-| `tsconfig.json` | TypeScript configuration |
-| `src/main.ts` | Application entry point |
-| `src/app/app.routes.ts` | Routing definitions |
-| `src/styles.css` | Global styles & theme system |
+**Not working?** → See Troubleshooting section below
 
-### Directory Structure
+## Understanding the Project Structure
+
+### What's in Each Folder?
+
 ```
 fresh_desk_2.0/
-├── src/
-│   ├── app/              # Application components & services
-│   │   ├── features/     # Feature modules (auth, tickets, etc.)
-│   │   ├── core/         # Singleton services (theme, auth)
-│   │   ├── shared/       # Reusable components & utilities
-│   │   └── layouts/      # Layout templates
-│   ├── assets/           # Static files
-│   ├── environments/     # Environment configs
-│   ├── styles.css        # Global styles
-│   └── main.ts           # Entry point
-├── public/               # Static root files
-├── dist/                 # Production build output
-├── node_modules/         # Dependencies
-├── angular.json          # Angular CLI config
-├── tailwind.config.js    # Tailwind config
-└── package.json          # Project metadata
+│
+├── src/                      ← All your code
+│   ├── app/                  ← Angular components & services
+│   ├── environments/         ← API URLs (dev vs prod)
+│   ├── styles.css            ← Global colors & theme
+│   └── main.ts               ← Startup file
+│
+├── public/                   ← Static files (favicon, robots.txt)
+├── node_modules/             ← Downloaded libraries (don't edit!)
+├── dist/                     ← Production build output (generated)
+│
+├── package.json              ← Project metadata (dependencies)
+├── angular.json              ← Build configuration
+├── tailwind.config.js        ← CSS configuration
+├── tsconfig.json             ← TypeScript rules
+└── README.md                 ← Original project README
 ```
+
+### Key Files You'll Edit
+
+| File | What It Does | Example |
+|------|--------------|---------|
+| `src/app/features/auth/login.component.ts` | Login page logic | Form validation, API call |
+| `src/app/app.routes.ts` | Page routing | `/agent/dashboard` → DashboardComponent |
+| `src/styles.css` | Global colors | Change primary color from blue to green |
+| `src/environments/environment.*.ts` | API URLs | Backend host/port |
+
+**Don't edit:**
+- `node_modules/` — Auto-generated, will be lost
+- `dist/` — Generated on build, overwritten
 
 ## Available Commands
 
-### Development
+### Development (What You'll Use)
+
 ```bash
-# Start development server with hot reload
 npm start
-
-# Run in watch mode (continuous compilation)
-npm run watch
-
-# Run tests in watch mode
-npm test
+# Starts dev server at http://localhost:4200
+# Hot reload: Save a file → page updates automatically
+# Perfect for building features
 ```
 
-### Production
 ```bash
-# Build for production
-npm run build
+npm test
+# Runs unit tests
+# Watches for file changes, re-runs tests
+```
 
-# Output goes to dist/
+### Production Build
+
+```bash
+npm run build
+# Creates optimized build in ./dist/
+# Minified, tree-shaken, ~50KB smaller
+# Used for deployment
+```
+
+```bash
+npm run watch
+# Continuous compilation without dev server
+# Useful if you have your own server
 ```
 
 ## Configuration
 
-### Environment Setup
+### Development vs Production
 
-#### Development (automatic on `npm start`)
+**How does Angular know which environment to use?**
+
+When you run `npm start`:
+```
+angular.json → Check "serve" configuration
+  → It says: "Use environment.development.ts"
+  → environment.development.ts says: "API is at https://localhost:5001"
+  → All HTTP calls go there ✓
+```
+
+When you run `npm run build`:
+```
+angular.json → Check "build" configuration
+  → It says: "Use environment.ts"
+  → environment.ts says: "API is at https://api.adrenalin-support.com"
+  → All HTTP calls go there ✓
+```
+
+**Can I use production API while developing?**
+Yes, edit `src/environments/environment.development.ts`:
 ```typescript
-// src/environments/environment.development.ts
+export const environment = {
+  apiUrl: 'https://api.adrenalin-support.com'  // ← Change this
+};
+```
+
+## Troubleshooting
+
+### "Port 4200 Already in Use"
+```bash
+# Find what's using port 4200
+netstat -ano | findstr :4200
+
+# Kill it (replace PID with the number shown)
+taskkill /PID 12345 /F
+
+# Try again
+npm start
+```
+
+### "Cannot Find Module..."
+```bash
+# Clear and reinstall
+npm install
+
+# Still broken? Nuclear option
+rm -r node_modules
+npm install
+npm start
+```
+
+### "API calls are failing / 404 errors"
+Check 3 things:
+1. **Backend running?** → Should see output in backend terminal
+2. **Port correct?** → Check `environment.development.ts` says `localhost:5001`
+3. **Endpoint exists?** → Try `https://localhost:5001/health` in browser
+4. **DevTools Network tab** → See actual request & response
+
+### "Login page appears blank / white screen"
+```bash
+# Clear browser cache
+Ctrl+Shift+Del  # (or Cmd+Shift+Del on Mac)
+
+# Clear local dev data
+localStorage.clear()  # Run in DevTools console
+
+# Hard refresh
+Ctrl+Shift+R  # (or Cmd+Shift+R on Mac)
+```
+
+### Browser Extension Conflicts
+Try private/incognito window. If it works, a browser extension is interfering.
+
+## Next: Start Coding
+
+1. Read [Architecture](./architecture.md) to understand the design
+2. Read [Routing](./routing.md) to add new pages
+3. Read [Authentication](./authentication-setup.md) to understand login flow
+4. Pick a feature and start hacking! 🚀
 export const environment = {
     production: false,
     apiUrl: 'https://localhost:5001'

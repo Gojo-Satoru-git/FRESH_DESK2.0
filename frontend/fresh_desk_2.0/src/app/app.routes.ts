@@ -91,6 +91,12 @@ export const routes: Routes = [
           import('./features/customer-portal/ticket-details.component')
             .then(m => m.TicketDetailsComponent),
       },
+      {
+        path: 'my-tickets',
+        loadComponent: () =>
+           import('./features/customer-portal/my-tickets.component')
+             .then(m => m.MyTicketsComponent)
+      }
     ],
   },
   {

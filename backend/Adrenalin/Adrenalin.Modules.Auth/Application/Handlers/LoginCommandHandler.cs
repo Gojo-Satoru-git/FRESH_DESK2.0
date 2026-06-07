@@ -1,7 +1,9 @@
 using Adrenalin.Modules.Auth.Application.Commands;
+using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.Infrastructure.Authentication;
+using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.Auth.Application.Handlers;

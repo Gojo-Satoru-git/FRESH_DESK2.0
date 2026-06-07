@@ -1,103 +1,166 @@
 # Authentication Setup
 
-## Overview
-The authentication system for Fresh Desk 2.0 is built around a standalone Angular `LoginComponent` with reactive forms, form validation, and theme support. The component communicates with the backend API for user authentication.
+## Why Authentication Matters
 
-## Login Component Architecture
+Fresh Desk handles sensitive HR data—tickets, employees, salaries, reviews. We need:
+- ✅ Only the right person can view their data
+- ✅ Agents can't access customer data (and vice versa)
+- ✅ Passwords are never stored in the browser
+- ✅ Sessions don't expire randomly (JWT tokens)
 
-### File Structure
-```
-src/app/features/auth/
-├── login.component.ts
-├── login.component.html
-├── login.component.css (if needed)
-└── login.spec.ts (tests)
-```
+That's what this guide covers.
 
-### Component Details
+## The Login Flow (Step by Step)
 
-#### LoginComponent (`login.component.ts`)
-- **Selector**: `app-login`
-- **Standalone**: Yes (uses standalone API)
-- **Imports**: 
-  - `ReactiveFormsModule` - For reactive form handling
-  - `ThemeSwitcherComponent` - For theme toggle in top-right corner
+### 1. User Types Email & Password
+The **LoginComponent** validates in real-time:
+- Email must be valid format (`user@example.com`)
+- Password must be 6+ characters
 
-#### Form Structure
+### 2. We Send to Backend
 ```typescript
-loginForm = new FormGroup({
-  email: new FormControl('', [Validators.required, Validators.email]),
-  password: new FormControl('', [Validators.required, Validators.minLength(6)])
-});
+// src/app/features/auth/login.component.ts
+this.authService.login(email, password)
+  .subscribe(response => {
+    // response contains JWT token
+    localStorage.setItem('auth_token', response.token);
+    this.router.navigate(['/agent/dashboard']);
+  });
 ```
 
-**Validation Rules:**
-- **Email**: Required, must be valid email format
-- **Password**: Required, minimum 6 characters
+### 3. Backend Validates Password
+Backend checks database, compares hashed password, returns JWT token if valid.
 
-#### State Management
-The component uses Angular Signals for reactive state:
-```typescript
-isLoading = signal<boolean>(false);        // Loading state during API call
-errorMessage = signal<string | null>(null); // Error notifications
-successMessage = signal<string | null>(null); // Success notifications
+**Why JWT?** 
+- No need to store session on server
+- Token expires after N hours (user logs out automatically)
+- Works with mobile apps, single-page apps, microservices
+
+### 4. We Store Token Locally
+JWT lives in browser's `localStorage` with key `auth_token`.
+
+**Risk?** If hacker accesses computer, they get the token. That's why:
+- We only send tokens over HTTPS (encrypted)
+- Tokens expire after 24 hours
+- Sensitive operations need re-authentication
+
+### 5. Every API Request Adds Token
+**JwtInterceptor** automatically adds the token to all requests:
 ```
+Authorization: Bearer <token_here>
+```
+Backend validates token, returns data if valid.
 
-### Form Submission Flow
-1. Validates form before submission
-2. Marks all fields as touched (shows validation errors)
-3. Sets `isLoading` to true
-4. Calls backend API via HTTP
-5. Handles success/error responses
-6. Updates corresponding signal
+### 6. If Token Expired or Missing
+**AuthGuard** redirects to `/login`. User logs in again.
+
+## File Structure
+
+```
+src/app/
+├── features/auth/
+│   ├── login.component.ts       ← Main login form
+│   ├── login.component.html     ← Template (email, password inputs)
+│   ├── signup.component.ts      ← Registration form
+│   └── signup.component.css
+│
+├── core/auth/
+│   ├── auth.service.ts          ← Login logic, token storage
+│   ├── jwt.interceptor.ts       ← Adds token to every request
+│   └── auth.guard.ts            ← Protects routes (/agent/*)
+```
 
 ## Environment Configuration
 
-### Files Location
-```
-src/environments/
-├── environment.ts           # Production environment
-└── environment.development.ts  # Development environment
-```
+### Why Two Environments?
 
-### Development Environment (`environment.development.ts`)
+**Development** (`npm start`)
+- Backend runs locally at `https://localhost:5001`
+- Self-signed SSL certificate (browser shows warning, ignore it)
+- Good for testing with hot-reload
+
+**Production** (`npm run build`)
+- Backend at `https://api.adrenalin-support.com`
+- Real SSL certificate from Let's Encrypt
+- Minified code, smaller file size
+
+### Files
+
 ```typescript
+// Development (auto-selected by ng serve)
+src/environments/environment.development.ts
 export const environment = {
-    production: false,
-    apiUrl: 'https://localhost:5001'
+  apiUrl: 'https://localhost:5001'
+};
+
+// Production (auto-selected by ng build)
+src/environments/environment.ts
+export const environment = {
+  apiUrl: 'https://api.adrenalin-support.com'
 };
 ```
-- **Use**: Local development with .NET backend running on port 5001
-- **HTTPS**: Yes, with self-signed certificates for local dev
 
-### Production Environment (`environment.ts`)
+## How to Use in Components
+
 ```typescript
-export const environment = {
-    production: true,
-    apiUrl: 'https://api.adrenalin-support.com'
-};
-```
-- **Use**: Production deployment
-- **Base URL**: Update to your actual production API domain
+import { AuthService } from './core/auth/auth.service';
 
-### Usage in Components
-```typescript
-import { environment } from '../../environments/environment';
+export class SomeComponent {
+  constructor(private auth: AuthService) {}
 
-// Use environment.apiUrl in HTTP calls
-this.http.post(`${environment.apiUrl}/auth/login`, credentials)
+  logout() {
+    this.auth.logout(); // Clears token, redirects to /login
+  }
+
+  getCurrentUser() {
+    return this.auth.currentUser(); // Returns logged-in user
+  }
+}
 ```
 
-## Angular Environment Selection
-Angular CLI automatically selects the correct environment based on build mode:
-- **Development**: `ng serve` uses `environment.development.ts`
-- **Production**: `ng build` uses `environment.ts`
+## Common Tasks
 
-### File Replacement Configuration
-Configured in `angular.json`:
-```json
-"fileReplacements": [
-  {
+### Check If User Is Logged In
+```typescript
+this.auth.isAuthenticated() // true/false
+```
+
+### Get User Info from Token
+```typescript
+const user = this.auth.getCurrentUser();
+console.log(user.email, user.role); // e.g., "agent" or "customer"
+```
+
+### Manual Logout
+```typescript
+this.auth.logout(); // Clears token, redirects to /login
+```
+
+## Token Storage Security
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **localStorage** (current) | Simple, works on refresh | XSS attacks can steal it |
+| **sessionStorage** | Clears on tab close | Still vulnerable to XSS |
+| **HttpOnly Cookie** | Inaccessible to JavaScript | More complex to manage |
+
+**We use localStorage because:** It's the standard for SPAs, easy to debug, and we use HTTPS + token expiration to mitigate risks.
+
+## Troubleshooting
+
+### "Unauthorized" API Error
+- Token expired → User logs out automatically, redirected to `/login`
+- Token invalid → Check backend is running, check JWT format
+
+### Login Button Doesn't Work
+- Check browser console (F12 → Console tab) for errors
+- Verify backend is running at `https://localhost:5001`
+- Try in private/incognito window (no conflicting browser extensions)
+
+### Stuck on Login Loop
+- Clear localStorage: `localStorage.clear()` in console
+- Try different browser
+- Check that backend auth endpoint is accessible
     "replace": "src/environments/environment.ts",
     "with": "src/environments/environment.development.ts"
   }

@@ -18,14 +18,14 @@ interface TicketDetails {
 @Component({
   standalone: true,
   selector: 'app-ticket-details',
-  imports: [RouterLink, CustomerHeaderComponent],
+  imports: [RouterLink],
   template: `
-    <app-customer-header></app-customer-header>
+   
     
     <div class="px-10 mt-8">
       <a
         routerLink="/customer-portal"
-        class="inline-flex items-center gap-2 ml-116 text-black font-bold text-2xl
+        class="inline-flex items-center gap-2 ml-76 text-black font-bold text-2xl
                px-4 py-2 rounded-lg
                hover:bg-blue-500 hover:text-white transition"
       >

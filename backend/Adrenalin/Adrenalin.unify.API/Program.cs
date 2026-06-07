@@ -20,6 +20,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
