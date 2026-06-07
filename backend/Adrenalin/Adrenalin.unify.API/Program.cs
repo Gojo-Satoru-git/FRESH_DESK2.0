@@ -23,6 +23,8 @@ using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Adrenalin.Persistence.Repositories;
+using Adrenalin.unify.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,7 +98,16 @@ builder.Services.Configure<JwtOptions>(
 builder.Services.AddScoped<
     IJwtProvider,
     JwtProvider>();
+builder.Services.AddScoped<
+    IRefreshTokenGenerator,
+    RefreshTokenGenerator>();
 
+builder.Services.AddScoped<
+    ITokenHasher,
+    TokenHasher>();
+builder.Services.AddScoped<
+    IRefreshTokenRepository,
+    RefreshTokenRepository>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 
@@ -184,7 +195,7 @@ if (app.Environment.IsDevelopment())
         o.RoutePrefix = "swagger";
     });
 }
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

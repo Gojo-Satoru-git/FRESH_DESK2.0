@@ -3,5 +3,7 @@ using Adrenalin.SharedKernel.Mediator;
 namespace Adrenalin.Modules.Auth.Application.Commands;
     public sealed record LoginCommand(
     string Email,
-    string Password
+    string Password,
+    string? IpAddress,
+    string? DeviceInfo
 ) : IRequest<LoginResponseDTO>;

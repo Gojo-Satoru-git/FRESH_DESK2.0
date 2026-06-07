@@ -39,10 +39,25 @@ public sealed class AuthController : ControllerBase
         LoginRequestDTO request,
         CancellationToken cancellationToken)
     {
+
         var userId = await _dispatcher.Send(
-            new LoginCommand(request.Email, request.Password),
+            new LoginCommand(request.Email, request.Password, HttpContext.Connection.RemoteIpAddress?.ToString(),
+    HttpContext.Request.Headers["User-Agent"]),
             cancellationToken);
 
         return Ok(new { UserId = userId, Message = "Login successful" });
+    }
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(
+    RefreshTokenRequestDTO request,
+    CancellationToken cancellationToken)
+    {
+        var result =
+            await _dispatcher.Send(
+                new RefreshTokenCommand(
+                    request.RefreshToken),
+                cancellationToken);
+
+        return Ok(result);
     }
 }

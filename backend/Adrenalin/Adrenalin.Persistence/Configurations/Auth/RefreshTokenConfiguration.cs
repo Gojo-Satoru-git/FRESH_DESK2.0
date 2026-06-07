@@ -38,7 +38,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasDefaultValueSql("gen_random_uuid()")
             .HasColumnName("family_id");
 
-        builder.Property(e => e.IpAddress).HasColumnName("ip_address").HasColumnType("inet");
+        builder.Property(e => e.IpAddress).HasColumnName("ip_address");
         builder.Property(e => e.IsRevoked).HasColumnName("is_revoked");
 
         builder.Property(e => e.IssuedAt)
