@@ -24,4 +24,49 @@ public sealed class UserRepository : IUserRepository
         await _db.AddAsync(user, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
+    public async Task<List<string>> GetUserRolesAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.UserRoles
+            .Where(x => x.UserId == userId && !x.IsDeleted)
+            .Select(x => x.Role.Name)
+            .ToListAsync(cancellationToken);
+    }
+    public async Task<User?> GetByIdAsync(Guid id, CancellationToken ct)
+        => await _db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, ct);
+
+    public async Task<User?> GetWithRolesAsync(Guid id, CancellationToken ct)
+        => await _db.Users
+            .Include(u => u.UserRoles.Where(ur => !ur.IsDeleted))
+                .ThenInclude(ur => ur.Role)
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(
+        string? emailQuery, bool? isActive, int pageNumber, int pageSize, CancellationToken ct)
+    {
+        var query = _db.Users.Where(u => !u.IsDeleted).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(emailQuery))
+            query = query.Where(u => EF.Functions.ILike(u.Email, $"%{emailQuery}%"));
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
+        var total = await query.CountAsync(ct);
+        var items = await query.OrderBy(u => u.Email)
+            .Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        return (items, total);
+    }
+
+    public async Task<IReadOnlyList<string>> GetEffectivePermissionsAsync(Guid userId, CancellationToken ct)
+        => await _db.UserRoles
+            .Where(ur => ur.UserId == userId && !ur.IsDeleted && !ur.Role.IsDeleted)
+            .SelectMany(ur => ur.Role.RolePermissions
+                .Where(rp => !rp.IsDeleted && !rp.Permission.IsDeleted)
+                .Select(rp => rp.Permission.Resource + ":" + rp.Permission.Action))
+            .Distinct()
+            .ToListAsync(ct);
+
+    public void Update(User user) => _db.Users.Update(user);
+
+    public async Task<int> SaveChangesAsync(CancellationToken ct) => await _db.SaveChangesAsync(ct);
 }

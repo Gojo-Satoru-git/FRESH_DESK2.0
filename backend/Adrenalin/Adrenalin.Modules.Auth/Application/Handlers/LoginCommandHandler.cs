@@ -44,7 +44,23 @@ public sealed class LoginCommandHandler
             throw new Exception(
                 "Invalid email or password");
         }
+<<<<<<< Updated upstream
 
         return user.Id;
+=======
+        var permissions = await _users.GetEffectivePermissionsAsync(user.Id, cancellationToken);
+        var roles = await _users.GetUserRolesAsync(user.Id, cancellationToken);
+
+
+        var token =
+        _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,roles,
+            permissions);
+
+        return new LoginResponseDTO(
+        token,
+        DateTime.UtcNow.AddHours(1));
+>>>>>>> Stashed changes
     }
 }
