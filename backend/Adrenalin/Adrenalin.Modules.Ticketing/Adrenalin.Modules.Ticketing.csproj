@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+	 
   </ItemGroup>
 
   <ItemGroup>

@@ -4,6 +4,8 @@ using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;                     
 
 namespace Adrenalin.unify.API.Controllers;
 
@@ -30,25 +32,36 @@ public sealed class TicketsController : ControllerBase
         });
     }
 
-    [HttpPost("{ticketId:guid}/assign")]
-    public async Task<IActionResult> Assign(Guid ticketId, [FromBody] AssignTicketRequest request)
+    // POST api/tickets/{id}/assign  — manual assignment
+    [HttpPost("{id:guid}/assign")]
+    [Authorize]
+    public async Task<IActionResult> AssignTicket(
+        Guid id,
+        [FromBody] AssignTicketRequest request,
+        CancellationToken ct)
     {
+        var agentId = Guid.Parse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         var command = new AssignTicketCommand(
-            ticketId,
-            request.AgentId,
-            request.AssignedBy,
-            request.Notes
+            TicketId: id,
+            TriggeredBy: agentId,
+            IsAutoAssignment: false,
+            OverrideAgentId: request.AgentId,
+            OverrideGroupId: request.GroupId
         );
 
-        var resultId = await _dispatcher.Send(command);
+        var result = await _dispatcher.Send(command, ct);
 
-        return Ok(new
-        {
-            Message = "Ticket assigned successfully.",
-            TicketId = resultId,
-            AgentId = request.AgentId
-        });
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(new { error = result.Error });
     }
+
+    public record AssignTicketRequest(
+        Guid TriggeredBy,
+        Guid? AgentId,
+        Guid? GroupId);
 
     [HttpPost("{ticketId:guid}/status")]
     public async Task<IActionResult> ChangeStatus(Guid ticketId, [FromBody] ChangeTicketStatusRequest request)

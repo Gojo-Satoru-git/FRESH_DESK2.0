@@ -28,7 +28,45 @@ public sealed class TicketRepository : ITicketRepository
 			.FirstOrDefaultAsync(x => x.Id == ticketId, cancellationToken);
 	}
 
-	public async Task<int> CountTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, CancellationToken cancellationToken = default)
+    public async Task AddAssignmentLogAsync(
+       TicketAssignmentLog log,
+       CancellationToken ct = default)
+    {
+        // INSERT into ticket.ticket_assignment_log
+        await _context.TicketAssignmentLogs.AddAsync(log, ct);
+    }
+
+    public async Task<Guid?> GetLeastLoadedAgentInGroupAsync(
+        Guid groupId, CancellationToken ct = default)
+    {
+        // Get all agent IDs in this group
+        // via auth.user_groups junction table
+        var agentIds = await _context.UserGroups
+            .Where(ug => ug.GroupId == groupId)
+            .Select(ug => ug.UserId)
+            .ToListAsync(ct);
+
+        if (!agentIds.Any()) return null;
+
+        // ticket.tickets exact columns used:
+        // assigned_agent_id, status (ENUM), is_deleted
+        // Count open tickets per agent — excluding resolved/closed
+        var openStatuses = new[] { "resolved", "closed" };
+
+        return await _context.Tickets
+            .Where(t =>
+                t.AssignedAgentId != null &&
+                agentIds.Contains(t.AssignedAgentId!.Value) &&
+                !openStatuses.Contains(
+                    t.Status.ToString().ToLower()) &&
+                !t.IsDeleted)
+            .GroupBy(t => t.AssignedAgentId)
+            .OrderBy(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<int> CountTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, CancellationToken cancellationToken = default)
 	{
 		var query = _context.Tickets
 			.AsNoTracking()
@@ -133,4 +171,42 @@ public sealed class TicketRepository : ITicketRepository
 
 		return companyId;
 	}
+    public async Task UpdateAssignmentAsync(
+    Guid ticketId,
+    Guid? agentId,
+    Guid? groupId,
+    Guid triggeredBy,
+    CancellationToken ct = default)
+    {
+        // Must load with tracking so EF Core sees the changes
+        // Include assignment logs so the collection is loaded
+        var ticket = await _context.Tickets
+            .Include(t => t.TicketAssignmentLogs)
+            .FirstOrDefaultAsync(t => t.Id == ticketId, ct);
+
+        if (ticket is null) return;
+
+        // AssignAgent calls TicketAssignmentLog.Create() internally
+        // and adds it to _ticketAssignmentLogs collection
+        // Only assign if we have an agent
+        if (agentId.HasValue)
+        {
+            ticket.AssignAgent(
+                agentId: agentId.Value,
+                assignedBy: triggeredBy,
+                notes: "Auto-assigned via automation rules");
+        }
+
+        // AssignGroup sets GroupId on the ticket
+        if (groupId.HasValue)
+        {
+            ticket.AssignGroup(
+                groupId: groupId.Value,
+                modifiedBy: triggeredBy);
+        }
+
+        // No manual property setting needed
+        // AssignAgent and AssignGroup call Touch() internally
+        // which sets UpdatedAt and UpdatedBy
+    }
 }

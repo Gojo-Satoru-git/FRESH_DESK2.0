@@ -109,7 +109,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.SubModuleId).HasColumnName("sub_module_id");
         
-        builder.Property(e => e.Subject).HasColumnName("subject");
+        builder.Property(e => e.Subject).HasColumnName("title");
         
         builder.Property(e => e.TicketNumber).HasMaxLength(20).HasColumnName("ticket_number");
         
