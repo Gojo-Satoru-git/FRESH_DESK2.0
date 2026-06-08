@@ -71,12 +71,22 @@ export class RaiseTicketComponent implements OnInit {
   removeFile(index: number) {
     this.attachedFiles.splice(index, 1);
   }
+onCancel(): void {
+  this.ticketForm.reset({
+    subject: '',
+    module: '',
+    priority: 'Medium',
+    description: ''
+  });
 
-  onCancel(): void {
-    this.ticketForm.reset({ priority: 'Medium' });
-    this.attachedFiles = [];
-    this.submitted = false;
-  }
+  this.attachedFiles = [];
+  this.kbSuggestions.set([]);
+  this.submitted = false;
+
+  // Reset form state completely
+  this.ticketForm.markAsPristine();
+  this.ticketForm.markAsUntouched();
+}
 
   onSubmit(): void {
     this.submitted = true;
