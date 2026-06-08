@@ -96,6 +96,19 @@ export const routes: Routes = [
         loadComponent: () =>
            import('./features/customer-portal/my-tickets.component')
              .then(m => m.MyTicketsComponent)
+      },
+      {
+        path: 'knowledge-base',
+        loadComponent:() =>
+           import('./features/customer-portal/knowledge-base.component')
+              .then(m => m.KnowledgeBaseComponent)
+      },
+      {
+        path: 'knowledge-base/articles',
+        loadComponent: () => 
+          import('./features/customer-portal/articles.component')
+              .then(m => m.ArticlesComponent)
+          
       }
     ],
   },

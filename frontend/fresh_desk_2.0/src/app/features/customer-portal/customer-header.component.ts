@@ -47,6 +47,7 @@ import { Router, RouterModule } from '@angular/router';
           </a>
 
           <a
+            
             routerLink="/customer-portal/knowledge-base"
             routerLinkActive="bg-blue-500"
             class="block px-6 py-3 text-xl font-semibold rounded-xl
