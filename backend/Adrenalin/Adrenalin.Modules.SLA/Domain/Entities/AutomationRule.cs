@@ -4,7 +4,7 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.SLA.Domain.Entities;
 
-public sealed class AutomationRule : ActiveSoftDeleteEntity
+public sealed class AutomationRule : ActiveSoftDeleteEntity, IAutomationRuleContract
 {
     public string Name { get; private set; } = null!;
 
