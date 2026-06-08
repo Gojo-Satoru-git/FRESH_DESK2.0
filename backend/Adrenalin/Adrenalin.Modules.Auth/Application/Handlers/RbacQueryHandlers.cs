@@ -113,7 +113,7 @@ public sealed class GetUsersQueryHandler
     public async Task<Result<PagedResultDto<UserSummaryDto>>> Handle(GetUsersQuery q, CancellationToken ct)
     {
         var (items, total) = await _users.GetPagedAsync(q.EmailQuery, q.IsActive, q.PageNumber, q.PageSize, ct);
-        var dtos = items.Select(u => new UserSummaryDto(u.Id, u.Email, u.FirstName, u.LastName, u.IsActive)).ToList();
+        var dtos = items.Select(u => new UserSummaryDto(u.Id, u.Email, u.FirstName, u.LastName, u.IsActive, u.Phone)).ToList();
         return Result<PagedResultDto<UserSummaryDto>>.Success(
             new PagedResultDto<UserSummaryDto>(dtos, total, q.PageNumber, q.PageSize));
     }

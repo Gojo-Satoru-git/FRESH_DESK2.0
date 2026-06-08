@@ -1,8 +1,33 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { TicketService } from '../../tickets/services/ticket.service';
+import { PagedResult, TicketListItem } from '../../tickets/models/ticket.model';
+import { environment } from '../../../../environments/environment.development';
+
+interface UserSummaryDto {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  isActive: boolean;
+  phone?: string;
+}
+
+interface ContactItem {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  phone: string;
+  openTickets: number;
+  avatarColor: string;
+}
 
 @Component({
   selector: 'app-contact-list',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <div class="h-full flex flex-col animate-fade-in relative">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -62,7 +87,9 @@ import { Component, signal } from '@angular/core';
           </div>
           <input
             type="text"
-            placeholder="Search contacts by name, email, or company..."
+            [value]="searchTerm()"
+            (input)="onSearch($event)"
+            placeholder="Search contacts by name or email..."
             class="w-full pl-10 pr-4 py-2 bg-background border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-text-main placeholder:text-text-muted/60 transition-all"
           />
         </div>
@@ -157,7 +184,7 @@ import { Component, signal } from '@angular/core';
                   </td>
 
                   <td class="px-6 py-4 text-text-muted">
-                    {{ contact.phone }}
+                    {{ contact.phone || 'None' }}
                   </td>
 
                   <td class="px-6 py-4">
@@ -194,15 +221,18 @@ import { Component, signal } from '@angular/core';
         <div
           class="border-t border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between text-sm text-text-muted bg-background"
         >
-          <div>Showing 1 to 5 of 24 contacts</div>
+          <div>Showing {{ startIndex() }} to {{ endIndex() }} of {{ totalCount() }} contacts</div>
           <div class="flex items-center gap-2">
             <button
+              [disabled]="page() === 1"
+              (click)="onPrevious()"
               class="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
-              disabled
             >
               Previous
             </button>
             <button
+              [disabled]="page() * pageSize >= totalCount()"
+              (click)="onNext()"
               class="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors bg-background"
             >
               Next
@@ -213,53 +243,132 @@ import { Component, signal } from '@angular/core';
     </div>
   `,
 })
-export class ContactListComponent {
-  // Mock Data perfectly formatted for the UI
-  contacts = signal([
-    {
-      id: '1',
-      name: 'Sarah Jenkins',
-      email: 'sarah.j@techcorp.io',
-      company: 'TechCorp Solutions',
-      phone: '+1 (555) 123-4567',
-      openTickets: 2,
-      avatarColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'mchen@innovate.co',
-      company: 'Innovate Logistics',
-      phone: '+1 (555) 987-6543',
-      openTickets: 0,
-      avatarColor: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
-    },
-    {
-      id: '3',
-      name: 'Elena Rodriguez',
-      email: 'erodriguez@designstudio.net',
-      company: 'Creative Studio',
-      phone: '+1 (555) 456-7890',
-      openTickets: 1,
-      avatarColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400',
-    },
-    {
-      id: '4',
-      name: 'David Kim',
-      email: 'dkim@healthplus.org',
-      company: 'HealthPlus Medical',
-      phone: '+1 (555) 222-3333',
-      openTickets: 5,
-      avatarColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
-    },
-    {
-      id: '5',
-      name: 'Amanda Foster',
-      email: 'amanda@retailhub.com',
-      company: 'Retail Hub Global',
-      phone: '+1 (555) 888-9999',
-      openTickets: 0,
-      avatarColor: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',
-    },
-  ]);
+export class ContactListComponent implements OnInit {
+  private http = inject(HttpClient);
+  private ticketService = inject(TicketService);
+
+  contacts = signal<ContactItem[]>([]);
+  searchTerm = signal<string>('');
+  page = signal<number>(1);
+  pageSize = 10;
+  totalCount = signal<number>(0);
+
+  startIndex = signal<number>(0);
+  endIndex = signal<number>(0);
+
+  ngOnInit(): void {
+    this.loadContacts();
+  }
+
+  onSearch(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchTerm.set(value);
+    this.page.set(1);
+    this.loadContacts();
+  }
+
+  onPrevious(): void {
+    if (this.page() > 1) {
+      this.page.update((p) => p - 1);
+      this.loadContacts();
+    }
+  }
+
+  onNext(): void {
+    if (this.page() * this.pageSize < this.totalCount()) {
+      this.page.update((p) => p + 1);
+      this.loadContacts();
+    }
+  }
+
+  private loadContacts(): void {
+    let url = `${environment.apiUrl}/api/rbac/users?pageNumber=${this.page()}&pageSize=${this.pageSize}`;
+    if (this.searchTerm()) {
+      url += `&email=${encodeURIComponent(this.searchTerm())}`;
+    }
+
+    // Fetch users and active tickets in parallel to calculate open tickets counts
+    this.http.get<{ items: UserSummaryDto[]; totalCount: number }>(url).subscribe({
+      next: (userResponse) => {
+        const users = userResponse.items || [];
+        this.totalCount.set(userResponse.totalCount || 0);
+
+        this.startIndex.set(users.length > 0 ? (this.page() - 1) * this.pageSize + 1 : 0);
+        this.endIndex.set(Math.min(this.page() * this.pageSize, this.totalCount()));
+
+        this.ticketService.searchTickets({ page: 1, pageSize: 100 }).subscribe({
+          next: (ticketResponse: PagedResult<TicketListItem>) => {
+            const tickets = ticketResponse.items || [];
+            // ticketResponse is now PagedResult<TicketListItem> — no 'any' cast needed
+            const activeTickets = tickets.filter(
+              (t) => !['resolved', 'closed'].includes(t.status.toLowerCase()),
+            );
+
+            const mappedContacts = users.map((user, index) => {
+              const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+              const company = this.getCompanyFromEmail(user.email);
+              const avatarColor = this.getAvatarColor(index);
+
+              // Count unresolved tickets assigned to this user/agent
+              const openTickets = activeTickets.filter((t) => t.assignedAgentId === user.id).length;
+
+              return {
+                id: user.id,
+                name,
+                email: user.email,
+                company,
+                phone: user.phone || '',
+                openTickets,
+                avatarColor,
+              };
+            });
+
+            this.contacts.set(mappedContacts);
+          },
+          error: () => {
+            // Fallback: If tickets fails, map with 0 open tickets
+            const mappedContacts = users.map((user, index) => {
+              const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+              return {
+                id: user.id,
+                name,
+                email: user.email,
+                company: this.getCompanyFromEmail(user.email),
+                phone: user.phone || '',
+                openTickets: 0,
+                avatarColor: this.getAvatarColor(index),
+              };
+            });
+            this.contacts.set(mappedContacts);
+          },
+        });
+      },
+    });
+  }
+
+  private getCompanyFromEmail(email: string): string {
+    const domain = email.split('@')[1]?.toLowerCase() || '';
+    if (domain.includes('techcorp')) return 'TechCorp Solutions';
+    if (domain.includes('innovate')) return 'Innovate Logistics';
+    if (domain.includes('designstudio')) return 'Creative Studio';
+    if (domain.includes('healthplus')) return 'HealthPlus Medical';
+    if (domain.includes('retailhub')) return 'Retail Hub Global';
+
+    const namePart = domain.split('.')[0];
+    if (namePart) {
+      return namePart.charAt(0).toUpperCase() + namePart.slice(1) + ' Corp';
+    }
+    return 'External Partner';
+  }
+
+  private getAvatarColor(index: number): string {
+    const colors = [
+      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+      'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
+      'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400',
+      'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+      'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',
+    ];
+    return colors[index % colors.length];
+  }
 }

@@ -1,8 +1,13 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
@@ -21,8 +26,10 @@ public class TicketLifecycleHandlerTests
     private async Task<(Ticket ticket, Guid userId)> BuildResolvedTicket()
     {
         var userId = Guid.NewGuid();
-        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Subj", "Desc");
+        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         ticket.ChangeStatus(TicketStatus.Open, userId);
+        ticket.ChangeStatus(TicketStatus.Assigned, userId);
+        ticket.ChangeStatus(TicketStatus.InProgress, userId);
         ticket.MarkCustomerCallTaken(userId);
         ticket.ProvideRootCauseAnalysis("Root cause", userId);
         ticket.Resolve(userId, "Resolved");
@@ -37,8 +44,10 @@ public class TicketLifecycleHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Subj", "Desc");
+        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         ticket.ChangeStatus(TicketStatus.Open, userId);
+        ticket.ChangeStatus(TicketStatus.Assigned, userId);
+        ticket.ChangeStatus(TicketStatus.InProgress, userId);
         ticket.MarkCustomerCallTaken(userId);
         ticket.ProvideRootCauseAnalysis("Fix details", userId);
         await _repo.AddAsync(ticket);
@@ -76,7 +85,7 @@ public class TicketLifecycleHandlerTests
     public async Task CloseTicket_ShouldThrow_WhenTicketIsNotResolved()
     {
         // Arrange — ticket is still in New state
-        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Subj", "Desc");
+        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         await _repo.AddAsync(ticket);
 
         var command = new CloseTicketCommand(ticket.Id, Guid.NewGuid(), "Done");

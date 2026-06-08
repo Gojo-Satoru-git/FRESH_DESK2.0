@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
@@ -31,6 +32,8 @@ public sealed class ReopenTicketCommandHandler : IRequestHandler<ReopenTicketCom
         }
 
         ticket.Reopen(request.ReopenedBy, request.Reason);
+
+        _ticketRepository.Update(ticket);
 
         return ticket.Id;
     }

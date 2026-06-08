@@ -1,6 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { InsightCardComponent } from './insight-card.component';
 import { ReportCategoryComponent, ReportItem } from './report-category.component';
+import { TicketService } from '../../tickets/services/ticket.service';
+import { TicketDashboard, PagedResult, TicketListItem } from '../../tickets/models/ticket.model';
 
 @Component({
   selector: 'app-reports',
@@ -79,7 +81,7 @@ import { ReportCategoryComponent, ReportItem } from './report-category.component
                   ></path>
                 </svg>
               </h3>
-              <p class="text-xs text-text-muted mt-1">Last updated 20 minutes ago</p>
+              <p class="text-xs text-text-muted mt-1">Last updated live</p>
             </div>
             <button class="text-sm font-medium text-primary hover:underline">Customize</button>
           </div>
@@ -101,7 +103,9 @@ import { ReportCategoryComponent, ReportItem } from './report-category.component
     </div>
   `,
 })
-export class ReportsComponent {
+export class ReportsComponent implements OnInit {
+  private ticketService = inject(TicketService);
+
   categories = signal([
     {
       title: 'Helpdesk Analysis',
@@ -171,46 +175,149 @@ export class ReportsComponent {
       title: string;
       description: string;
     }[]
-  >([
-    {
-      trendDirection: 'up',
-      trendColor: 'red',
-      trendValue: '99+%',
-      metric: '7',
-      title: 'Received tickets',
-      description: 'Higher ticket volumes today, motivate agents to keep up!',
-    },
-    {
-      trendDirection: 'up',
-      trendColor: 'red',
-      trendValue: '99+%',
-      metric: '6',
-      title: 'Unresolved tickets',
-      description: 'Slower day? Consider using day passes to get everyone to pitch in',
-    },
-    {
-      trendDirection: 'down',
-      trendColor: 'green',
-      trendValue: '99+%',
-      metric: '0m 0s',
-      title: 'Average first response time',
-      description: 'High fives, your team is super responsive today!',
-    },
-    {
-      trendDirection: 'down',
-      trendColor: 'green',
-      trendValue: '99+%',
-      metric: '0m 0s',
-      title: 'Average response time',
-      description: "There's something customers just love about a responsive support team!",
-    },
-    {
-      trendDirection: 'up',
-      trendColor: 'green',
-      trendValue: '99+%',
-      metric: '100%',
-      title: 'First Response SLA',
-      description: 'Nice work creating great first impressions!',
-    },
-  ]);
+  >([]);
+
+  ngOnInit(): void {
+    this.loadInsights();
+  }
+
+  private loadInsights(): void {
+    this.ticketService.getDashboard().subscribe({
+      next: (dashboard) => {
+        // Fetch tickets to compute response time metrics
+        this.ticketService.searchTickets({ page: 1, pageSize: 100 }).subscribe({
+          next: (res: PagedResult<TicketListItem>) => {
+            const tickets: TicketListItem[] = res.items || [];
+
+            let totalFirstResponseTimeMs = 0;
+            let firstResponseCount = 0;
+
+            tickets.forEach((ticket: TicketListItem) => {
+              if (ticket.updatedAt) {
+                const created = new Date(ticket.createdAt).getTime();
+                const updated = new Date(ticket.updatedAt).getTime();
+                totalFirstResponseTimeMs += updated - created;
+                firstResponseCount++;
+              }
+            });
+
+            const avgTimeMs =
+              firstResponseCount > 0 ? totalFirstResponseTimeMs / firstResponseCount : 0;
+            const avgMins = Math.floor(avgTimeMs / 60000);
+            const avgSecs = Math.round((avgTimeMs % 60000) / 1000);
+            const timeStr = avgMins > 0 ? `${avgMins}m ${avgSecs}s` : `${avgSecs}s`;
+
+            // SLA: resolved or updated within 15 minutes
+            const slaMetCount = tickets.filter((t) => {
+              if (!t.updatedAt) return true;
+              const created = new Date(t.createdAt).getTime();
+              const updated = new Date(t.updatedAt).getTime();
+              return updated - created <= 15 * 60 * 1000;
+            }).length;
+            const slaPercent =
+              tickets.length > 0 ? Math.round((slaMetCount / tickets.length) * 100) : 100;
+
+            this.insights.set([
+              {
+                trendDirection: 'up',
+                trendColor: 'red',
+                trendValue: 'Live',
+                metric: (dashboard.totalActive + dashboard.resolvedClosed).toString(),
+                title: 'Received tickets',
+                description: 'Total ticket volume recorded in helpdesk.',
+              },
+              {
+                trendDirection: 'up',
+                trendColor: 'red',
+                trendValue: 'Live',
+                metric: dashboard.totalActive.toString(),
+                title: 'Unresolved tickets',
+                description: 'Active tickets currently awaiting resolution.',
+              },
+              {
+                trendDirection: 'down',
+                trendColor: 'green',
+                trendValue: 'Live',
+                metric: timeStr === '0s' ? '0m 0s' : timeStr,
+                title: 'Average first response time',
+                description: 'High fives, your team is keeping first responses fast!',
+              },
+              {
+                trendDirection: 'down',
+                trendColor: 'green',
+                trendValue: 'Live',
+                metric: timeStr === '0s' ? '0m 0s' : timeStr,
+                title: 'Average response time',
+                description: 'Customers love a highly responsive support team!',
+              },
+              {
+                trendDirection: 'up',
+                trendColor: 'green',
+                trendValue: 'Live',
+                metric: `${slaPercent}%`,
+                title: 'First Response SLA',
+                description: 'Nice work meeting response SLA thresholds!',
+              },
+            ]);
+          },
+          error: () => {
+            this.setDefaultInsights(dashboard);
+          },
+        });
+      },
+      error: () => {
+        this.setDefaultInsights({
+          totalActive: 0,
+          inProgress: 0,
+          pendingReply: 0,
+          resolvedClosed: 0,
+        });
+      },
+    });
+  }
+
+  private setDefaultInsights(dashboard: TicketDashboard): void {
+    this.insights.set([
+      {
+        trendDirection: 'up',
+        trendColor: 'red',
+        trendValue: 'Live',
+        metric: (dashboard.totalActive + dashboard.resolvedClosed).toString(),
+        title: 'Received tickets',
+        description: 'Total ticket volume recorded in helpdesk.',
+      },
+      {
+        trendDirection: 'up',
+        trendColor: 'red',
+        trendValue: 'Live',
+        metric: dashboard.totalActive.toString(),
+        title: 'Unresolved tickets',
+        description: 'Active tickets currently awaiting resolution.',
+      },
+      {
+        trendDirection: 'down',
+        trendColor: 'green',
+        trendValue: 'Live',
+        metric: '0m 0s',
+        title: 'Average first response time',
+        description: 'High fives, your team is keeping first responses fast!',
+      },
+      {
+        trendDirection: 'down',
+        trendColor: 'green',
+        trendValue: 'Live',
+        metric: '0m 0s',
+        title: 'Average response time',
+        description: 'Customers love a highly responsive support team!',
+      },
+      {
+        trendDirection: 'up',
+        trendColor: 'green',
+        trendValue: 'Live',
+        metric: '100%',
+        title: 'First Response SLA',
+        description: 'Nice work meeting response SLA thresholds!',
+      },
+    ]);
+  }
 }

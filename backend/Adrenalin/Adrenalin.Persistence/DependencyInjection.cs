@@ -28,11 +28,15 @@ public static class PersistenceServiceCollectionExtensions
         // ── Ticketing ─────────────────────────────────────────────────────────
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
+        services.AddScoped<Adrenalin.Modules.Ticketing.Application.Queries.ITicketQueryService, TicketQueryService>();
 
         // ── KnowledgeBase ─────────────────────────────────────────────────────
         services.AddScoped<Adrenalin.Modules.KB.Domain.Interfaces.IKbArticleRepository, KbArticleRepository>();
         services.AddScoped<Adrenalin.Modules.KB.Domain.Interfaces.IKbFolderRepository, KbFolderRepository>();
         services.AddScoped<Adrenalin.Modules.KB.Domain.Interfaces.IPortalBannerRepository, PortalBannerRepository>();
+
+        // ── Notification ──────────────────────────────────────────────────────
+        services.AddScoped<Adrenalin.Modules.Notification.Domain.Interfaces.INotificationRepository, NotificationRepository>();
 
         return services;
     }

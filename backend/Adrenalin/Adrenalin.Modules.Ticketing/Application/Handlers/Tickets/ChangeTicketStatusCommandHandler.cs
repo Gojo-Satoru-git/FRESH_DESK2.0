@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
@@ -36,9 +37,13 @@ public sealed class ChangeTicketStatusCommandHandler : IRequestHandler<ChangeTic
                 ticket.Reopen(request.ChangedBy, request.Reason ?? string.Empty);
                 break;
             default:
+                // Generic status transitions (e.g. New→Open, Open→Assigned, Assigned→InProgress)
+                // Domain AllowedTransitions will reject invalid moves.
                 ticket.ChangeStatus(request.NewStatus, request.ChangedBy, request.Reason);
                 break;
         }
+
+        _ticketRepository.Update(ticket);
 
         return ticket.Id;
     }

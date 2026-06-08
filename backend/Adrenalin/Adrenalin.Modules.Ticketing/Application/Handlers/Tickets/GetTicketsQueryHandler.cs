@@ -56,15 +56,17 @@ public sealed class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, Pa
             TotalCount = totalCount,
 
             Items = tickets
-                .Select(x => new TicketListItemDto
-                (
+                .Select(x => new TicketListItemDto(
                     x.Id,
                     x.TicketNumber ?? string.Empty,
-                    x.Subject,
+                    x.Title,
                     x.Status.ToString(),
+                    x.Priority.ToString(),
+                    x.Description.Length > 200 ? x.Description[..200] + "..." : x.Description,
                     x.AssignedAgentId,
                     x.CompanyId,
-                    x.CreatedAt
+                    x.CreatedAt,
+                    x.UpdatedAt
                 ))
                 .ToList()
         };

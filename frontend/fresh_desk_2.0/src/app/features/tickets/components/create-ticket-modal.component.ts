@@ -1,8 +1,9 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-// Ensure this path correctly points to your shared component
 import { UiInputComponent } from '../../../shared/components/ui-input/ui-input.component';
+import { TicketService } from '../services/ticket.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-create-ticket-modal',
@@ -75,6 +76,7 @@ import { UiInputComponent } from '../../../shared/components/ui-input/ui-input.c
                 </div>
               </div>
 
+              <!-- Module selector & Assignee (rendered side-by-side or stacked) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div class="relative" (click)="$event.stopPropagation(); toggleDropdown('module')">
                   <app-ui-input 
@@ -96,24 +98,30 @@ import { UiInputComponent } from '../../../shared/components/ui-input/ui-input.c
                   }
                 </div>
 
-                <div class="relative" (click)="$event.stopPropagation(); toggleDropdown('assignee')">
-                  <app-ui-input 
-                    id="assignee" 
-                    label="Assignee" 
-                    [control]="getControl('assignee')" 
-                    [isDropdown]="true">
-                  </app-ui-input>
-                  
-                  @if (activeDropdown() === 'assignee') {
-                    <div class="absolute z-20 w-full mt-2 bg-background border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-fade-in py-1 max-h-48 overflow-y-auto">
-                      @for (opt of assignees; track opt) {
-                        <div (click)="selectOption('assignee', opt)" class="px-5 py-3 text-sm hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors text-text-main font-medium">
-                          {{ opt }}
+                @if (isStaff()) {
+                  <div class="relative" (click)="$event.stopPropagation(); toggleDropdown('assignee')">
+                    <app-ui-input 
+                      id="assigneeName" 
+                      label="Assignee" 
+                      [control]="getControl('assigneeName')" 
+                      [isDropdown]="true"
+                      placeholder="Select assignee...">
+                    </app-ui-input>
+                    
+                    @if (activeDropdown() === 'assignee') {
+                      <div class="absolute z-20 w-full mt-2 bg-background border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-fade-in py-1 max-h-48 overflow-y-auto">
+                        <div (click)="selectAssignee(null, '— Unassigned —')" class="px-5 py-3 text-sm hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors text-text-muted font-medium">
+                          — Unassigned —
                         </div>
-                      }
-                    </div>
-                  }
-                </div>
+                        @for (agent of agents(); track agent.id) {
+                          <div (click)="selectAssignee(agent.id, (agent.firstName || '') + ' ' + (agent.lastName || ''))" class="px-5 py-3 text-sm hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors text-text-main font-medium">
+                            {{ agent.firstName }} {{ agent.lastName }}
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
               </div>
 
               <app-ui-input 
@@ -124,26 +132,44 @@ import { UiInputComponent } from '../../../shared/components/ui-input/ui-input.c
               </app-ui-input>
 
               <div class="space-y-1 w-full">
-                <label for="description" class="block text-xl font-medium text-text-main transition-colors">Description</label>
-                <textarea
-                  id="description"
-                  formControlName="description"
-                  rows="4"
-                  placeholder="Steps to reproduce, context, expected vs actual..."
-                  class="w-full px-5 py-3 text-lg bg-surface text-text-main shadow-lg border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-text-muted/50 resize-y"
-                ></textarea>
+                <label for="description" class="block text-xl font-medium text-text-main transition-colors">Description *</label>
+                <div class="relative transition-all">
+                  <textarea
+                    id="description"
+                    formControlName="description"
+                    rows="4"
+                    placeholder="Steps to reproduce, context, expected vs actual..."
+                    class="w-full px-5 py-3 text-lg bg-surface text-text-main shadow-lg border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-text-muted/50 resize-y"
+                    [class.border-red-500]="ticketForm.get('description')?.touched && ticketForm.get('description')?.invalid"
+                  ></textarea>
+                </div>
+                @if (ticketForm.get('description')?.touched && ticketForm.get('description')?.invalid) {
+                  <div class="pt-1">
+                    <span class="text-xs font-medium text-red-500 dark:text-red-400">Description is required</span>
+                  </div>
+                }
               </div>
 
             </form>
           </div>
 
-          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-900/50 rounded-b-2xl">
-            <button (click)="attemptCancel()" class="px-5 py-2.5 text-sm font-semibold text-text-muted hover:text-text-main hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors">
-              Cancel
-            </button>
-            <button (click)="submitTicket()" [disabled]="ticketForm.invalid" class="px-5 py-2.5 text-sm font-semibold bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-lg shadow-primary/30 transition-all">
-              Create Ticket
-            </button>
+          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 rounded-b-2xl">
+            @if (submitError()) {
+              <p class="text-xs text-red-600 dark:text-red-400 mb-3">{{ submitError() }}</p>
+            }
+            <div class="flex justify-end gap-3">
+              <button (click)="attemptCancel()" [disabled]="submitting()" class="px-5 py-2.5 text-sm font-semibold text-text-muted hover:text-text-main hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50">
+                Cancel
+              </button>
+              <button (click)="submitTicket()" [disabled]="ticketForm.invalid || submitting()" class="px-5 py-2.5 text-sm font-semibold bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-lg shadow-primary/30 transition-all flex items-center gap-2">
+                @if (submitting()) {
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  Creating…
+                } @else {
+                  Create Ticket
+                }
+              </button>
+            </div>
           </div>
 
           @if (showCancelConfirm()) {
@@ -174,34 +200,57 @@ import { UiInputComponent } from '../../../shared/components/ui-input/ui-input.c
     }
   `
 })
-export class CreateTicketModalComponent {
+export class CreateTicketModalComponent implements OnInit {
   isOpen = input.required<boolean>();
   closeModal = output<void>();
+  ticketCreated = output<void>();
 
   showCancelConfirm = signal<boolean>(false);
   activeDropdown = signal<string | null>(null);
-  
+  submitting = signal<boolean>(false);
+  submitError = signal<string | null>(null);
+
   ticketForm: FormGroup;
 
-  // Dropdown Data
-  categories = ['Bug', 'Feature Request', 'Support', 'Billing'];
+  categories = ['Bug', 'FeatureRequest', 'Support', 'ChangeRequest'];
+  // 'Critical' maps to backend TicketPriority.Critical
   priorities = ['Critical', 'High', 'Medium', 'Low'];
-  modules = ['Authentication', 'Mobile App', 'Backend Core', 'UI/UX'];
-  assignees = ['— Unassigned —', 'Rakesh Mondal (You)', 'Sarah Jenkins', 'Michael Chen'];
+  modules = ['Authentication', 'Mobile App', 'Backend Core', 'UI/UX', 'Payroll', 'Leave Management', 'HR Core'];
+  agents = signal<any[]>([]);
+  isStaff = signal<boolean>(false);
 
-  constructor(private fb: FormBuilder) {
+  private authService = inject(AuthService);
+
+  constructor(private fb: FormBuilder, private ticketService: TicketService) {
     this.ticketForm = this.fb.group({
-      title: ['', Validators.required],
-      category: ['Bug'],
-      priority: ['Medium'],
+      title: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+      category: ['Bug', Validators.required],
+      priority: ['Medium', Validators.required],
       module: [''],
-      assignee: ['Rakesh Mondal (You)'], 
       tags: [''],
-      description: [''],
+      description: ['', [Validators.required, Validators.maxLength(5000)]],
+      assigneeId: [null],
+      assigneeName: ['']
     });
   }
 
-  // Helper method to safely cast to FormControl for the child component
+  ngOnInit() {
+    const role = this.authService.currentUser()?.role;
+    if (role && role !== 'customer') {
+      this.isStaff.set(true);
+      this.ticketService.getAgents().subscribe({
+        next: (res) => {
+          if (res && res.items) {
+            this.agents.set(res.items);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to load agents', err);
+        }
+      });
+    }
+  }
+
   getControl(controlName: string): FormControl {
     return this.ticketForm.get(controlName) as FormControl;
   }
@@ -212,7 +261,13 @@ export class CreateTicketModalComponent {
 
   selectOption(controlName: string, value: string) {
     this.ticketForm.get(controlName)?.setValue(value);
-    this.activeDropdown.set(null); // Close dropdown after selection
+    this.activeDropdown.set(null);
+  }
+
+  selectAssignee(id: string | null, name: string) {
+    this.ticketForm.get('assigneeId')?.setValue(id);
+    this.ticketForm.get('assigneeName')?.setValue(id ? name : '');
+    this.activeDropdown.set(null);
   }
 
   attemptCancel() {
@@ -224,20 +279,41 @@ export class CreateTicketModalComponent {
   }
 
   confirmCancel() {
-    this.ticketForm.reset({
-      category: 'Bug',
-      priority: 'Medium',
-      assignee: 'Rakesh Mondal (You)',
-    });
+    this.ticketForm.reset({ category: 'Bug', priority: 'Medium', assigneeId: null, assigneeName: '' });
     this.showCancelConfirm.set(false);
     this.activeDropdown.set(null);
+    this.submitError.set(null);
     this.closeModal.emit();
   }
 
   submitTicket() {
-    if (this.ticketForm.valid) {
-      console.log('Ticket Submitted payload:', this.ticketForm.value);
-      this.confirmCancel(); // Resets and closes
-    }
+    if (this.ticketForm.invalid || this.submitting()) return;
+    const v = this.ticketForm.value;
+    const rawTags: string = v.tags ?? '';
+    const tags = rawTags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+
+    this.submitting.set(true);
+    this.submitError.set(null);
+
+    // ActorId & IsCustomer are injected server-side from the JWT — do NOT send them
+    this.ticketService.createTicket({
+      title: v.title,
+      description: v.description ?? '',
+      priority: v.priority,    // Must match TicketPriority enum: Critical|High|Medium|Low
+      category: v.category,    // Must match TicketCategory enum: Bug|FeatureRequest|Support|ChangeRequest
+      tags,
+      assigneeId: v.assigneeId || null,
+      moduleName: v.module || null
+    }).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.ticketCreated.emit();
+        this.confirmCancel();
+      },
+      error: (err) => {
+        this.submitting.set(false);
+        this.submitError.set(err?.error?.detail ?? 'Failed to create ticket. Please try again.');
+      }
+    });
   }
 }

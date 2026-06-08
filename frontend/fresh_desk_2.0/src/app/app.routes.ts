@@ -32,10 +32,29 @@ export const routes: Routes = [
       },
       {
         path: 'tickets',
-        loadComponent: () =>
-          import('./features/tickets/components/ticket-list.component').then(
-            (m) => m.TicketListComponent,
-          ),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-dashboard.component').then(
+                (m) => m.TicketDashboardComponent,
+              ),
+          },
+          {
+            path: 'list',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-list.component').then(
+                (m) => m.TicketListComponent,
+              ),
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-detail.component').then(
+                (m) => m.TicketDetailComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'contacts',
@@ -84,12 +103,6 @@ export const routes: Routes = [
           import('./features/customer-portal/raise-ticket.component').then(
             (m) => m.RaiseTicketComponent,
           ),
-      },
-      {
-        path: 'ticket/:id',
-        loadComponent: () =>
-          import('./features/customer-portal/ticket-details.component')
-            .then(m => m.TicketDetailsComponent),
       },
       {
         path: 'my-tickets',

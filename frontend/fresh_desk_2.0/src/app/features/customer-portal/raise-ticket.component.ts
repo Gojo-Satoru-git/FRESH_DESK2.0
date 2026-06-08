@@ -1,7 +1,10 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CustomerHeaderComponent } from '../../features/customer-portal/customer-header.component';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { TicketService } from '../tickets/services/ticket.service';
+import { environment } from '../../../environments/environment.development';
 
 @Component({
   selector: 'app-raise-ticket',
@@ -11,6 +14,9 @@ import { CustomerHeaderComponent } from '../../features/customer-portal/customer
 })
 export class RaiseTicketComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private ticketService = inject(TicketService);
   
   ticketForm!: FormGroup;
   attachedFiles: File[] = [];
@@ -18,16 +24,16 @@ export class RaiseTicketComponent implements OnInit {
   isSubmitting = false;
   submitted = false;
 
-  modules = ['Change Request', 'Clarification', 'Environment Issues', 'New Requirements', 'Service Requests', 'Software Enchancement','Software Problem', 'Other'];
+  modules = ['Change Request', 'Clarification', 'Environment Issues', 'New Requirements', 'Service Requests', 'Software Enhancement','Software Problem', 'Other'];
   priorities = ['Low', 'Medium', 'High', 'Critical'];
   kbSuggestions = signal<any[]>([]);
+  showCancelConfirm = signal<boolean>(false);
+  toastMessage = signal<string | null>(null);
 
-  private kbArticles = [
-    { title: 'How to reset your password', description: 'Steps to reset login password', keywords: ['password', 'login', 'authentication'] },
-    { title: 'Billing and invoice issues', description: 'Fix billing and payment problems', keywords: ['billing', 'invoice', 'payment'] },
-    { title: 'Dashboard not loading', description: 'Resolve dashboard loading issues', keywords: ['dashboard', 'loading', 'slow'] },
-    { title: 'Report export failed', description: 'Fix report download problems', keywords: ['report', 'export', 'download'] },
-  ];
+  private showToast(msg: string) {
+    this.toastMessage.set(msg);
+    setTimeout(() => this.toastMessage.set(null), 3000);
+  }
 
   ngOnInit(): void {
     this.ticketForm = this.fb.group({
@@ -47,12 +53,18 @@ export class RaiseTicketComponent implements OnInit {
       this.kbSuggestions.set([]);
       return;
     }
-    const text = subject.toLowerCase();
-    const matches = this.kbArticles.filter(article =>
-      article.keywords.some(k => text.includes(k)) ||
-      article.title.toLowerCase().includes(text)
-    );
-    this.kbSuggestions.set(matches);
+    this.http.get<{ items: any[] }>(`${environment.apiUrl}/api/kb/articles?titleQuery=${encodeURIComponent(subject)}&pageSize=5`).subscribe({
+      next: (res: any) => {
+        const mapped = (res.items || []).map((item: any) => ({
+          title: item.title,
+          description: item.articleType || 'Knowledge Base Article'
+        }));
+        this.kbSuggestions.set(mapped);
+      },
+      error: () => {
+        this.kbSuggestions.set([]);
+      }
+    });
   }
 
   onFileSelect(event: Event) {
@@ -71,22 +83,32 @@ export class RaiseTicketComponent implements OnInit {
   removeFile(index: number) {
     this.attachedFiles.splice(index, 1);
   }
-onCancel(): void {
-  this.ticketForm.reset({
-    subject: '',
-    module: '',
-    priority: 'Medium',
-    description: ''
-  });
+  onCancel(): void {
+    if (this.ticketForm.dirty || this.attachedFiles.length > 0) {
+      this.showCancelConfirm.set(true);
+    } else {
+      this.confirmCancel();
+    }
+  }
 
-  this.attachedFiles = [];
-  this.kbSuggestions.set([]);
-  this.submitted = false;
+  confirmCancel(): void {
+    this.ticketForm.reset({
+      subject: '',
+      module: '',
+      priority: 'Medium',
+      description: ''
+    });
+    this.attachedFiles = [];
+    this.kbSuggestions.set([]);
+    this.submitted = false;
+    this.showCancelConfirm.set(false);
+    this.ticketForm.markAsPristine();
+    this.ticketForm.markAsUntouched();
+  }
 
-  // Reset form state completely
-  this.ticketForm.markAsPristine();
-  this.ticketForm.markAsUntouched();
-}
+  keepEditing(): void {
+    this.showCancelConfirm.set(false);
+  }
 
   onSubmit(): void {
     this.submitted = true;
@@ -94,11 +116,61 @@ onCancel(): void {
       this.ticketForm.markAllAsTouched();
       return;
     }
+    
     this.isSubmitting = true;
+    
+    const payload = {
+      title: this.ticketForm.value.subject,
+      description: this.ticketForm.value.description,
+      priority: this.ticketForm.value.priority,
+      category: this.ticketForm.value.module,
+      tags: []
+    };
+
+    this.ticketService.createTicket(payload).subscribe({
+      next: (res: any) => {
+        const ticketId = res.ticketId;
+        if (this.attachedFiles.length > 0) {
+          this.uploadFiles(ticketId);
+        } else {
+          this.onSuccess();
+        }
+      },
+      error: (err: any) => {
+        this.showToast('Failed to submit ticket: ' + (err.error?.error || 'Unknown error'));
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  private uploadFiles(ticketId: string): void {
+    let uploadedCount = 0;
+    this.attachedFiles.forEach(file => {
+      const formData = new FormData();
+      formData.append('File', file);
+      
+      this.http.post(`${environment.apiUrl}/api/tickets/${ticketId}/attachments`, formData).subscribe({
+        next: () => {
+          uploadedCount++;
+          if (uploadedCount === this.attachedFiles.length) {
+            this.onSuccess();
+          }
+        },
+        error: () => {
+          uploadedCount++;
+          if (uploadedCount === this.attachedFiles.length) {
+            this.onSuccess();
+          }
+        }
+      });
+    });
+  }
+
+  private onSuccess(): void {
+    this.isSubmitting = false;
+    this.showToast('Ticket submitted successfully!');
     setTimeout(() => {
-      alert('Ticket submitted successfully!');
-      this.isSubmitting = false;
-      this.onCancel();
+      this.router.navigate(['/customer-portal']);
     }, 1500);
   }
 }

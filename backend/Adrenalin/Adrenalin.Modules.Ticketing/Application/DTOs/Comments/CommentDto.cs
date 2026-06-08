@@ -7,5 +7,7 @@ public sealed record CommentDto(
     string Body,
     string Visibility,
     DateTimeOffset CreatedAt,
-    IReadOnlyCollection<AttachmentDto> Attachments
+    IReadOnlyCollection<AttachmentDto> Attachments,
+    string? AuthorName = null,
+    string? ContactName = null
 );

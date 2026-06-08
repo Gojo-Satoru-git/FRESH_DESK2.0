@@ -2,7 +2,9 @@ using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
+using Adrenalin.UnitTests.Fakes;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -13,51 +15,6 @@ namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
 public class WatcherCommandHandlerTests
 {
-    private class FakeTicketRepository : ITicketRepository
-    {
-        public Ticket? TicketToReturn { get; set; }
-
-        public Task<Ticket?> GetByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(TicketToReturn?.Id == ticketId ? TicketToReturn : null);
-        }
-
-        public Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public void Update(Ticket ticket) { }
-        public Task<bool> ExistsAsync(Guid ticketId, CancellationToken cancellationToken = default) => Task.FromResult(TicketToReturn?.Id == ticketId);
-        public void Remove(Ticket ticket) { }
-
-        public Task<IReadOnlyList<Ticket>> GetTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, int page, int pageSize, CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IReadOnlyList<Ticket>>(Array.Empty<Ticket>());
-        }
-
-        public Task<int> CountTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(0);
-        }
-
-        public Guid? DefaultCompanyId { get; set; }
-        public Dictionary<Guid, Guid> UserCompanyMap { get; } = new();
-
-        public Task<Guid?> GetUserCompanyIdAsync(Guid userId, CancellationToken cancellationToken = default)
-        {
-            if (UserCompanyMap.TryGetValue(userId, out var cid))
-            {
-                return Task.FromResult<Guid?>(cid);
-            }
-            if (DefaultCompanyId.HasValue)
-            {
-                return Task.FromResult<Guid?>(DefaultCompanyId.Value);
-            }
-            if (TicketToReturn is not null)
-            {
-                return Task.FromResult<Guid?>(TicketToReturn.CompanyId);
-            }
-            return Task.FromResult<Guid?>(null);
-        }
-    }
-
     private readonly FakeTicketRepository _ticketRepository;
     private readonly AddWatcherCommandHandler _addHandler;
     private readonly RemoveWatcherCommandHandler _removeHandler;

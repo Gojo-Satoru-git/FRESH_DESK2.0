@@ -43,7 +43,6 @@
     <Folder Include="Context\" />
     <Folder Include="Interceptors\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Seed\" />
   </ItemGroup>
 
 </Project>

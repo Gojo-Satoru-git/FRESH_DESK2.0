@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Entities;
 

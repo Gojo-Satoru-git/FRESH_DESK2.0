@@ -11,130 +11,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-
+using Adrenalin.UnitTests.Fakes;
 namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
 public class GetTicketsQueryHandlerTests
 {
-    private class FakeTicketRepository : ITicketRepository
-    {
-        public List<Ticket> Tickets { get; } = new();
-
-        public Task<Ticket?> GetByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(Tickets.FirstOrDefault(x => x.Id == ticketId));
-        }
-
-        public Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default)
-        {
-            Tickets.Add(ticket);
-            return Task.CompletedTask;
-        }
-
-        public void Update(Ticket ticket) { }
-
-        public Task<bool> ExistsAsync(Guid ticketId, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(Tickets.Any(x => x.Id == ticketId));
-        }
-
-        public void Remove(Ticket ticket)
-        {
-            Tickets.Remove(ticket);
-        }
-
-        public Task<IReadOnlyList<Ticket>> GetTicketsAsync(
-            string? ticketNumber,
-            TicketStatus? status,
-            Guid? assignedAgentId,
-            Guid? companyId,
-            int page,
-            int pageSize,
-            CancellationToken cancellationToken)
-        {
-            var query = Tickets.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(ticketNumber))
-            {
-                query = query.Where(x => x.TicketNumber == ticketNumber);
-            }
-
-            if (status.HasValue)
-            {
-                query = query.Where(x => x.Status == status.Value);
-            }
-
-            if (assignedAgentId.HasValue)
-            {
-                query = query.Where(x => x.AssignedAgentId == assignedAgentId);
-            }
-
-            if (companyId.HasValue)
-            {
-                query = query.Where(x => x.CompanyId == companyId);
-            }
-
-            var result = query
-                .OrderByDescending(x => x.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            return Task.FromResult<IReadOnlyList<Ticket>>(result);
-        }
-
-        public Task<int> CountTicketsAsync(
-            string? ticketNumber,
-            TicketStatus? status,
-            Guid? assignedAgentId,
-            Guid? companyId,
-            CancellationToken cancellationToken = default)
-        {
-            var query = Tickets.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(ticketNumber))
-            {
-                query = query.Where(x => x.TicketNumber == ticketNumber);
-            }
-
-            if (status.HasValue)
-            {
-                query = query.Where(x => x.Status == status.Value);
-            }
-
-            if (assignedAgentId.HasValue)
-            {
-                query = query.Where(x => x.AssignedAgentId == assignedAgentId.Value);
-            }
-
-            if (companyId.HasValue)
-            {
-                query = query.Where(x => x.CompanyId == companyId);
-            }
-
-            return Task.FromResult(query.Count());
-        }
-
-        public Guid? DefaultCompanyId { get; set; }
-        public Dictionary<Guid, Guid> UserCompanyMap { get; } = new();
-
-        public Task<Guid?> GetUserCompanyIdAsync(Guid userId, CancellationToken cancellationToken = default)
-        {
-            if (UserCompanyMap.TryGetValue(userId, out var cid))
-            {
-                return Task.FromResult<Guid?>(cid);
-            }
-            if (DefaultCompanyId.HasValue)
-            {
-                return Task.FromResult<Guid?>(DefaultCompanyId.Value);
-            }
-            if (Tickets.Any())
-            {
-                return Task.FromResult<Guid?>(Tickets.First().CompanyId);
-            }
-            return Task.FromResult<Guid?>(null);
-        }
-    }
 
     private readonly FakeTicketRepository _ticketRepository;
     private readonly GetTicketsQueryHandler _handler;
@@ -158,6 +39,7 @@ public class GetTicketsQueryHandlerTests
 
         // Force one to be InProgress
         ticket2.ChangeStatus(TicketStatus.Open, Guid.NewGuid(), "Transition to Open");
+        ticket2.ChangeStatus(TicketStatus.Assigned, Guid.NewGuid(), "Transition to Assigned");
         ticket2.ChangeStatus(TicketStatus.InProgress, Guid.NewGuid(), "Transition to InProgress");
 
         await _ticketRepository.AddAsync(ticket1);

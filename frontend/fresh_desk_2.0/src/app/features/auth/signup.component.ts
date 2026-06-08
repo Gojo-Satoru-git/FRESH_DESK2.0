@@ -5,6 +5,8 @@ import { UiInputComponent } from '../../shared/components/ui-input/ui-input.comp
 import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
 import { passwordMatchValidator } from '../../core/validators/password-match.validator';
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
+import { AuthService } from '../../core/auth/auth.service';
+import { strongPasswordValidator } from '../../core/validators/strong-password.validator';
 
 @Component({
   selector: 'app-signup',
@@ -72,6 +74,22 @@ import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.componen
               [control]="$any(signupForm.get('email'))"
             ></app-ui-input>
 
+            <div class="space-y-1">
+              <app-ui-input
+                id="phone"
+                label="Phone Number"
+                type="text"
+                placeholder="1234567890"
+                [control]="$any(signupForm.get('phone'))"
+              ></app-ui-input>
+              @if (
+                signupForm.get('phone')?.touched &&
+                signupForm.get('phone')?.invalid
+              ) {
+                <span class="text-xs text-red-500 dark:text-red-400">Phone number must be exactly 10 digits</span>
+              }
+            </div>
+
             <div class="space-y-5">
               <div class="space-y-1">
                 <app-ui-input
@@ -81,6 +99,13 @@ import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.componen
                   placeholder="••••••••••••••"
                   [control]="$any(signupForm.get('password'))"
                 ></app-ui-input>
+
+                @if (
+                  signupForm.get('password')?.touched &&
+                  (signupForm.get('password')?.hasError('minlength') || signupForm.get('password')?.hasError('maxlength'))
+                ) {
+                  <span class="text-xs text-red-500 dark:text-red-400 block mt-1">Password must be between 12 and 14 characters</span>
+                }
 
                 @if (
                   signupForm.get('password')?.touched &&
@@ -191,6 +216,7 @@ import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.componen
 })
 export class SignupComponent {
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
@@ -202,7 +228,13 @@ export class SignupComponent {
       firstName: new FormControl('', [Validators.required]),
       lastName: new FormControl('', [Validators.required]),
       email: new FormControl('', [Validators.required, Validators.email]),
-      password: new FormControl('', [Validators.required, Validators.minLength(14)]),
+      phone: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]),
+      password: new FormControl('', [
+        Validators.required,
+        Validators.minLength(12),
+        Validators.maxLength(14),
+        strongPasswordValidator
+      ]),
       confirmPassword: new FormControl('', [Validators.required]),
     },
     { validators: passwordMatchValidator },
@@ -218,16 +250,29 @@ export class SignupComponent {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    // MOCK API CALL
-    setTimeout(() => {
-      this.isLoading.set(false);
+    const formValues = this.signupForm.value;
+    const registerData = {
+      firstName: formValues.firstName!,
+      lastName: formValues.lastName!,
+      email: formValues.email!,
+      phone: formValues.phone!,
+      password: formValues.password!,
+      username: formValues.email!.split('@')[0] // auto-generate username from email prefix
+    };
 
-      // Simulate success and route them to login
-      this.successMessage.set('Account created successfully! Redirecting to login...');
-
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-    }, 1500);
+    this.authService.register(registerData).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.successMessage.set('Account created successfully! Redirecting to login...');
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 2000);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(err.error?.detail || err.error?.message || err.message || 'Registration failed. Please check your inputs.');
+      }
+    });
   }
 }
+

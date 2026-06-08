@@ -15,7 +15,22 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
         builder.HasKey(e => e.Id).HasName("tickets_pkey");
 
-        builder.ToTable("tickets", "ticket", tb => tb.HasComment("Central transactional entity. graph_id is resolved once at creation via scope engine. version_id/module_id/sub_module_id are normalized FK refs per Addendum v7. sla_excluded=true during hypercare/delivery mode. is_on_hold_payment for payment holds."));
+        builder.ToTable("tickets", "ticket", tb => tb.HasComment("Central transactional entity."));
+
+        builder.HasQueryFilter(e => !e.IsDeleted);
+
+        builder.Ignore(e => e.Type);
+
+        builder.Property(e => e.Title).HasColumnName("title").HasMaxLength(100);
+        builder.Property(e => e.Category).HasConversion<string>().HasColumnName("category").HasMaxLength(30);
+        builder.Property(e => e.Priority).HasConversion<string>().HasColumnName("priority").HasMaxLength(30);
+        builder.Property(e => e.ModuleName).HasColumnName("module_name").HasMaxLength(100);
+        builder.Property(e => e.Department).HasColumnName("department").HasMaxLength(50);
+        builder.Property(e => e.Region).HasColumnName("region").HasMaxLength(50);
+        builder.Property(e => e.ResolvedAt).HasColumnName("resolved_at");
+        builder.Property(e => e.ClosedAt).HasColumnName("closed_at");
+
+        builder.Property(e => e.Status).HasConversion<string>().HasColumnName("status").HasMaxLength(30);
 
         builder.HasIndex(e => new { e.IsAutoResolved, e.CreatedAt }, "idx_tickets_auto_resolved").HasFilter("((is_auto_resolved = true) AND (is_deleted = false))");
 
@@ -109,15 +124,11 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.SubModuleId).HasColumnName("sub_module_id");
         
-        builder.Property(e => e.Subject).HasColumnName("subject");
-        
         builder.Property(e => e.TicketNumber).HasMaxLength(20).HasColumnName("ticket_number");
         
         builder.Property(e => e.TierWeight).HasPrecision(4, 2).HasColumnName("tier_weight");
         
         builder.Property(e => e.TypeWeight).HasPrecision(4, 2).HasColumnName("type_weight");
-        
-        builder.Property(e => e.Status).HasColumnName("status");
 
         builder.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").HasColumnName("updated_at");
         
@@ -127,7 +138,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.VersionId).HasColumnName("version_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version").IsRowVersion();
+        builder.Property(e => e.RowVersion).HasColumnName("row_version").IsConcurrencyToken();
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.AssignedAgentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("tickets_assigned_agent_id_fkey");
 

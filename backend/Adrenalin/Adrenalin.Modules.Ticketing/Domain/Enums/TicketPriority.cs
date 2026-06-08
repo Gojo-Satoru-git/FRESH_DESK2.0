@@ -2,8 +2,8 @@ namespace Adrenalin.Modules.Ticketing.Domain.Enums;
 
 public enum TicketPriority
 {
-    Urgent,
-    High,
+    Low,
     Medium,
-    Low
+    High,
+    Critical
 }

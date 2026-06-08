@@ -8,9 +8,11 @@ namespace Adrenalin.SharedKernel.Interfaces
     public interface  IJwtProvider
     {
         string GenerateToken(
-        Guid userId,
-        string email,
-        IEnumerable<string> roles,
-        IEnumerable<string> permissions);
+            Guid userId,
+            string email,
+            IEnumerable<string> roles,
+            IEnumerable<string> permissions,
+            string? firstName = null,
+            string? lastName = null);
     }
 }

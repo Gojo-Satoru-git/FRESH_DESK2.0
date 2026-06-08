@@ -87,7 +87,9 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
                 user.Id,
                 user.Email,
                 roles,
-                permissions);
+                permissions,
+                user.FirstName,
+                user.LastName);
 
         var newRefreshToken =
             _refreshTokenGenerator.Generate();

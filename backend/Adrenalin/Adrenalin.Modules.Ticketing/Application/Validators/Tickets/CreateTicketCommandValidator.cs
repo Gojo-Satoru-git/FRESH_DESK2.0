@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 
 namespace Adrenalin.Modules.Ticketing.Application.Validators;
@@ -7,12 +7,19 @@ public sealed class CreateTicketCommandValidator : AbstractValidator<CreateTicke
 {
     public CreateTicketCommandValidator()
     {
-        RuleFor(x => x.CompanyId).NotEmpty();
+        RuleFor(x => x.Title)
+            .NotEmpty().WithMessage("Title is required.")
+            .MinimumLength(5).WithMessage("Title must be at least 5 characters.")
+            .MaximumLength(100).WithMessage("Title cannot exceed 100 characters.");
 
-        RuleFor(x => x.ModuleId).NotEmpty();
+        RuleFor(x => x.Description)
+            .NotEmpty().WithMessage("Description is required.")
+            .MaximumLength(5000).WithMessage("Description cannot exceed 5000 characters.");
 
-        RuleFor(x => x.Subject).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Priority)
+            .NotEmpty().WithMessage("Priority is required.");
 
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(10000);
+        RuleFor(x => x.Category)
+            .NotEmpty().WithMessage("Category is required.");
     }
 }

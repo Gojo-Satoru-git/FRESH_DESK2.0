@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
@@ -28,19 +29,25 @@ public sealed class AssignTicketCommandHandler : IRequestHandler<AssignTicketCom
             throw new TicketDomainException("Cannot assign agent to a deleted ticket.");
         }
 
-        var assignerCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AssignedBy, cancellationToken);
-        if (assignerCompanyId != ticket.CompanyId)
+        var isAssignerAdmin = await _ticketRepository.IsUserAdminAsync(request.AssignedBy, cancellationToken);
+        if (!isAssignerAdmin)
         {
-            throw new TicketDomainException("Assigner does not belong to the ticket's company.");
-        }
+            var assignerCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AssignedBy, cancellationToken);
+            if (assignerCompanyId != ticket.CompanyId)
+            {
+                throw new TicketDomainException("Assigner does not belong to the ticket's company.");
+            }
 
-        var agentCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AgentId, cancellationToken);
-        if (agentCompanyId != ticket.CompanyId)
-        {
-            throw new TicketDomainException("Agent does not belong to the ticket's company.");
+            var agentCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AgentId, cancellationToken);
+            if (agentCompanyId != ticket.CompanyId)
+            {
+                throw new TicketDomainException("Agent does not belong to the ticket's company.");
+            }
         }
 
         ticket.AssignAgent(request.AgentId, request.AssignedBy, request.Notes);
+
+        _ticketRepository.Update(ticket);
 
         return ticket.Id;
     }

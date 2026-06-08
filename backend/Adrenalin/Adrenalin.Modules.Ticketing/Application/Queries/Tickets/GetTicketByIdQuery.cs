@@ -5,5 +5,5 @@ namespace Adrenalin.Modules.Ticketing.Application.Queries;
 
 public sealed record GetTicketByIdQuery(
     Guid TicketId,
-    bool InclueInternalComments = true
+    bool IncludeInternalComments = true
 ) : IRequest<GetTicketByIdResponse>;

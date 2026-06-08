@@ -1,6 +1,7 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
 

@@ -45,4 +45,18 @@ public sealed class Company : SoftDeleteEntity
     public ICollection<CompanyDomain> CompanyDomains { get; private set; } = new List<CompanyDomain>();
 
     public ICollection<Contact> Contacts { get; private set; } = new List<Contact>();
+
+    public static Company Create(string name, string geoRegion, string supportTier, bool isActive = true)
+    {
+        return new Company
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            GeoRegion = geoRegion,
+            SupportTier = supportTier,
+            IsActive = isActive,
+            Contacts = new List<Contact>(),
+            CompanyDomains = new List<CompanyDomain>()
+        };
+    }
 }
