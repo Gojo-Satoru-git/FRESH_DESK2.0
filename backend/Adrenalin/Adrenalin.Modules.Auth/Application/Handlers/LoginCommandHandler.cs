@@ -69,6 +69,7 @@ public sealed class LoginCommandHandler
            permissions);
         var refreshToken =
      _refreshTokenGenerator.Generate();
+     Console.WriteLine($"Refresh Token: {refreshToken}");
 
         var tokenHash =
             _tokenHasher.Hash(refreshToken);
