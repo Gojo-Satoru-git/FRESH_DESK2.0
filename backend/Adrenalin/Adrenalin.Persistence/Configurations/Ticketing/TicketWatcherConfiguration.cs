@@ -26,7 +26,7 @@ public sealed class TicketWatcherConfiguration : IEntityTypeConfiguration<Ticket
 
         builder.Property(x => x.AddedBy).IsRequired();
 
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsConcurrencyToken();
 
         builder.HasIndex(x => new { x.TicketId, x.UserId }).IsUnique();
 

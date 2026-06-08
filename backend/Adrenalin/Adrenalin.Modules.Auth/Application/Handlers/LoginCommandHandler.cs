@@ -66,7 +66,9 @@ public sealed class LoginCommandHandler
        _jwtProvider.GenerateToken(
            user.Id,
            user.Email, roles,
-           permissions);
+           permissions,
+           user.FirstName,
+           user.LastName);
         var refreshToken =
      _refreshTokenGenerator.Generate();
      Console.WriteLine($"Refresh Token: {refreshToken}");

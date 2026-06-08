@@ -19,6 +19,8 @@ public class FakeTicketRepository : ITicketRepository
     // Maps UserId → CompanyId for access-control tests.
     public Dictionary<Guid, Guid> UserCompanyMap { get; } = new();
 
+    public HashSet<Guid> AdminUserIds { get; } = new();
+
     public Task<Ticket?> GetByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
     {
         // Prefer the pinned ticket when set, otherwise search the list
@@ -114,5 +116,69 @@ public class FakeTicketRepository : ITicketRepository
         // Fallback: infer from any stored ticket
         var any = TicketToReturn ?? Tickets.FirstOrDefault();
         return Task.FromResult<Guid?>(any?.CompanyId);
+    }
+
+    public Task<string> GenerateTicketNumberAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult($"TKT-{DateTime.UtcNow.Year}-{Tickets.Count + 1:D6}");
+    }
+
+    public Task<(Guid ContactId, Guid CompanyId)?> GetContactAndCompanyByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var companyId = DefaultCompanyId ?? Guid.NewGuid();
+        return Task.FromResult<(Guid ContactId, Guid CompanyId)?>((userId, companyId));
+    }
+
+    public Task<(Guid ContactId, Guid CompanyId)?> GetContactAndCompanyByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var contactId = Guid.NewGuid();
+        var companyId = DefaultCompanyId ?? Guid.NewGuid();
+        return Task.FromResult<(Guid ContactId, Guid CompanyId)?>((contactId, companyId));
+    }
+
+    public Task<(Guid ContactId, Guid CompanyId)> AutoCreateContactAndCompanyAsync(string email, string name, CancellationToken cancellationToken = default)
+    {
+        var contactId = Guid.NewGuid();
+        var companyId = DefaultCompanyId ?? Guid.NewGuid();
+        return Task.FromResult((contactId, companyId));
+    }
+
+    public Task<(Guid ContactId, Guid CompanyId)> AutoCreateContactForUserAsync(Guid userId, string email, string name, CancellationToken cancellationToken = default)
+    {
+        var companyId = DefaultCompanyId ?? Guid.NewGuid();
+        return Task.FromResult((userId, companyId));
+    }
+
+    public Task<(Guid ModuleId, string ModuleName, string? Department)> ResolveOrCreateModuleAsync(string categoryName, CancellationToken cancellationToken = default)
+    {
+        var moduleId = Guid.NewGuid();
+        return Task.FromResult((moduleId, categoryName, (string?)"Support"));
+    }
+
+    public Task<(string Email, string Name)> GetUserEmailAndNameAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(( "user@example.com", "Test User" ));
+    }
+
+    public Task<Dictionary<Guid, string>> GetUserDisplayNamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    {
+        var dict = userIds.Distinct().ToDictionary(id => id, id => $"Test User ({id.ToString().Substring(0, 8)})");
+        return Task.FromResult(dict);
+    }
+
+    public Task<Dictionary<Guid, string>> GetContactDisplayNamesAsync(IEnumerable<Guid> contactIds, CancellationToken cancellationToken = default)
+    {
+        var dict = contactIds.Distinct().ToDictionary(id => id, id => $"Test Contact ({id.ToString().Substring(0, 8)})");
+        return Task.FromResult(dict);
+    }
+
+    public Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult("US");
+    }
+
+    public Task<bool> IsUserAdminAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(AdminUserIds.Contains(userId));
     }
 }

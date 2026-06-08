@@ -16,4 +16,19 @@ public sealed class GeoRegion : ActiveSoftDeleteEntity
     public TimeOnly BusinessEnd { get; private set; }
 
     public string WorkingDays { get; private set; } = null!;
+
+    public static GeoRegion Create(string code, string label, string timezone, TimeOnly businessStart, TimeOnly businessEnd, string workingDays = "Mon-Fri")
+    {
+        return new GeoRegion
+        {
+            Id = Guid.NewGuid(),
+            Code = code,
+            Label = label,
+            Timezone = timezone,
+            BusinessStart = businessStart,
+            BusinessEnd = businessEnd,
+            WorkingDays = workingDays,
+            IsActive = true
+        };
+    }
 }

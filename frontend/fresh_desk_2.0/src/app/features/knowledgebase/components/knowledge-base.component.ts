@@ -1,8 +1,40 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment.development';
+
+interface KbFolderTreeNodeDto {
+  id: string;
+  name: string;
+  parentId?: string;
+  displayOrder: number;
+  children: KbFolderTreeNodeDto[];
+}
+
+interface KbArticleSummaryDto {
+  id: string;
+  title: string;
+  articleType: string;
+  status: string;
+  isPublished: boolean;
+  folderId?: string;
+  updatedAt?: string;
+}
+
+interface CategoryItem {
+  title: string;
+  items: { name: string; count: string }[];
+}
+
+interface DraftItem {
+  title: string;
+  lastEdited: string;
+}
 
 @Component({
   selector: 'app-knowledge-base',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <div class="h-full flex flex-col animate-fade-in bg-background">
       
@@ -46,39 +78,51 @@ import { Component, signal } from '@angular/core';
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @for (draft of drafts(); track draft.title) {
-              <div class="bg-surface border border-gray-200 dark:border-gray-800 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer group">
-                <h4 class="text-sm font-semibold text-text-main mb-2 group-hover:text-primary transition-colors">{{ draft.title }}</h4>
-                <p class="text-xs text-text-muted">Last edited {{ draft.lastEdited }}</p>
+            @if (drafts().length === 0) {
+              <div class="col-span-full py-8 text-center text-sm text-text-muted bg-surface border border-gray-200 dark:border-gray-800 rounded-lg">
+                No draft articles found.
               </div>
+            } @else {
+              @for (draft of drafts(); track draft.title) {
+                <div class="bg-surface border border-gray-200 dark:border-gray-800 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer group">
+                  <h4 class="text-sm font-semibold text-text-main mb-2 group-hover:text-primary transition-colors">{{ draft.title }}</h4>
+                  <p class="text-xs text-text-muted">Last edited {{ draft.lastEdited }}</p>
+                </div>
+              }
             }
           </div>
         </section>
 
         <section>
           <div class="mb-4">
-            <h3 class="text-base font-bold text-text-main">Categories (6)</h3>
+            <h3 class="text-base font-bold text-text-main">Categories ({{ categories().length }})</h3>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @for (category of categories(); track category.title) {
-              <div class="bg-surface border border-gray-200 dark:border-gray-800 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full">
-                
-                <div class="flex items-center gap-3 mb-6">
-                  <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                  <h4 class="text-sm font-bold text-text-main">{{ category.title }}</h4>
-                </div>
-                
-                <div class="space-y-4 mt-auto">
-                  @for (item of category.items; track item.name) {
-                    <div class="flex justify-between items-center group/item">
-                      <span class="text-sm text-text-muted group-hover/item:text-primary transition-colors">{{ item.name }}</span>
-                      <span class="text-sm font-bold text-text-main">{{ item.count }}</span>
-                    </div>
-                  }
-                </div>
-                
+            @if (categories().length === 0) {
+              <div class="col-span-full py-8 text-center text-sm text-text-muted bg-surface border border-gray-200 dark:border-gray-800 rounded-lg">
+                No categories found.
               </div>
+            } @else {
+              @for (category of categories(); track category.title) {
+                <div class="bg-surface border border-gray-200 dark:border-gray-800 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full">
+                  
+                  <div class="flex items-center gap-3 mb-6">
+                    <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    <h4 class="text-sm font-bold text-text-main">{{ category.title }}</h4>
+                  </div>
+                  
+                  <div class="space-y-4 mt-auto">
+                    @for (item of category.items; track item.name) {
+                      <div class="flex justify-between items-center group/item">
+                        <span class="text-sm text-text-muted group-hover/item:text-primary transition-colors">{{ item.name }}</span>
+                        <span class="text-sm font-bold text-text-main">{{ item.count }}</span>
+                      </div>
+                    }
+                  </div>
+                  
+                </div>
+              }
             }
           </div>
         </section>
@@ -87,54 +131,77 @@ import { Component, signal } from '@angular/core';
     </div>
   `
 })
-export class KnowledgeBaseComponent {
+export class KnowledgeBaseComponent implements OnInit {
+  private http = inject(HttpClient);
   
-  // Data matching your screenshot
-  drafts = signal([
-    { title: 'Information safety and security', lastEdited: '3 minutes ago' },
-    { title: 'Legal requirements', lastEdited: '3 minutes ago' },
-    { title: 'Email-marketing', lastEdited: '3 minutes ago' }
-  ]);
+  drafts = signal<DraftItem[]>([]);
+  categories = signal<CategoryItem[]>([]);
 
-  categories = signal([
-    {
-      title: 'General',
-      items: [
-        { name: 'FAQ', count: '00' },
-        { name: 'Getting Started', count: '00' }
-      ]
-    },
-    {
-      title: 'Getting started with us',
-      items: [
-        { name: 'Your account', count: '02' }
-      ]
-    },
-    {
-      title: 'Orders and refunds',
-      items: [
-        { name: 'Your order', count: '01' }
-      ]
-    },
-    {
-      title: 'FAQs',
-      items: [
-        { name: 'Shipping FAQs', count: '03' }
-      ]
-    },
-    {
-      title: 'Gifts and coupons',
-      items: [
-        { name: 'Gifts', count: '02' },
-        { name: 'Coupons', count: '02' }
-      ]
-    },
-    {
-      title: 'Information collected',
-      items: [
-        { name: 'Privacy policy', count: '02' },
-        { name: 'Opt-out policy', count: '02' }
-      ]
-    }
-  ]);
+  ngOnInit(): void {
+    this.loadKBData();
+  }
+
+  private loadKBData(): void {
+    // 1. Fetch draft articles
+    this.http.get<{ items: KbArticleSummaryDto[] }>(`${environment.apiUrl}/api/kb/articles?status=Draft&pageSize=10`).subscribe({
+      next: (res) => {
+        const items = res.items || [];
+        this.drafts.set(items.map(art => ({
+          title: art.title,
+          lastEdited: art.updatedAt ? this.formatTimeAgo(art.updatedAt) : 'Recently'
+        })));
+      }
+    });
+
+    // 2. Fetch categories and subcategory article counts
+    this.http.get<KbFolderTreeNodeDto[]>(`${environment.apiUrl}/api/kb/folders/tree`).subscribe({
+      next: (tree) => {
+        // Fetch all article summaries to calculate counts per subfolder
+        this.http.get<{ items: KbArticleSummaryDto[] }>(`${environment.apiUrl}/api/kb/articles?pageSize=1000`).subscribe({
+          next: (artRes) => {
+            const articles = artRes.items || [];
+            const folderCounts: { [folderId: string]: number } = {};
+            articles.forEach(art => {
+              if (art.folderId) {
+                folderCounts[art.folderId] = (folderCounts[art.folderId] || 0) + 1;
+              }
+            });
+
+            const mapped = tree.map(node => ({
+              title: node.name,
+              items: (node.children || []).map(child => ({
+                name: child.name,
+                count: (folderCounts[child.id] || 0).toString().padStart(2, '0')
+              }))
+            }));
+            this.categories.set(mapped);
+          },
+          error: () => {
+            // Fallback: map with 0 counts
+            const mapped = tree.map(node => ({
+              title: node.name,
+              items: (node.children || []).map(child => ({
+                name: child.name,
+                count: '00'
+              }))
+            }));
+            this.categories.set(mapped);
+          }
+        });
+      }
+    });
+  }
+
+  private formatTimeAgo(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} days ago`;
+  }
 }

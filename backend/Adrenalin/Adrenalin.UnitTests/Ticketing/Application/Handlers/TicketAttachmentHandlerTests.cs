@@ -3,8 +3,14 @@ using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.Modules.Ticketing.Application.Validators;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
@@ -73,7 +79,7 @@ public class TicketAttachmentHandlerTests
     {
         // Arrange
         var companyId = Guid.NewGuid();
-        var ticket    = Ticket.Create(companyId, Guid.NewGuid(), "Subj", "Desc");
+        var ticket    = Ticket.Create(companyId, Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         await _repo.AddAsync(ticket);
 
         var uploaderId = Guid.NewGuid();
@@ -93,7 +99,7 @@ public class TicketAttachmentHandlerTests
     public async Task Upload_ShouldThrow_WhenExtensionIsBlocked()
     {
         // Arrange
-        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Subj", "Desc");
+        var ticket = Ticket.Create(Guid.NewGuid(), Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         await _repo.AddAsync(ticket);
         var handler = BuildUploadHandler();
 
@@ -110,7 +116,7 @@ public class TicketAttachmentHandlerTests
     {
         // Arrange
         var companyId = Guid.NewGuid();
-        var ticket    = Ticket.Create(companyId, Guid.NewGuid(), "Subj", "Desc");
+        var ticket    = Ticket.Create(companyId, Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         await _repo.AddAsync(ticket);
 
         var uploaderId = Guid.NewGuid();
@@ -131,7 +137,7 @@ public class TicketAttachmentHandlerTests
     {
         // Arrange
         var companyId  = Guid.NewGuid();
-        var ticket     = Ticket.Create(companyId, Guid.NewGuid(), "Subj", "Desc");
+        var ticket     = Ticket.Create(companyId, Guid.NewGuid(), "Ticket Subject", "Ticket Description");
         var uploaderId = Guid.NewGuid();
         var attachment = TicketAttachment.Create(ticket.Id, null, "test.txt", "http://fakeurl/test.txt", 12, "text/plain", uploaderId);
         ticket.AddAttachment(attachment);

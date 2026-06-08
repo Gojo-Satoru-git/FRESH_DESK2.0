@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'; // <-- Added RouterLink & RouterLinkActive
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
 import { SidebarLinkComponent } from './components/sidebar-link.component';
 import { CreateTicketModalComponent } from '../../features/tickets/components/create-ticket-modal.component';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-agent-layout',
@@ -189,6 +190,18 @@ import { CreateTicketModalComponent } from '../../features/tickets/components/cr
 
               <app-theme-switcher></app-theme-switcher>
 
+              <!-- Logout Button -->
+              <button
+                (click)="logout()"
+                class="flex items-center gap-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-text-main px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 transition-all cursor-pointer"
+                title="Logout"
+              >
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden md:inline">Logout</span>
+              </button>
+
               <button
                 class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm hover:ring-2 hover:ring-primary hover:ring-offset-2 hover:ring-offset-surface transition-all"
               >
@@ -211,10 +224,15 @@ import { CreateTicketModalComponent } from '../../features/tickets/components/cr
   `,
 })
 export class AgentLayoutComponent {
+  authService = inject(AuthService);
   showActivationAlert = signal<boolean>(true);
   isCreateTicketModalOpen = signal<boolean>(false);
 
   dismissAlert() {
     this.showActivationAlert.set(false);
+  }
+
+  logout() {
+    this.authService.logout();
   }
 }

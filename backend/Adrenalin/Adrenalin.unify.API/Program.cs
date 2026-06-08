@@ -113,6 +113,21 @@ builder.Services.AddPersistence();
 builder.Services.AddTicketingApplication();
 builder.Services.AddKbModule();
 
+// ── RabbitMQ EventBus ──────────────────────────────────────────────────────────
+builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
+builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+
+// ── Email Polling & Receiving ────────────────────────────────────────────────
+builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
+builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EmailPollingJob>();
+
+// Integration Event Handlers
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCreatedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCreatedNotificationHandler>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketAssignedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketAssignedNotificationHandler>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketResolvedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketResolvedNotificationHandler>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketClosedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketClosedNotificationHandler>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCommentAddedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCommentAddedNotificationHandler>();
+
 // ── 7. Auth infrastructure ───────────────────────────────────────────────────
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
@@ -167,6 +182,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddExceptionHandler<Adrenalin.unify.API.Infrastructure.GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDevClient",
+        policyBuilder => policyBuilder
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
+
 var app = builder.Build();
 
 if (args.Contains("--seed"))
@@ -175,7 +200,8 @@ if (args.Contains("--seed"))
     {
         var context = scope.ServiceProvider.GetRequiredService<AdrenalinDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        await Adrenalin.Persistence.Seed.DbSeeder.SeedAsync(context, hasher);
+        await Adrenalin.Persistence.Context.DbSeeder.SeedTemplatesAsync(context);
+        await Adrenalin.Persistence.Context.DbSeeder.SeedRolesAndPermissionsAsync(context, hasher);
     }
     return;
 }
@@ -195,6 +221,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
+app.UseCors("AllowAngularDevClient");
 app.UseAuthentication();
 app.UseAuthorization();
 

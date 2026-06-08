@@ -52,7 +52,7 @@ public sealed class UsersRbacControllerTests
     public async Task GetAll_Should_Return_Ok_With_Paged_Results()
     {
         var pagedResult = new PagedResultDto<UserSummaryDto>(
-                new List<UserSummaryDto> { new(Guid.NewGuid(), "a@b.com", "John", "Doe", true) },
+                new List<UserSummaryDto> { new(Guid.NewGuid(), "a@b.com", "John", "Doe", true, null) },
                 TotalCount: 1, PageNumber: 1, PageSize: 20);
 
         _dispatcher.Setup(d => d.Send(It.IsAny<GetUsersQuery>(), default))

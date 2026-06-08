@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -34,7 +33,7 @@ namespace Adrenalin.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "sla", "trigger_event", new[] { "ticket_created", "ticket_updated", "time_based" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "ticket", "ticket_priority", new[] { "urgent", "high", "medium", "low" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "ticket", "ticket_source", new[] { "email", "portal", "phone" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "ticket", "ticket_status", new[] { "new", "open", "in_progress", "pending_customer", "pending_internal", "on_hold", "product_roadmap", "pending_approval", "compliance_review", "dual_agent_confirm", "resolved", "reopened", "closed" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "ticket", "ticket_status", new[] { "new", "open", "assigned", "in_progress", "pending", "resolved", "closed", "reopened" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "ticket", "ticket_type", new[] { "bug", "enhancement", "incident", "change_request", "query", "service_request", "clarification", "environment_issue" });
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "btree_gin");
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
@@ -440,8 +439,8 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("family_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("text")
+                    b.Property<IPAddress>("IpAddress")
+                        .HasColumnType("inet")
                         .HasColumnName("ip_address");
 
                     b.Property<bool>("IsRevoked")
@@ -1065,8 +1064,8 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("geo_location");
 
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("text")
+                    b.Property<IPAddress>("IpAddress")
+                        .HasColumnType("inet")
                         .HasColumnName("ip_address");
 
                     b.Property<bool>("IsActive")
@@ -2035,18 +2034,16 @@ namespace Adrenalin.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbArticle", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbArticle", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
+                        .HasColumnName("id");
 
                     b.Property<string>("ArticleType")
                         .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("text")
                         .HasColumnName("article_type");
 
                     b.Property<Guid?>("AuthorId")
@@ -2054,23 +2051,22 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("author_id");
 
                     b.Property<bool>("AutoResolve")
-                        .HasColumnType("boolean")
-                        .HasColumnName("auto_resolve")
-                        .HasComment("TRUE = this article is eligible for the auto-resolution engine. Engine only fires if confidence > confidence_threshold AND guardrail_excluded = FALSE.");
-
-                    b.Property<decimal>("ConfidenceThreshold")
                         .ValueGeneratedOnAdd()
-                        .HasPrecision(4, 3)
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("auto_resolve");
+
+                    b.Property<decimal>("ConfidenceThresholdValue")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("numeric(4,3)")
                         .HasDefaultValue(0.850m)
-                        .HasColumnName("confidence_threshold")
-                        .HasComment("Minimum match confidence (0.85 default) required to trigger auto-resolve. Articles with high reopen rates should have this raised automatically by learning loop.");
+                        .HasColumnName("confidence_threshold");
 
                     b.Property<string>("Content")
                         .HasColumnType("text")
                         .HasColumnName("content");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -2085,22 +2081,26 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("folder_id");
 
                     b.Property<bool>("GuardrailExcluded")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasColumnName("guardrail_excluded")
-                        .HasComment("TRUE = this article covers a guardrail topic (payroll, financial, legal/compliance). Auto-resolution engine NEVER fires for guardrail_excluded articles regardless of confidence.");
+                        .HasDefaultValue(false)
+                        .HasColumnName("guardrail_excluded");
 
                     b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("is_published");
 
-                    b.PrimitiveCollection<List<string>>("Keywords")
+                    b.PrimitiveCollection<string[]>("Keywords")
                         .HasColumnType("text[]")
-                        .HasColumnName("keywords")
-                        .HasComment("Phase 1 (keyword match) trigger words. Stored as PostgreSQL text array. Example: ARRAY['forgot password', 'reset password', 'login failed'].");
+                        .HasColumnName("keywords");
 
                     b.Property<string>("ResolutionText")
                         .HasColumnType("text")
@@ -2109,20 +2109,21 @@ namespace Adrenalin.Persistence.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("status")
-                        .HasDefaultValueSql("'draft'::character varying");
+                        .HasColumnType("text")
+                        .HasDefaultValue("draft")
+                        .HasColumnName("status");
 
                     b.Property<int>("TimesMatched")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("times_matched")
-                        .HasComment("Learning loop counter: incremented each time this article is matched (auto-resolve attempted).");
+                        .HasDefaultValue(0)
+                        .HasColumnName("times_matched");
 
                     b.Property<int>("TimesReopened")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("times_reopened")
-                        .HasComment("Learning loop counter: incremented each time a ticket auto-resolved via this article is reopened. High reopen rate → confidence_threshold auto-raised by learning loop job.");
+                        .HasDefaultValue(0)
+                        .HasColumnName("times_reopened");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -2130,7 +2131,7 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("title");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -2140,51 +2141,32 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by");
 
-                    b.HasKey("Id")
-                        .HasName("kb_articles_pkey");
+                    b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                    b.HasIndex("FolderId")
+                        .HasDatabaseName("ix_kb_articles_folder_id");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_kb_articles_status");
 
-                    b.HasIndex("UpdatedBy");
-
-                    b.HasIndex(new[] { "AutoResolve", "GuardrailExcluded" }, "idx_kb_articles_auto_resolve")
-                        .HasFilter("((auto_resolve = true) AND (is_deleted = false))");
-
-                    b.HasIndex(new[] { "FolderId" }, "idx_kb_articles_folder")
-                        .HasFilter("(is_deleted = false)");
-
-                    b.HasIndex(new[] { "Keywords" }, "idx_kb_articles_keywords")
-                        .HasFilter("((auto_resolve = true) AND (is_deleted = false))");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "Keywords" }, "idx_kb_articles_keywords"), "gin");
-
-                    b.HasIndex(new[] { "IsPublished", "ArticleType" }, "idx_kb_articles_published")
-                        .HasFilter("(is_deleted = false)");
-
-                    b.HasIndex(new[] { "Title" }, "idx_kb_articles_title_trgm")
-                        .HasFilter("(is_deleted = false)");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "Title" }, "idx_kb_articles_title_trgm"), "gin");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex(new[] { "Title" }, "idx_kb_articles_title_trgm"), new[] { "gin_trgm_ops" });
+                    b.HasIndex("AutoResolve", "GuardrailExcluded")
+                        .HasDatabaseName("ix_kb_articles_auto_resolve");
 
                     b.ToTable("kb_articles", "kb");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbAttachment", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbAttachment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
+                        .HasColumnName("id");
 
                     b.Property<Guid>("ArticleId")
                         .HasColumnType("uuid")
                         .HasColumnName("article_id");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -2206,7 +2188,9 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("file_url");
 
                     b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<string>("MimeType")
@@ -2214,24 +2198,22 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("mime_type");
 
-                    b.HasKey("Id")
-                        .HasName("kb_attachments_pkey");
+                    b.HasKey("Id");
 
-                    b.HasIndex(new[] { "ArticleId" }, "idx_kb_attachments_article")
-                        .HasFilter("(is_deleted = false)");
+                    b.HasIndex("ArticleId")
+                        .HasDatabaseName("ix_kb_attachments_article_id");
 
                     b.ToTable("kb_attachments", "kb");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbFolder", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbFolder", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
+                        .HasColumnName("id");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -2242,11 +2224,15 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
+                        .HasDefaultValue(0)
                         .HasColumnName("display_order");
 
                     b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
@@ -2259,7 +2245,7 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("parent_id");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -2269,39 +2255,33 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by");
 
-                    b.HasKey("Id")
-                        .HasName("kb_folders_pkey");
+                    b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_kb_folders_parent_id");
 
-                    b.HasIndex("UpdatedBy");
+                    b.HasIndex("ParentId", "DisplayOrder")
+                        .HasDatabaseName("ix_kb_folders_parent_display_order");
 
-                    b.HasIndex(new[] { "ParentId" }, "idx_kb_folders_parent")
-                        .HasFilter("(is_deleted = false)");
-
-                    b.ToTable("kb_folders", "kb", t =>
-                        {
-                            t.HasComment("Self-referencing folder hierarchy. parent_id=NULL for root folders. Use WITH RECURSIVE CTE to retrieve full tree. Depth limit enforced in API layer.");
-                        });
+                    b.ToTable("kb_folders", "kb");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.PortalBanner", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.PortalBanner", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
+                        .HasColumnName("id");
 
-                    b.Property<DateTime?>("ActiveFrom")
+                    b.Property<DateTimeOffset?>("ActiveFrom")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("active_from");
 
-                    b.Property<DateTime?>("ActiveTo")
+                    b.Property<DateTimeOffset?>("ActiveTo")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("active_to");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
@@ -2328,7 +2308,7 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("title");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at")
@@ -2338,15 +2318,10 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by");
 
-                    b.HasKey("Id")
-                        .HasName("portal_banners_pkey");
+                    b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("UpdatedBy");
-
-                    b.HasIndex(new[] { "IsActive", "ActiveFrom", "ActiveTo" }, "idx_portal_banners_active")
-                        .HasFilter("(is_active = true)");
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_portal_banners_is_active");
 
                     b.ToTable("portal_banners", "kb");
                 });
@@ -3535,6 +3510,9 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("assigned_agent_id");
 
+                    b.Property<Guid?>("AssigneeId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("AuditNotes")
                         .HasColumnType("text")
                         .HasColumnName("audit_notes");
@@ -3542,6 +3520,16 @@ namespace Adrenalin.Persistence.Migrations
                     b.Property<Guid?>("AuditedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("audited_by");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid")
@@ -3573,6 +3561,11 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("customer_reply_count")
                         .HasComment("Incremented by automation rule on every inbound customer comment. Re-evaluation loop: every increment triggers risk agent re-score. Multiple follow-ups (≥3) increase urgency_score by +1 in the scoring formula.");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("department");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -3633,6 +3626,17 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("module_id");
 
+                    b.Property<string>("ModuleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("module_name");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("priority");
+
                     b.Property<decimal?>("PriorityScore")
                         .HasPrecision(4, 2)
                         .HasColumnType("numeric(4,2)")
@@ -3652,6 +3656,18 @@ namespace Adrenalin.Persistence.Migrations
                     b.Property<string>("Rca")
                         .HasColumnType("text")
                         .HasColumnName("rca");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("region");
+
+                    b.Property<Guid?>("ReporterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -3683,18 +3699,15 @@ namespace Adrenalin.Persistence.Migrations
                         .HasColumnName("solution_type_id")
                         .HasComment("FK to lookup.solution_types. Replaces the free-text solution_type varchar column. Both columns kept during migration; remove solution_type varchar after data backfill.");
 
-                    b.Property<TicketStatus>("Status")
-                        .HasColumnType("ticket.ticket_status")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("status");
 
                     b.Property<Guid?>("SubModuleId")
                         .HasColumnType("uuid")
                         .HasColumnName("sub_module_id");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("subject");
 
                     b.Property<string>("TicketNumber")
                         .HasMaxLength(20)
@@ -3705,6 +3718,12 @@ namespace Adrenalin.Persistence.Migrations
                         .HasPrecision(4, 2)
                         .HasColumnType("numeric(4,2)")
                         .HasColumnName("tier_weight");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("title");
 
                     b.Property<decimal?>("TypeWeight")
                         .HasPrecision(4, 2)
@@ -3790,8 +3809,53 @@ namespace Adrenalin.Persistence.Migrations
 
                     b.ToTable("tickets", "ticket", t =>
                         {
-                            t.HasComment("Central transactional entity. graph_id is resolved once at creation via scope engine. version_id/module_id/sub_module_id are normalized FK refs per Addendum v7. sla_excluded=true during hypercare/delivery mode. is_on_hold_payment for payment holds.");
+                            t.HasComment("Central transactional entity.");
                         });
+                });
+
+            modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("activity_type");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("text")
+                        .HasColumnName("new_value");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("text")
+                        .HasColumnName("old_value");
+
+                    b.Property<DateTimeOffset>("PerformedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("performed_at");
+
+                    b.Property<Guid?>("PerformedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("performed_by");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("bytea");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_id");
+
+                    b.HasKey("Id")
+                        .HasName("ticket_activities_pkey");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("ticket_activities", "ticket");
                 });
 
             modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketAssignmentLog", b =>
@@ -4059,6 +4123,10 @@ namespace Adrenalin.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
+
+                    b.PrimitiveCollection<List<string>>("MentionedUsers")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<byte[]>("RowVersion")
                         .HasColumnType("bytea")
@@ -4358,6 +4426,35 @@ namespace Adrenalin.Persistence.Migrations
                         {
                             t.HasComment("Immutable audit log of every status transition. Never update or delete rows. Append-only; enables full status trail and SLA clock reconstruction.");
                         });
+                });
+
+            modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketTag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("TagName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tag_name");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_id");
+
+                    b.HasKey("Id")
+                        .HasName("ticket_tags_pkey");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("ticket_tags", "ticket");
                 });
 
             modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketWatcher", b =>
@@ -4677,7 +4774,7 @@ namespace Adrenalin.Persistence.Migrations
 
             modelBuilder.Entity("Adrenalin.Modules.AI.Domain.Entities.AutoResolutionLog", b =>
                 {
-                    b.HasOne("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbArticle", null)
+                    b.HasOne("Adrenalin.Modules.KB.Domain.Entities.KbArticle", null)
                         .WithMany()
                         .HasForeignKey("KbArticleId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -5191,83 +5288,33 @@ namespace Adrenalin.Persistence.Migrations
                         .HasConstraintName("point_rules_created_by_fkey");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbArticle", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbArticle", b =>
                 {
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
+                    b.HasOne("Adrenalin.Modules.KB.Domain.Entities.KbFolder", "Folder")
                         .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_articles_author_id_fkey");
-
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_articles_created_by_fkey");
-
-                    b.HasOne("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbFolder", "Folder")
-                        .WithMany("KbArticles")
                         .HasForeignKey("FolderId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_articles_folder_id_fkey");
-
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_articles_updated_by_fkey");
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Folder");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbAttachment", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbAttachment", b =>
                 {
-                    b.HasOne("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbArticle", "Article")
-                        .WithMany("KbAttachments")
+                    b.HasOne("Adrenalin.Modules.KB.Domain.Entities.KbArticle", null)
+                        .WithMany("Attachments")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("kb_attachments_article_id_fkey");
-
-                    b.Navigation("Article");
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbFolder", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbFolder", b =>
                 {
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
+                    b.HasOne("Adrenalin.Modules.KB.Domain.Entities.KbFolder", "Parent")
                         .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_folders_created_by_fkey");
-
-                    b.HasOne("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbFolder", "Parent")
-                        .WithMany("InverseParent")
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_folders_parent_id_fkey");
-
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("kb_folders_updated_by_fkey");
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Parent");
-                });
-
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.PortalBanner", b =>
-                {
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("portal_banners_created_by_fkey");
-
-                    b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("portal_banners_updated_by_fkey");
                 });
 
             modelBuilder.Entity("Adrenalin.Modules.Lookup.Domain.Entities.Module", b =>
@@ -5576,6 +5623,18 @@ namespace Adrenalin.Persistence.Migrations
                         .HasConstraintName("tickets_version_id_fkey");
                 });
 
+            modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketActivity", b =>
+                {
+                    b.HasOne("Adrenalin.Modules.Ticketing.Domain.Entities.Ticket", "Ticket")
+                        .WithMany("TicketActivities")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("ticket_activities_ticket_id_fkey");
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketAssignmentLog", b =>
                 {
                     b.HasOne("Adrenalin.Modules.Auth.Domain.Entities.User", null)
@@ -5728,6 +5787,18 @@ namespace Adrenalin.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("ticket_status_history_ticket_id_fkey");
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Adrenalin.Modules.Ticketing.Domain.Entities.TicketTag", b =>
+                {
+                    b.HasOne("Adrenalin.Modules.Ticketing.Domain.Entities.Ticket", "Ticket")
+                        .WithMany("TicketTags")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("ticket_tags_ticket_id_fkey");
 
                     b.Navigation("Ticket");
                 });
@@ -5892,16 +5963,9 @@ namespace Adrenalin.Persistence.Migrations
                     b.Navigation("AgentPoints");
                 });
 
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbArticle", b =>
+            modelBuilder.Entity("Adrenalin.Modules.KB.Domain.Entities.KbArticle", b =>
                 {
-                    b.Navigation("KbAttachments");
-                });
-
-            modelBuilder.Entity("Adrenalin.Modules.KnowledgeBase.Domain.Entities.KbFolder", b =>
-                {
-                    b.Navigation("InverseParent");
-
-                    b.Navigation("KbArticles");
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("Adrenalin.Modules.Lookup.Domain.Entities.Module", b =>
@@ -5930,6 +5994,8 @@ namespace Adrenalin.Persistence.Migrations
 
                     b.Navigation("CsatSurvey");
 
+                    b.Navigation("TicketActivities");
+
                     b.Navigation("TicketAssignmentLogs");
 
                     b.Navigation("TicketAttachments");
@@ -5945,6 +6011,8 @@ namespace Adrenalin.Persistence.Migrations
                     b.Navigation("TicketRiskScores");
 
                     b.Navigation("TicketStatusHistories");
+
+                    b.Navigation("TicketTags");
 
                     b.Navigation("TicketWatchers");
                 });

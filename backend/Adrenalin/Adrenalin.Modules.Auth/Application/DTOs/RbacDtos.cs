@@ -12,7 +12,7 @@ public sealed record RoleWithPermissionsDto(Guid Id, string Name, string? Descri
     DateTimeOffset CreatedAt, DateTimeOffset? UpdatedAt);
 
 public sealed record UserSummaryDto(Guid Id, string Email, string? FirstName,
-    string? LastName, bool IsActive);
+    string? LastName, bool IsActive, string? Phone);
 
 public sealed record UserWithRolesDto(Guid Id, string Email, string? FirstName,
     string? LastName, bool IsActive, IReadOnlyList<RoleSummaryDto> Roles,
