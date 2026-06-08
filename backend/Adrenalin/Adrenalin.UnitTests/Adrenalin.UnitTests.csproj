@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+	
+	
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
@@ -15,11 +17,17 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+	<PackageReference Include="FluentAssertions" Version="6.12.0" />
+	<PackageReference Include="Moq" Version="4.18.4" />
+	<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
     <ProjectReference Include="..\Adrenalin.Persistence\Adrenalin.Persistence.csproj" />
+	<ProjectReference Include="..\Adrenalin.Modules.Auth\Adrenalin.Modules.Auth.csproj" />
+	<ProjectReference Include="..\Adrenalin.unify.API\Adrenalin.unify.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
