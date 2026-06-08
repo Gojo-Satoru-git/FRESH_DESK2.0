@@ -1,10 +1,9 @@
+using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System.IO;
 using Npgsql;
-using Adrenalin.Modules.Ticketing.Domain.Enums;
-using Adrenalin.Persistence.Context;
 
 namespace Adrenalin.Persistence.Context;
 
@@ -12,12 +11,9 @@ public class AdrenalinDbContextFactory : IDesignTimeDbContextFactory<AdrenalinDb
 {
     public AdrenalinDbContext CreateDbContext(string[] args)
     {
-        // Get the directory of the startup project (unify.API)
         var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Adrenalin.unify.API");
         if (!Directory.Exists(basePath))
-        {
             basePath = Directory.GetCurrentDirectory();
-        }
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(basePath)
@@ -36,6 +32,19 @@ public class AdrenalinDbContextFactory : IDesignTimeDbContextFactory<AdrenalinDb
         var optionsBuilder = new DbContextOptionsBuilder<AdrenalinDbContext>();
         optionsBuilder.UseNpgsql(dataSource, o => o.MapEnum<TicketStatus>("ticket_status", "ticket"));
 
-        return new AdrenalinDbContext(optionsBuilder.Options);
+        return new AdrenalinDbContext(optionsBuilder.Options, new NoOpPublisher());
+    }
+
+    /// <summary>No-op publisher used only at design time (EF CLI migrations).</summary>
+    private sealed class NoOpPublisher : Adrenalin.SharedKernel.Mediator.IPublisher
+    {
+        public Task Publish<TNotification>(TNotification notification,
+            CancellationToken cancellationToken = default)
+            where TNotification : Adrenalin.SharedKernel.Mediator.INotification
+            => Task.CompletedTask;
+
+        public Task Publish(Adrenalin.SharedKernel.Mediator.INotification notification,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
     }
 }

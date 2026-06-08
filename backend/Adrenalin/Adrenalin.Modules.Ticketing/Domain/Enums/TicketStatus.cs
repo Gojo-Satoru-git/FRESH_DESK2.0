@@ -4,15 +4,11 @@ public enum TicketStatus
 {
     New,
     Open,
+    Assigned,
     InProgress,
-    PendingCustomer,
-    PendingInternal,
-    OnHold,
-    ProductRoadmap,
-    PendingApproval,
-    ComplianceReview,
-    DualAgentConfirm,
+    Pending,
     Resolved,
-    Reopened,
-    Closed
+    Closed,
+    Reopened
 }
+

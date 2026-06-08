@@ -11,6 +11,8 @@ public static class DependencyInjection
     public static IServiceCollection AddTicketingApplication(
         this IServiceCollection services)
     {
+         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>));
+         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         // Scans assembly → auto-registers ALL IRequestHandler<,>
         // and ALL IPipelineBehavior<,> — no manual handler registration needed
         services.AddCustomDispatcher(Assembly.GetExecutingAssembly());

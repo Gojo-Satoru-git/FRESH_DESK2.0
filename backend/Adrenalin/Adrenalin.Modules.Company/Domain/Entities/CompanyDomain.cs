@@ -14,4 +14,15 @@ public sealed class CompanyDomain : SoftDeleteEntity
     public new string? CreatedBy { get; private set; }
 
     public Company Company { get; private set; } = null!;
+
+    public static CompanyDomain Create(Guid companyId, string domain, bool isPrimary = true)
+    {
+        return new CompanyDomain
+        {
+            Id = Guid.NewGuid(),
+            CompanyId = companyId,
+            Domain = domain,
+            IsPrimary = isPrimary
+        };
+    }
 }

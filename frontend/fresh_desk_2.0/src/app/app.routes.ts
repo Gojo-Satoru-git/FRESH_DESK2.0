@@ -32,10 +32,29 @@ export const routes: Routes = [
       },
       {
         path: 'tickets',
-        loadComponent: () =>
-          import('./features/tickets/components/ticket-list.component').then(
-            (m) => m.TicketListComponent,
-          ),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-dashboard.component').then(
+                (m) => m.TicketDashboardComponent,
+              ),
+          },
+          {
+            path: 'list',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-list.component').then(
+                (m) => m.TicketListComponent,
+              ),
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./features/tickets/components/ticket-detail.component').then(
+                (m) => m.TicketDetailComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'contacts',
@@ -86,11 +105,24 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'ticket/:id',
+        path: 'my-tickets',
         loadComponent: () =>
-          import('./features/customer-portal/ticket-details.component')
-            .then(m => m.TicketDetailsComponent),
+           import('./features/customer-portal/my-tickets.component')
+             .then(m => m.MyTicketsComponent)
       },
+      {
+        path: 'knowledge-base',
+        loadComponent:() =>
+           import('./features/customer-portal/knowledge-base.component')
+              .then(m => m.KnowledgeBaseComponent)
+      },
+      {
+        path: 'knowledge-base/articles',
+        loadComponent: () => 
+          import('./features/customer-portal/articles.component')
+              .then(m => m.ArticlesComponent)
+          
+      }
     ],
   },
   {

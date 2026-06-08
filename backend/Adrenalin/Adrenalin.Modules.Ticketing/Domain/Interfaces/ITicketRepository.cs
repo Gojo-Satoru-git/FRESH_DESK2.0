@@ -32,6 +32,9 @@ public interface ITicketRepository
         Guid userId,
         CancellationToken ct = default);
 
+    Task<string> GenerateTicketNumberAsync(CancellationToken cancellationToken = default);
+
+    void Update(Ticket ticket);
     Task<IReadOnlyList<Ticket>> GetTicketsAsync(
          string? ticketNumber,
          TicketStatus? status,
@@ -41,6 +44,27 @@ public interface ITicketRepository
          int pageSize,
          CancellationToken ct = default);
 
+    void Remove(Ticket ticket);
+
+    Task<(Guid ContactId, Guid CompanyId)?> GetContactAndCompanyByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<(Guid ContactId, Guid CompanyId)?> GetContactAndCompanyByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    Task<(Guid ContactId, Guid CompanyId)> AutoCreateContactAndCompanyAsync(string email, string name, CancellationToken cancellationToken = default);
+
+    Task<(Guid ContactId, Guid CompanyId)> AutoCreateContactForUserAsync(Guid userId, string email, string name, CancellationToken cancellationToken = default);
+
+    Task<(Guid ModuleId, string ModuleName, string? Department)> ResolveOrCreateModuleAsync(string categoryName, CancellationToken cancellationToken = default);
+
+    Task<(string Email, string Name)> GetUserEmailAndNameAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<Dictionary<Guid, string>> GetUserDisplayNamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
+    Task<Dictionary<Guid, string>> GetContactDisplayNamesAsync(IEnumerable<Guid> contactIds, CancellationToken cancellationToken = default);
+
+    Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default);
+
+    Task<bool> IsUserAdminAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<int> CountTicketsAsync(
         string? ticketNumber,
         TicketStatus? status,

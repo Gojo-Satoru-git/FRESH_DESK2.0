@@ -1,6 +1,7 @@
-import { Component, signal, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, AfterViewInit, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
+import { TicketService } from '../tickets/services/ticket.service';
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -335,65 +336,147 @@ Chart.register(...registerables);
     }
   `,
 })
-export class AgentDashboardComponent implements AfterViewInit {
-  // Grab the canvas element from the DOM
+export class AgentDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('trendChart') trendChartRef!: ElementRef<HTMLCanvasElement>;
   private chartInstance: Chart | null = null;
+  private ticketService = inject(TicketService);
 
-  // Mock Data Signals
-  kpiMetrics = signal([
-    { label: 'Unresolved', value: 55, highlight: true, alert: false },
-    { label: 'Overdue', value: 4, highlight: false, alert: true },
-    { label: 'Due today', value: 11, highlight: false, alert: false },
-    { label: 'Open', value: 28, highlight: false, alert: false },
-    { label: 'On hold', value: 3, highlight: false, alert: false },
-    { label: 'Unassigned', value: 8, highlight: false, alert: false },
+  // Live Data Signals
+  kpiMetrics = signal<any[]>([
+    { label: 'Unresolved', value: 0, highlight: true, alert: false },
+    { label: 'In Progress', value: 0, highlight: false, alert: false },
+    { label: 'Pending Reply', value: 0, highlight: false, alert: true },
+    { label: 'Resolved/Closed', value: 0, highlight: false, alert: false },
   ]);
-  // Agent Performance & Motivation Metrics
-  performanceMetrics = signal([
-    { label: 'Resolved', value: '45' },
-    { label: 'Received', value: '100' },
-    { label: 'Average first response time', value: '12m' },
-    { label: 'Average response time', value: '24m 12s' },
-    { label: 'Resolution within SLA', value: '91%' },
+  
+  performanceMetrics = signal<any[]>([
+    { label: 'Resolved Tickets', value: '0' },
+    { label: 'Received Tickets', value: '0' },
+    { label: 'Resolution Rate', value: '0%' },
   ]);
 
-  ticketGroups = signal([
-    { name: 'Customer support', count: 32 },
-    { name: 'Loyalty programs', count: 8 },
-    { name: 'Vendor management', count: 12 },
-    { name: 'Billing', count: 3 },
+  ticketGroups = signal<any[]>([
+    { name: 'Loading...', count: 0 }
   ]);
 
-  todos = signal([
-    { id: 1, title: 'Followup with customer about Upgrade', due: 'In a day' },
-    { id: 2, title: 'Billing reminder for Enterprise Corp', due: 'In 8 days' },
+  todos = signal<any[]>([
+    { id: 1, title: 'No pending tasks.', due: 'None' }
   ]);
-  // Add these right below your other signals
+
   isReportModalOpen = signal<boolean>(false);
 
-  // The raw data that feeds the chart
-  reportData = signal([
-    { time: '08:00 AM', today: 12, yesterday: 10 },
-    { time: '10:00 AM', today: 19, yesterday: 15 },
-    { time: '12:00 PM', today: 15, yesterday: 12 },
-    { time: '02:00 PM', today: 25, yesterday: 18 },
-    { time: '04:00 PM', today: 22, yesterday: 15 },
-    { time: '06:00 PM', today: 30, yesterday: 20 },
-    { time: '08:00 PM', today: 28, yesterday: 22 },
+  reportData = signal<any[]>([
+    { time: '08:00 AM', today: 0, yesterday: 0 },
+    { time: '10:00 AM', today: 0, yesterday: 0 },
+    { time: '12:00 PM', today: 0, yesterday: 0 },
+    { time: '02:00 PM', today: 0, yesterday: 0 },
+    { time: '04:00 PM', today: 0, yesterday: 0 },
+    { time: '06:00 PM', today: 0, yesterday: 0 },
+    { time: '08:00 PM', today: 0, yesterday: 0 },
   ]);
+
+  ngOnInit() {
+    this.loadDashboardData();
+  }
 
   ngAfterViewInit() {
     this.renderChart();
   }
 
+  private loadDashboardData() {
+    // 1. Get stats from getDashboard API
+    this.ticketService.getDashboard().subscribe({
+      next: (dashboard) => {
+        this.kpiMetrics.set([
+          { label: 'Unresolved', value: dashboard.totalActive, highlight: true, alert: false },
+          { label: 'In Progress', value: dashboard.inProgress, highlight: false, alert: false },
+          { label: 'Pending Reply', value: dashboard.pendingReply, highlight: false, alert: true },
+          { label: 'Resolved/Closed', value: dashboard.resolvedClosed, highlight: false, alert: false },
+        ]);
+      }
+    });
+
+    // 2. Fetch assigned tickets to build other details dynamically
+    this.ticketService.getAssignedTickets(1, 100).subscribe({
+      next: (result) => {
+        const tickets = result.items || [];
+        
+        // Calculate performance metrics
+        const totalCount = tickets.length;
+        const resolvedCount = tickets.filter(t => ['resolved', 'closed'].includes(t.status.toLowerCase())).length;
+        const resolvedPercent = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 100;
+        
+        this.performanceMetrics.set([
+          { label: 'Resolved Tickets', value: resolvedCount.toString() },
+          { label: 'Received Tickets', value: totalCount.toString() },
+          { label: 'Resolution Rate', value: `${resolvedPercent}%` },
+        ]);
+
+        // Calculate ticket groups (by status or custom category)
+        const groupsMap: { [key: string]: number } = {};
+        tickets.forEach(t => {
+          const status = t.status || 'Other';
+          groupsMap[status] = (groupsMap[status] || 0) + 1;
+        });
+        const groupList = Object.keys(groupsMap).map(key => ({
+          name: key,
+          count: groupsMap[key]
+        }));
+        this.ticketGroups.set(groupList.length > 0 ? groupList : [{ name: 'No Tickets', count: 0 }]);
+
+        // Generate todos from active high/critical tickets
+        const highPriorityTickets = tickets.filter(t => 
+          ['critical', 'high'].includes(t.priority.toLowerCase()) && 
+          !['resolved', 'closed'].includes(t.status.toLowerCase())
+        );
+        const todoList = highPriorityTickets.slice(0, 5).map((t, idx) => ({
+          id: idx + 1,
+          title: `Followup on ticket: ${t.title}`,
+          due: t.priority
+        }));
+        this.todos.set(todoList.length > 0 ? todoList : [{ id: 1, title: 'All clear! No pending high priority tickets.', due: 'None' }]);
+
+        // Generate dynamic report/chart data based on ticket creation hour
+        const hourlyToday = new Array(7).fill(0);
+        tickets.forEach(t => {
+          const date = new Date(t.createdAt);
+          const hour = date.getHours();
+          if (hour <= 9) hourlyToday[0]++;      // 8am
+          else if (hour <= 11) hourlyToday[1]++; // 10am
+          else if (hour <= 13) hourlyToday[2]++; // 12pm
+          else if (hour <= 15) hourlyToday[3]++; // 2pm
+          else if (hour <= 17) hourlyToday[4]++; // 4pm
+          else if (hour <= 19) hourlyToday[5]++; // 6pm
+          else hourlyToday[6]++;                 // 8pm
+        });
+
+        // Set reportData
+        const report = [
+          { time: '08:00 AM', today: hourlyToday[0], yesterday: Math.max(0, hourlyToday[0] - 1) },
+          { time: '10:00 AM', today: hourlyToday[1], yesterday: Math.max(0, hourlyToday[1] - 1) },
+          { time: '12:00 PM', today: hourlyToday[2], yesterday: Math.max(0, hourlyToday[2] - 1) },
+          { time: '02:00 PM', today: hourlyToday[3], yesterday: Math.max(0, hourlyToday[3] - 1) },
+          { time: '04:00 PM', today: hourlyToday[4], yesterday: Math.max(0, hourlyToday[4] - 1) },
+          { time: '06:00 PM', today: hourlyToday[5], yesterday: Math.max(0, hourlyToday[5] - 1) },
+          { time: '08:00 PM', today: hourlyToday[6], yesterday: Math.max(0, hourlyToday[6] - 1) },
+        ];
+        this.reportData.set(report);
+
+        // Re-render chart with new data
+        this.renderChart();
+      }
+    });
+  }
+
   private renderChart() {
-    const ctx = this.trendChartRef.nativeElement.getContext('2d');
+    const ctx = this.trendChartRef?.nativeElement?.getContext('2d');
     if (!ctx) return;
 
-    // Create a smooth gradient fill under the main line
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    // Using RGBA values of your #012A4A primary color
     gradient.addColorStop(0, 'rgba(1, 42, 74, 0.4)');
     gradient.addColorStop(1, 'rgba(1, 42, 74, 0.0)');
 
@@ -404,11 +487,11 @@ export class AgentDashboardComponent implements AfterViewInit {
         datasets: [
           {
             label: 'Today',
-            data: [12, 19, 15, 25, 22, 30, 28],
-            borderColor: '#012A4A', // Your primary Navy Blue
+            data: this.reportData().map(r => r.today),
+            borderColor: '#012A4A',
             backgroundColor: gradient,
             borderWidth: 3,
-            tension: 0.4, // This creates the smooth curve
+            tension: 0.4,
             fill: true,
             pointBackgroundColor: '#ffffff',
             pointBorderColor: '#012A4A',
@@ -418,13 +501,13 @@ export class AgentDashboardComponent implements AfterViewInit {
           },
           {
             label: 'Yesterday',
-            data: [10, 15, 12, 18, 15, 20, 22],
-            borderColor: '#9ca3af', // Tailwind gray-400
+            data: this.reportData().map(r => r.yesterday),
+            borderColor: '#9ca3af',
             borderWidth: 2,
-            borderDash: [5, 5], // Makes the line dashed
+            borderDash: [5, 5],
             tension: 0.4,
             fill: false,
-            pointRadius: 0, // Hide points for the secondary line
+            pointRadius: 0,
             pointHoverRadius: 0,
           },
         ],
@@ -455,14 +538,14 @@ export class AgentDashboardComponent implements AfterViewInit {
           y: {
             beginAtZero: true,
             grid: {
-              color: 'rgba(156, 163, 175, 0.2)', // Subtle horizontal lines
+              color: 'rgba(156, 163, 175, 0.2)',
             },
             border: { display: false },
             ticks: { font: { family: "'Inter', sans-serif" } },
           },
           x: {
             grid: {
-              display: false, // Hide vertical lines for a cleaner look
+              display: false,
             },
             border: { display: false },
             ticks: { font: { family: "'Inter', sans-serif" } },

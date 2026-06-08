@@ -1,74 +1,157 @@
+using Adrenalin.Modules.KB.Domain.Entities;
+using Adrenalin.Modules.KB.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Adrenalin.Modules.KnowledgeBase.Domain.Entities;
-using Adrenalin.Modules.Auth.Domain.Entities;
 
 namespace Adrenalin.Persistence.Configurations.KnowledgeBase;
 
-public class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
+public sealed class KbArticleConfiguration : IEntityTypeConfiguration<KbArticle>
 {
     public void Configure(EntityTypeBuilder<KbArticle> builder)
     {
-        builder.HasKey(e => e.Id).HasName("kb_articles_pkey");
-
         builder.ToTable("kb_articles", "kb");
 
-        builder.HasIndex(e => new { e.AutoResolve, e.GuardrailExcluded }, "idx_kb_articles_auto_resolve").HasFilter("((auto_resolve = true) AND (is_deleted = false))");
+        builder.HasKey(a => a.Id);
+        
+        builder.Property(a => a.Id).HasColumnName("id");
 
-        builder.HasIndex(e => e.FolderId, "idx_kb_articles_folder").HasFilter("(is_deleted = false)");
+        builder.Ignore(a => a.RowVersion);
 
-        builder.HasIndex(e => e.Keywords, "idx_kb_articles_keywords").HasFilter("((auto_resolve = true) AND (is_deleted = false))").HasMethod("gin");
+        builder.Property(a => a.Title)
+            .IsRequired()
+            .HasMaxLength(300)
+            .HasColumnName("title");
 
-        builder.HasIndex(e => new { e.IsPublished, e.ArticleType }, "idx_kb_articles_published").HasFilter("(is_deleted = false)");
+        builder.Property(a => a.Content)
+            .HasColumnName("content")
+            .HasColumnType("text");
 
-        builder.HasIndex(e => e.Title, "idx_kb_articles_title_trgm").HasFilter("(is_deleted = false)").HasMethod("gin").HasOperators(new[] { "gin_trgm_ops" });
+        builder.Property(a => a.ArticleType)
+                .IsRequired()
+                .HasColumnName("article_type")
+                .HasConversion(
+                    v => v.ToString().ToSnakeCase(),
+                    v => ParseArticleType(v));
+        builder.Property(a => a.Status)
+            .IsRequired()
+            .HasColumnName("status")
+            .HasDefaultValue(ArticleStatus.Draft)
+            .HasConversion(
+                v => v.ToString().ToLower(),
+                v => Enum.Parse<ArticleStatus>(v, ignoreCase: true));
 
-        builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
+        builder.Property(a => a.IsPublished)
+            .HasColumnName("is_published")
+            .HasDefaultValue(false);
 
-        builder.Property(e => e.ArticleType).HasMaxLength(40).HasColumnName("article_type");
+        builder.Property(a => a.AuthorId)
+            .HasColumnName("author_id");
 
-        builder.Property(e => e.AuthorId).HasColumnName("author_id");
+        builder.Property(a => a.FolderId)
+            .HasColumnName("folder_id");
 
-        builder.Property(e => e.AutoResolve).HasComment("TRUE = this article is eligible for the auto-resolution engine. Engine only fires if confidence > confidence_threshold AND guardrail_excluded = FALSE.").HasColumnName("auto_resolve");
+        builder.Property(a => a.IsDeleted)
+            .HasColumnName("is_deleted")
+            .HasDefaultValue(false);
 
-        builder.Property(e => e.ConfidenceThreshold).HasPrecision(4, 3).HasDefaultValue(0.850m).HasComment("Minimum match confidence (0.85 default) required to trigger auto-resolve. Articles with high reopen rates should have this raised automatically by learning loop.").HasColumnName("confidence_threshold");
+        builder.Property(a => a.CreatedBy)
+            .HasColumnName("created_by");
 
-        builder.Property(e => e.Content).HasColumnName("content");
+        builder.Property(a => a.UpdatedBy)
+            .HasColumnName("updated_by");
 
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
+        builder.Property(a => a.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()");
 
-        builder.Property(e => e.CreatedBy).HasColumnName("created_by");
+        builder.Property(a => a.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()");
 
-        builder.Property(e => e.FolderId).HasColumnName("folder_id");
+        // ── Auto-resolve columns (addendum v8) ────────────────────────────────
+        builder.Property(a => a.AutoResolve)
+            .HasColumnName("auto_resolve")
+            .HasDefaultValue(false);
 
-        builder.Property(e => e.GuardrailExcluded).HasComment("TRUE = this article covers a guardrail topic (payroll, financial, legal/compliance). Auto-resolution engine NEVER fires for guardrail_excluded articles regardless of confidence.").HasColumnName("guardrail_excluded");
+        // Schema: numeric(4,3) — matches ConfidenceThreshold range 0.500–1.000
+        builder.Property(a => a.ConfidenceThresholdValue)
+            .HasColumnName("confidence_threshold")
+            .HasColumnType("numeric(4,3)")
+            .HasDefaultValue(0.850m);
 
-        builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
+        // keywords stored as TEXT[] in Postgres
+        builder.Property(a => a.Keywords)
+            .HasColumnName("keywords")
+            .HasColumnType("text[]");
 
-        builder.Property(e => e.IsPublished).HasColumnName("is_published");
+        builder.Property(a => a.ResolutionText)
+            .HasColumnName("resolution_text")
+            .HasColumnType("text");
 
-        builder.Property(e => e.Keywords).HasComment("Phase 1 (keyword match) trigger words. Stored as PostgreSQL text array. Example: ARRAY['forgot password', 'reset password', 'login failed'].").HasColumnName("keywords");
+        builder.Property(a => a.GuardrailExcluded)
+            .HasColumnName("guardrail_excluded")
+            .HasDefaultValue(false);
 
-        builder.Property(e => e.ResolutionText).HasColumnName("resolution_text");
+        builder.Property(a => a.TimesMatched)
+            .HasColumnName("times_matched")
+            .HasDefaultValue(0);
 
-        builder.Property(e => e.Status).HasMaxLength(30).HasDefaultValueSql("'draft'::character varying").HasColumnName("status");
+        builder.Property(a => a.TimesReopened)
+            .HasColumnName("times_reopened")
+            .HasDefaultValue(0);
 
-        builder.Property(e => e.TimesMatched).HasComment("Learning loop counter: incremented each time this article is matched (auto-resolve attempted).").HasColumnName("times_matched");
+        // ── Computed/ignored ──────────────────────────────────────────────────
+        builder.Ignore(a => a.ConfidenceThreshold);
+        builder.Ignore(a => a.DomainEvents);
 
-        builder.Property(e => e.TimesReopened).HasComment("Learning loop counter: incremented each time a ticket auto-resolved via this article is reopened. High reopen rate → confidence_threshold auto-raised by learning loop job.").HasColumnName("times_reopened");
+        // ── Relationships ─────────────────────────────────────────────────────
+        builder.HasOne(a => a.Folder)
+            .WithMany()
+            .HasForeignKey(a => a.FolderId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-        builder.Property(e => e.Title).HasMaxLength(300).HasColumnName("title");
+        builder.HasMany(a => a.Attachments)
+            .WithOne()
+            .HasForeignKey(att => att.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").HasColumnName("updated_at");
+        // ── Indexes ───────────────────────────────────────────────────────────
+        builder.HasIndex(a => a.Status)
+            .HasDatabaseName("ix_kb_articles_status");
 
-        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        builder.HasIndex(a => a.FolderId)
+            .HasDatabaseName("ix_kb_articles_folder_id");
 
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.AuthorId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_articles_author_id_fkey");
+        builder.HasIndex(a => new { a.AutoResolve, a.GuardrailExcluded })
+            .HasDatabaseName("ix_kb_articles_auto_resolve");
 
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_articles_created_by_fkey");
+        // ── Global query filter ───────────────────────────────────────────────
+        builder.HasQueryFilter(a => !a.IsDeleted);
+    }
 
-        builder.HasOne(d => d.Folder).WithMany(p => p.KbArticles).HasForeignKey(d => d.FolderId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_articles_folder_id_fkey");
-
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.UpdatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("kb_articles_updated_by_fkey");
+    private static ArticleType ParseArticleType(string value)
+    {
+        // "release_note" → "ReleaseNote", "faq" → "Faq", etc.
+        var pascal = string.Concat(
+            value.Split('_')
+                 .Select(w => char.ToUpper(w[0]) + w.Substring(1)));
+        return Enum.Parse<ArticleType>(pascal, ignoreCase: true);
     }
 }
+
+/// <summary>
+/// Simple extension to convert PascalCase enum names to snake_case for DB storage.
+/// e.g. ReleaseNote → release_note
+/// </summary>
+internal static class StringExtensions
+{
+    internal static string ToSnakeCase(this string value)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return System.Text.RegularExpressions.Regex
+            .Replace(value, "(?<!^)([A-Z])", "_$1")
+            .ToLower();
+    }
+}
+
+

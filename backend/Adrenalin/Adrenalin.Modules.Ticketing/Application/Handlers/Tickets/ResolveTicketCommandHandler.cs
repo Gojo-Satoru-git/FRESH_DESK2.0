@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
@@ -29,6 +30,8 @@ public sealed class ResolveTicketCommandHandler : IRequestHandler<ResolveTicketC
         }
 
         ticket.Resolve(request.ResolvedBy, request.ResolutionSummary);
+
+        _ticketRepository.Update(ticket);
 
         return ticket.Id;
     }

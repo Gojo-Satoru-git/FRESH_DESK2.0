@@ -24,4 +24,18 @@ public sealed class Contact : SoftDeleteEntity
     public string? ModifiedBy { get; private set; }
 
     public Company Company { get; private set; } = null!;
+
+    public static Contact Create(Guid companyId, string email, string name, bool autoCreated = true, bool isAuthorized = true, Guid? userId = null)
+    {
+        return new Contact
+        {
+            Id = Guid.NewGuid(),
+            CompanyId = companyId,
+            Email = email,
+            Name = name,
+            AutoCreated = autoCreated,
+            IsAuthorized = isAuthorized,
+            UserId = userId
+        };
+    }
 }

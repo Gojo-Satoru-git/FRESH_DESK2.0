@@ -1,14 +1,9 @@
-﻿using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Entities;
 
-#pragma warning disable RCS1194 // Implement exception constructors
-public class TicketDomainException : Exception
-#pragma warning restore RCS1194 // Implement exception constructors
-{
-    public TicketDomainException(string message) : base(message) { }
-}
 public sealed class TicketRelation : BaseEntity
 {
     public Guid ParentTicketId { get; private set; }

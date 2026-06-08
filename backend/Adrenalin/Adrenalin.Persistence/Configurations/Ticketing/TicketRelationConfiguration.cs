@@ -14,7 +14,7 @@ public sealed class TicketRelationConfiguration : IEntityTypeConfiguration<Ticke
 
         builder.Property(x => x.RelationType).HasConversion<string>().IsRequired();
 
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        builder.Property(x => x.RowVersion).IsConcurrencyToken();
 
         builder.HasIndex(x => new { x.ParentTicketId, x.ChildTicketId, x.RelationType }).IsUnique();
 

@@ -1,0 +1,17 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Adrenalin.Modules.Notification.Domain.Entities;
+
+namespace Adrenalin.Modules.Notification.Domain.Interfaces;
+
+public interface INotificationRepository
+{
+    Task<NotificationTemplate?> GetTemplateByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task AddLogAsync(NotificationLog log, CancellationToken cancellationToken = default);
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<string?> ResolveEmailAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<System.Collections.Generic.List<string>> GetTeamLeadsEmailsAsync(CancellationToken cancellationToken = default);
+    Task<string?> GetTicketReporterEmailAsync(Guid ticketId, CancellationToken cancellationToken = default);
+    Task<string?> GetTicketAssigneeEmailAsync(Guid ticketId, CancellationToken cancellationToken = default);
+}

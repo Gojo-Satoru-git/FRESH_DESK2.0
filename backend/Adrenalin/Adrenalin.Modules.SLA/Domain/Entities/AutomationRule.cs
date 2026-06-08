@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Adrenalin.SharedKernel.Entities;
+using Adrenalin.SharedKernel.Contracts;
+
 
 namespace Adrenalin.Modules.SLA.Domain.Entities;
 

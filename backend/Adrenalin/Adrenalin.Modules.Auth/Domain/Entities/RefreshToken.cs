@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Domain.Enums;
 using Adrenalin.SharedKernel.Entities;
@@ -9,6 +10,23 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
 {
 public sealed class RefreshToken : AuditableEntity
 {
+    public RefreshToken(
+    Guid userId,
+    string tokenHash,
+    Guid familyId,
+    DateTimeOffset expiresAt,
+    string? deviceInfo = null,
+    string? ipAddress = null)
+{
+    UserId = userId;
+    TokenHash = tokenHash;
+    FamilyId = familyId;
+    IssuedAt = DateTimeOffset.UtcNow;
+    ExpiresAt = expiresAt;
+    DeviceInfo = deviceInfo;
+    IpAddress = ipAddress;
+    IsRevoked = false;
+}
     public Guid UserId { get; private set; }
 
     public string TokenHash { get; private set; } = string.Empty;
@@ -17,7 +35,7 @@ public sealed class RefreshToken : AuditableEntity
 
     public string? DeviceInfo { get; private set; }
 
-    public string? IpAddress { get; private set; }
+  public string? IpAddress { get; private set; }
 
     public DateTimeOffset IssuedAt { get; private set; }
 
@@ -46,5 +64,10 @@ public sealed class RefreshToken : AuditableEntity
         get;
         private set;
     } = [];
+    public void Revoke()
+{
+    IsRevoked = true;
+    RevokedAt = DateTimeOffset.UtcNow;
+}
 }
 }
