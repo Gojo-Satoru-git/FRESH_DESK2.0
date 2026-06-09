@@ -115,8 +115,16 @@ builder.Services.AddTicketingApplication();
 builder.Services.AddKbModule();
 
 // ── RabbitMQ EventBus ──────────────────────────────────────────────────────────
-builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
-builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", true);
+if (rabbitMqEnabled)
+{
+    builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
+    builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+}
+else
+{
+    builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.InMemoryEventBus>();
+}
 
 // ── Email Polling & Receiving ────────────────────────────────────────────────
 builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
