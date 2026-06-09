@@ -51,5 +51,14 @@ namespace Adrenalin.Persistence.Repositories
 
     return Task.CompletedTask;
 }
+public async Task<List<RefreshToken>>
+    GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+{
+    return await _db.RefreshTokens
+        .Where(x => x.UserId == userId)
+        .ToListAsync(cancellationToken);
+}
 }
 }

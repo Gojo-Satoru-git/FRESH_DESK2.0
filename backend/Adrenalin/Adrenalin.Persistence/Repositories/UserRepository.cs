@@ -86,4 +86,14 @@ public sealed class UserRepository : IUserRepository
                 .Select(rp => rp.Permission.Resource + ":" + rp.Permission.Action))
             .Distinct()
             .ToListAsync(ct);
+    public async Task<List<RefreshToken>>
+    GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+{
+    return await _db.RefreshTokens
+        .Where(x => x.UserId == userId)
+        .ToListAsync(cancellationToken);
+}
+
 }

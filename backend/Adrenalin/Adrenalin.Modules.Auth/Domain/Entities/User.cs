@@ -85,6 +85,12 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
     EmailVerified = true;
     EmailVerifiedAt = DateTimeOffset.UtcNow;
 }
+public void ChangePassword(
+    string passwordHash)
+{
+    PasswordHash = passwordHash;
+    PasswordChangedAt = DateTime.UtcNow;
+}
     }
 
 }

@@ -34,6 +34,7 @@ namespace Adrenalin.Persistence.Repositories
                 x => x.TokenHash == tokenHash,
                 cancellationToken);
     }
+    
      
     }
 }
