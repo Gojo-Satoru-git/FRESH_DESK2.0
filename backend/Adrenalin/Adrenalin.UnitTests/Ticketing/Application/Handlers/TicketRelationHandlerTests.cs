@@ -1,8 +1,13 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Adrenalin.UnitTests.Ticketing.Application.Handlers;
 
@@ -17,7 +22,7 @@ public class TicketRelationHandlerTests
         _repo = new FakeTicketRepository();
     }
 
-    private async Task<Ticket> Add(Guid companyId, Guid moduleId, string subject = "S", string desc = "D")
+    private async Task<Ticket> Add(Guid companyId, Guid moduleId, string subject = "Subject", string desc = "Description")
     {
         var ticket = Ticket.Create(companyId, moduleId, subject, desc);
         await _repo.AddAsync(ticket);
@@ -32,8 +37,8 @@ public class TicketRelationHandlerTests
         // Arrange
         var companyId = Guid.NewGuid();
         var moduleId  = Guid.NewGuid();
-        var t1 = await Add(companyId, moduleId, "Parent");
-        var t2 = await Add(companyId, moduleId, "Child");
+        var t1 = await Add(companyId, moduleId, "ParentTicket");
+        var t2 = await Add(companyId, moduleId, "ChildTicket");
 
         var command = new AddRelationCommand(t1.Id, t2.Id, TicketRelationType.DependsOn);
         var handler = new AddRelationCommandHandler(_repo);
@@ -51,8 +56,8 @@ public class TicketRelationHandlerTests
     public async Task AddRelation_ShouldThrow_WhenTicketsBelongToDifferentCompanies()
     {
         // Arrange
-        var t1 = await Add(Guid.NewGuid(), Guid.NewGuid(), "T1");
-        var t2 = await Add(Guid.NewGuid(), Guid.NewGuid(), "T2");
+        var t1 = await Add(Guid.NewGuid(), Guid.NewGuid(), "Ticket1");
+        var t2 = await Add(Guid.NewGuid(), Guid.NewGuid(), "Ticket2");
 
         var command = new AddRelationCommand(t1.Id, t2.Id, TicketRelationType.DependsOn);
         var handler = new AddRelationCommandHandler(_repo);
@@ -68,9 +73,9 @@ public class TicketRelationHandlerTests
         // Arrange — A→B→C, then C→A is circular
         var companyId = Guid.NewGuid();
         var moduleId  = Guid.NewGuid();
-        var tA = await Add(companyId, moduleId, "A");
-        var tB = await Add(companyId, moduleId, "B");
-        var tC = await Add(companyId, moduleId, "C");
+        var tA = await Add(companyId, moduleId, "TicketA");
+        var tB = await Add(companyId, moduleId, "TicketB");
+        var tC = await Add(companyId, moduleId, "TicketC");
 
         var handler = new AddRelationCommandHandler(_repo);
         await handler.Handle(new AddRelationCommand(tA.Id, tB.Id, TicketRelationType.ParentChild), CancellationToken.None);
@@ -87,8 +92,8 @@ public class TicketRelationHandlerTests
     public async Task LinkTickets_ShouldThrow_WhenTicketsBelongToDifferentCompanies()
     {
         // Arrange
-        var t1 = await Add(Guid.NewGuid(), Guid.NewGuid(), "T1");
-        var t2 = await Add(Guid.NewGuid(), Guid.NewGuid(), "T2");
+        var t1 = await Add(Guid.NewGuid(), Guid.NewGuid(), "Ticket1");
+        var t2 = await Add(Guid.NewGuid(), Guid.NewGuid(), "Ticket2");
 
         var command = new LinkTicketsCommand(t1.Id, t2.Id, TicketRelationType.DependsOn);
         var handler = new LinkTicketsCommandHandler(_repo);
@@ -104,8 +109,8 @@ public class TicketRelationHandlerTests
     public async Task MergeTicket_ShouldThrow_WhenTicketsBelongToDifferentCompanies()
     {
         // Arrange
-        var master    = await Add(Guid.NewGuid(), Guid.NewGuid(), "Master");
-        var duplicate = await Add(Guid.NewGuid(), Guid.NewGuid(), "Duplicate");
+        var master    = await Add(Guid.NewGuid(), Guid.NewGuid(), "MasterTicket");
+        var duplicate = await Add(Guid.NewGuid(), Guid.NewGuid(), "DuplicateTicket");
 
         var command = new MergeTicketCommand(master.Id, duplicate.Id, Guid.NewGuid());
         var handler = new MergeTicketCommandHandler(_repo, new FakeUnitOfWork());
@@ -121,8 +126,8 @@ public class TicketRelationHandlerTests
         // Arrange
         var companyId = Guid.NewGuid();
         var moduleId  = Guid.NewGuid();
-        var master    = await Add(companyId, moduleId, "Master");
-        var duplicate = await Add(companyId, moduleId, "Duplicate");
+        var master    = await Add(companyId, moduleId, "MasterTicket");
+        var duplicate = await Add(companyId, moduleId, "DuplicateTicket");
 
         var mergerId = Guid.NewGuid();
         _repo.UserCompanyMap[mergerId] = Guid.NewGuid(); // wrong company

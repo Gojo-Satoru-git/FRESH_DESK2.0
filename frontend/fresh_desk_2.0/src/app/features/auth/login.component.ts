@@ -1,9 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ThemeSwitcherComponent } from '../../core/theme/theme-switcher.component';
 import { Router, RouterLink } from '@angular/router';
 import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
 import { UiInputComponent } from '../../shared/components/ui-input/ui-input.component';
+import { AuthService } from '../../core/auth/auth.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment.development';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -13,15 +17,34 @@ import { UiInputComponent } from '../../shared/components/ui-input/ui-input.comp
     UiButtonComponent,
     UiInputComponent,
     RouterLink,
-  ], // Built-in Angular package
+  ],
   templateUrl: './login.component.html',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private router = inject(Router);
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
+
   // Local UI State using Signals
   isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
+  activeBanner = signal<any | null>(null);
+
+  ngOnInit() {
+    this.loadActiveBanner();
+  }
+
+  private loadActiveBanner() {
+    this.http.get<any[]>(`${environment.apiUrl}/api/kb/banners/active`).subscribe({
+      next: (banners) => {
+        if (banners && banners.length > 0) {
+          this.activeBanner.set(banners[0]);
+        }
+      },
+      error: () => this.activeBanner.set(null)
+    });
+  }
 
   // Strongly typed Reactive Form
   loginForm = new FormGroup({
@@ -39,23 +62,27 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
-    // FAKE API CALL (Simulating the Traffic Cop)
-    setTimeout(() => {
-      this.isLoading.set(false);
-      const enteredEmail = this.loginForm.value.email;
 
-      // 1. Simulate an Agent Logging In
-      if (enteredEmail === 'agent@adrenalin.com') {
-        this.router.navigate(['/agent/dashboard']);
+    const email = this.loginForm.value.email!;
+    const password = this.loginForm.value.password!;
+
+    this.authService.login({ email, password }).subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        const token = res.userId.accessToken;
+        
+        // Decode token to build User object
+        const user = this.authService.getUserFromToken(token);
+        if (user) {
+          this.authService.handleLoginSuccess(token, user);
+        } else {
+          this.errorMessage.set('Invalid token received from server.');
+        }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(err.error?.message || err.message || 'Invalid email or password.');
       }
-      // 2. Simulate a Customer Logging In
-      else if (enteredEmail === 'customer@company.com') {
-        this.router.navigate(['/customer-portal']);
-      }
-      // 3. Error state
-      else {
-        this.errorMessage.set('Try "agent@adrenalin.com" or "customer@company.com"');
-      }
-    }, 1000); // 1 second fake delay to test the loading spinner
+    });
   }
 }

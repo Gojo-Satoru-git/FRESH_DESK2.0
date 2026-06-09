@@ -1,14 +1,22 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Adrenalin.unify.API.Controllers;
 
 [ApiController]
 [Route("api/tickets")]
+[Authorize]
 public sealed class TicketsController : ControllerBase
 {
     private readonly IDispatcher _dispatcher;
@@ -19,9 +27,19 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateTicketCommand command)
+    [Authorize(Policy = "ticket:create")]
+    public async Task<IActionResult> Create([FromBody] CreateTicketCommand command)
     {
-        var ticketId = await _dispatcher.Send(command);
+        var actorId = GetActorId();
+        var isCustomer = User.IsInRole("customer");
+
+        var commandToExecute = command with
+        {
+            ActorId = actorId,
+            IsCustomer = isCustomer
+        };
+
+        var ticketId = await _dispatcher.Send(commandToExecute);
 
         return Ok(new
         {
@@ -30,13 +48,58 @@ public sealed class TicketsController : ControllerBase
         });
     }
 
+    [HttpPut("{ticketId:guid}")]
+    [Authorize(Policy = "ticket:update")]
+    public async Task<IActionResult> Update(Guid ticketId, [FromBody] UpdateTicketRequest request, CancellationToken cancellationToken = default)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var command = new UpdateTicketCommand(
+            ticketId,
+            request.Title,
+            request.Description,
+            request.Priority,
+            request.Category,
+            request.Tags,
+            actorId.Value
+        );
+
+        var resultId = await _dispatcher.Send(command, cancellationToken);
+
+        return Ok(new
+        {
+            Message = "Ticket updated successfully.",
+            TicketId = resultId
+        });
+    }
+
+    [HttpDelete("{ticketId:guid}")]
+    [Authorize(Policy = "ticket:delete")]
+    public async Task<IActionResult> Delete(Guid ticketId, CancellationToken cancellationToken = default)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var command = new DeleteTicketCommand(ticketId, actorId.Value);
+        var resultId = await _dispatcher.Send(command, cancellationToken);
+
+        return Ok(new
+        {
+            Message = "Ticket deleted successfully.",
+            TicketId = resultId
+        });
+    }
+
     [HttpPost("{ticketId:guid}/assign")]
+    [Authorize(Policy = "ticket:assign")]
     public async Task<IActionResult> Assign(Guid ticketId, [FromBody] AssignTicketRequest request)
     {
+        var actorId = GetActorId();
         var command = new AssignTicketCommand(
             ticketId,
             request.AgentId,
-            request.AssignedBy,
+            actorId ?? request.AssignedBy,
             request.Notes
         );
 
@@ -51,9 +114,16 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/status")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<IActionResult> ChangeStatus(Guid ticketId, [FromBody] ChangeTicketStatusRequest request)
     {
-        var command = new ChangeTicketStatusCommand(ticketId, request.NewStatus, request.ChangedBy, request.Reason);
+        var actorId = GetActorId();
+        var command = new ChangeTicketStatusCommand(
+            ticketId,
+            request.NewStatus,
+            actorId ?? request.ChangedBy,
+            request.Reason
+        );
 
         var resultId = await _dispatcher.Send(command);
 
@@ -66,12 +136,16 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/comments")]
+    [Authorize(Policy = "ticket:comment")]
     public async Task<ActionResult<Guid>> AddComment(Guid ticketId, [FromBody] AddCommentRequest request)
     {
+        var actorId = GetActorId();
+        var isCustomer = User.IsInRole("customer");
+
         var command = new AddCommentCommand(
             ticketId,
-            request.AuthorId,
-            request.ContactId,
+            isCustomer ? null : (actorId ?? request.AuthorId),
+            isCustomer ? (actorId ?? request.ContactId) : request.ContactId,
             request.Body,
             request.Visibility
         );
@@ -81,14 +155,65 @@ public sealed class TicketsController : ControllerBase
         return Ok(commentId);
     }
 
+    [HttpGet("{ticketId:guid}/comments")]
+    [Authorize(Policy = "ticket:read")]
+    public async Task<IActionResult> GetComments(Guid ticketId, [FromQuery] bool includeInternal = false, CancellationToken cancellationToken = default)
+    {
+        var query = new GetTicketCommentsQuery(ticketId, includeInternal);
+        var response = await _dispatcher.Send(query, cancellationToken);
+        return Ok(response);
+    }
+
     [HttpGet]
+    [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetTickets([FromQuery] GetTicketsQuery query, CancellationToken cancellationToken)
     {
         var response = await _dispatcher.Send(query, cancellationToken);
         return Ok(response);
     }
 
+    [HttpGet("my")]
+    [Authorize(Policy = "ticket:read")]
+    public async Task<IActionResult> GetMyTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var query = new GetMyTicketsQuery(actorId.Value, page, pageSize);
+        var response = await _dispatcher.Send(query, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpGet("assigned")]
+    [Authorize(Policy = "ticket:read")]
+    public async Task<IActionResult> GetAssignedTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var query = new GetAssignedTicketsQuery(actorId.Value, page, pageSize);
+        var response = await _dispatcher.Send(query, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpGet("dashboard")]
+    [Authorize(Policy = "ticket:read")]
+    public async Task<IActionResult> GetDashboard([FromQuery] Guid? companyId = null, CancellationToken cancellationToken = default)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        // Customers only see their own tickets; agents/admins/team_leads see all
+        var isCustomer = User.IsInRole("customer");
+        var userIdFilter = isCustomer ? actorId : null;
+
+        var query = new GetTicketDashboardQuery(companyId, userIdFilter);
+        var response = await _dispatcher.Send(query, cancellationToken);
+        return Ok(response);
+    }
+
     [HttpGet("{ticketId:guid}")]
+    [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetById(Guid ticketId)
     {
         var query = new GetTicketByIdQuery(ticketId);
@@ -97,23 +222,27 @@ public sealed class TicketsController : ControllerBase
         return Ok(response);
     }
 
-    //[HttpPost("{ticketId:guid}/watchers")]
-    //public async Task<IActionResult> AddWatcher(Guid ticketId, [FromBody] AddWatcherRequest request)
-    //{
-    //    await _dispatcher.Send(new AddWatcherCommand(ticketId, request.UserId, request.AddedBy));
-
-    //    return NoContent();
-    //}
+    [HttpGet("{ticketId:guid}/activities")]
+    [Authorize(Policy = "ticket:read")]
+    public async Task<IActionResult> GetActivities(Guid ticketId, CancellationToken cancellationToken = default)
+    {
+        var query = new GetTicketActivitiesQuery(ticketId);
+        var response = await _dispatcher.Send(query, cancellationToken);
+        return Ok(response);
+    }
 
     [HttpPost("{ticketId:guid}/watchers/{userId:guid}")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<IActionResult> AddWatcher(Guid ticketId, Guid userId, [FromQuery] Guid? addedBy = null)
     {
-        await _dispatcher.Send(new AddWatcherCommand(ticketId, userId, addedBy ?? userId));
+        var actorId = GetActorId();
+        await _dispatcher.Send(new AddWatcherCommand(ticketId, userId, actorId ?? addedBy ?? userId));
 
         return NoContent();
     }
 
     [HttpDelete("{ticketId:guid}/watchers/{userId:guid}")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<IActionResult> RemoveWatcher(Guid ticketId, Guid userId)
     {
         await _dispatcher.Send(new RemoveWatcherCommand(ticketId, userId));
@@ -122,6 +251,7 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/relations")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<ActionResult<Guid>> LinkTicket(Guid ticketId, [FromBody] LinkTicketRequest request)
     {
         var relationId = await _dispatcher.Send(
@@ -137,9 +267,11 @@ public sealed class TicketsController : ControllerBase
 
     [HttpPost("{ticketId:guid}/attachments")]
     [Consumes("multipart/form-data")]
+    [Authorize(Policy = "ticket:comment")]
     public async Task<ActionResult<Guid>> UploadAttachment(Guid ticketId, [FromForm] UploadAttachmentRequest request)
     {
         await using var stream = request.File.OpenReadStream();
+        var actorId = GetActorId();
 
         var attachmentId =
             await _dispatcher.Send(
@@ -150,12 +282,13 @@ public sealed class TicketsController : ControllerBase
                     request.File.FileName,
                     request.File.Length,
                     request.File.ContentType,
-                    request.UploadedBy));
+                    actorId ?? request.UploadedBy));
 
         return Ok(attachmentId);
     }
 
     [HttpGet("{ticketId:guid}/attachments/{attachmentId:guid}")]
+    [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetAttachment(Guid ticketId, Guid attachmentId, CancellationToken cancellationToken)
     {
         var query = new GetAttachmentQuery(ticketId, attachmentId);
@@ -170,6 +303,7 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpDelete("{ticketId:guid}/attachments/{attachmentId:guid}")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<IActionResult> DeleteAttachment(Guid ticketId, Guid attachmentId, CancellationToken cancellationToken)
     {
         var command = new DeleteTicketAttachmentCommand(ticketId, attachmentId);
@@ -179,24 +313,28 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/merge")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<ActionResult<Guid>> MergeTicket(
-    Guid ticketId,
-    [FromBody] MergeTicketRequest request)
+        Guid ticketId,
+        [FromBody] MergeTicketRequest request)
     {
+        var actorId = GetActorId();
         var relationId =
             await _dispatcher.Send(
                 new MergeTicketCommand(
                     ticketId,
                     request.DuplicateTicketId,
-                    request.MergedBy));
+                    actorId ?? request.MergedBy));
 
         return Ok(relationId);
     }
 
     [HttpPost("{ticketId:guid}/close")]
+    [Authorize(Policy = "ticket:close")]
     public async Task<IActionResult> Close(Guid ticketId, [FromBody] CloseTicketRequest request)
     {
-        var command = new CloseTicketCommand(ticketId, request.ClosedBy, request.Notes);
+        var actorId = GetActorId();
+        var command = new CloseTicketCommand(ticketId, actorId ?? request.ClosedBy, request.Notes);
         var resultId = await _dispatcher.Send(command);
 
         return Ok(new
@@ -207,9 +345,11 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/reopen")]
+    [Authorize(Policy = "ticket:reopen")]
     public async Task<IActionResult> Reopen(Guid ticketId, [FromBody] ReopenTicketRequest request)
     {
-        var command = new ReopenTicketCommand(ticketId, request.ReopenedBy, request.Reason);
+        var actorId = GetActorId();
+        var command = new ReopenTicketCommand(ticketId, actorId ?? request.ReopenedBy, request.Reason);
         var resultId = await _dispatcher.Send(command);
 
         return Ok(new
@@ -220,9 +360,11 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/resolve")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<IActionResult> Resolve(Guid ticketId, [FromBody] ResolveTicketRequest request)
     {
-        var command = new ResolveTicketCommand(ticketId, request.ResolvedBy, request.ResolutionSummary);
+        var actorId = GetActorId();
+        var command = new ResolveTicketCommand(ticketId, actorId ?? request.ResolvedBy, request.ResolutionSummary);
         var resultId = await _dispatcher.Send(command);
 
         return Ok(new
@@ -233,6 +375,7 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpGet("{ticketId:guid}/history")]
+    [Authorize(Policy = "ticket:read")]
     public async Task<ActionResult<TicketHistoryDto>> GetHistory(Guid ticketId, CancellationToken cancellationToken)
     {
         var query = new GetTicketHistoryQuery(ticketId);
@@ -242,13 +385,15 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/split")]
+    [Authorize(Policy = "ticket:update")]
     public async Task<ActionResult<Guid>> SplitTicket(Guid ticketId, [FromBody] SplitTicketRequest request)
     {
+        var actorId = GetActorId();
         var command = new SplitTicketCommand(
             ticketId,
             request.NewSubject,
             request.NewDescription,
-            request.CreatedByUserId,
+            actorId ?? request.CreatedByUserId,
             request.CommentIdsToMove,
             request.AttachmentIdsToMove
         );
@@ -261,4 +406,19 @@ public sealed class TicketsController : ControllerBase
             NewTicketId = resultId
         });
     }
+
+    private Guid? GetActorId()
+    {
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+               ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(sub, out var id) ? id : null;
+    }
 }
+
+public sealed record UpdateTicketRequest(
+    string Title,
+    string Description,
+    TicketPriority Priority,
+    TicketCategory Category,
+    List<string> Tags
+);

@@ -1,6 +1,7 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.Handlers;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.UnitTests.Fakes;
 
@@ -50,6 +51,8 @@ public class ChangeTicketStatusHandlerTests
         var userId = Guid.NewGuid();
 
         ticket.ChangeStatus(TicketStatus.Open, userId);
+        ticket.ChangeStatus(TicketStatus.Assigned, userId);
+        ticket.ChangeStatus(TicketStatus.InProgress, userId);
         ticket.MarkCustomerCallTaken(userId);
         ticket.ProvideRootCauseAnalysis("Network packet drop", userId);
 

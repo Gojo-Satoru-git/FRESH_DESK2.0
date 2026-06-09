@@ -1,5 +1,7 @@
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Entities;
+using System.Text.RegularExpressions;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Entities;
 
@@ -11,7 +13,9 @@ public sealed class TicketComment : SoftDeleteEntity
     public string Body { get; private set; } = null!;    
     public CommentVisibility Visibility { get; private set; }
     public Ticket Ticket { get; private set; } = null!;
-
+    
+    public string CommentText => Body;
+    public List<string> MentionedUsers { get; private set; } = new();
 
     private readonly List<TicketAttachment> _attachments = new();
     public IReadOnlyCollection<TicketAttachment> Attachments => _attachments.AsReadOnly();
@@ -27,13 +31,14 @@ public sealed class TicketComment : SoftDeleteEntity
         TicketId = destinationTicketId;
     }
 
-    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, CommentVisibility visibility)
+    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, CommentVisibility visibility, List<string> mentionedUsers)
     {
         TicketId = ticketId;
         AuthorId = authorId;
         ContactId = contactId;
         Body = body;
         Visibility = visibility;
+        MentionedUsers = mentionedUsers;
     }
 
     public static TicketComment Create(Guid ticketId, Guid? authorId, Guid? contactId, string body, CommentVisibility visibility)
@@ -62,12 +67,24 @@ public sealed class TicketComment : SoftDeleteEntity
         if (body.Length > 10000)
             throw new TicketDomainException("Comment body exceeds 10000 characters.");
 
+        var mentioned = new List<string>();
+        var matches = Regex.Matches(body, @"@(\w+(?:\.\w+)*)");
+        foreach (Match match in matches)
+        {
+            var user = match.Groups[1].Value;
+            if (!mentioned.Contains(user))
+            {
+                mentioned.Add(user);
+            }
+        }
+
         var ticketComment = new TicketComment(
             ticketId,
             authorId,
             contactId,
             body.Trim(),
-            visibility
+            visibility,
+            mentioned
         );
 
         return ticketComment;

@@ -2,6 +2,7 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-customer-header',
@@ -47,6 +48,7 @@ import { Router, RouterModule } from '@angular/router';
           </a>
 
           <a
+            
             routerLink="/customer-portal/knowledge-base"
             routerLinkActive="bg-blue-500"
             class="block px-6 py-3 text-xl font-semibold rounded-xl
@@ -155,6 +157,7 @@ import { Router, RouterModule } from '@angular/router';
 })
 export class CustomerHeaderComponent {
   private router = inject(Router);
+  private authService = inject(AuthService);
   isMenuOpen = signal(false);
 
   toggleMenu() {
@@ -167,8 +170,7 @@ export class CustomerHeaderComponent {
 
   logout() {
     this.isMenuOpen.set(false);
-    // later connect auth service
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 
   @HostListener('document:click', ['$event'])

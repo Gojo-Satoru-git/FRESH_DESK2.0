@@ -82,6 +82,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<TicketStatusGraph> TicketStatusGraphs { get; set; }
     public virtual DbSet<TicketStatusGraphScope> TicketStatusGraphScopes { get; set; }
     public virtual DbSet<TicketStatusHistory> TicketStatusHistories { get; set; }
+    public virtual DbSet<TicketTag> TicketTags { get; set; }
+    public virtual DbSet<TicketActivity> TicketActivities { get; set; }
     public virtual DbSet<TokenBlacklist> TokenBlacklists { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserGroup> UserGroups { get; set; }
@@ -111,17 +113,37 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
             .HasPostgresExtension("pgcrypto")
             .HasPostgresExtension("unaccent");
 
-        // All entity configurations are loaded automatically from the Configurations folder
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AdrenalinDbContext).Assembly);
 
         modelBuilder.HasSequence("ticket_number_seq", "ticket");
     }
 
-    /// <summary>
-    /// Saves changes then dispatches domain events from aggregate roots (KB entities).
-    /// </summary>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Modified &&
+                (entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketActivity ||
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketAssignmentLog ||
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketStatusHistory))
+            {
+                entry.State = EntityState.Added;
+            }
+        }
+
+        var entries = ChangeTracker.Entries<Adrenalin.SharedKernel.Entities.BaseEntity>()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+        foreach (var entry in entries)
+        {
+            var property = entry.Metadata.FindProperty(nameof(Adrenalin.SharedKernel.Entities.BaseEntity.RowVersion));
+            if (property != null)
+            {
+                var versionBytes = Guid.NewGuid().ToByteArray();
+                entry.Property(property.Name).CurrentValue = versionBytes;
+            }
+        }
+
         var result = await base.SaveChangesAsync(cancellationToken);
         await DispatchDomainEventsAsync(cancellationToken);
         return result;
@@ -133,11 +155,14 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
             .SelectMany(e => e.Entity.DomainEvents).ToList();
         var folderEvents = ChangeTracker.Entries<KbFolder>()
             .SelectMany(e => e.Entity.DomainEvents).ToList();
+        var ticketEvents = ChangeTracker.Entries<Ticket>()
+            .SelectMany(e => e.Entity.DomainEvents).ToList();
 
         ChangeTracker.Entries<KbArticle>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
         ChangeTracker.Entries<KbFolder>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
+        ChangeTracker.Entries<Ticket>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
 
-        foreach (var evt in articleEvents.Concat(folderEvents))
+        foreach (var evt in articleEvents.Concat(folderEvents).Concat(ticketEvents))
             await _publisher.Publish(evt, ct);
     }
 }

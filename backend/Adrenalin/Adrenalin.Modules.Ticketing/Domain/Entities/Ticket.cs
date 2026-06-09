@@ -1,5 +1,8 @@
 using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Events;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.SharedKernel.Entities;
+using Adrenalin.SharedKernel.Mediator;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -18,9 +21,17 @@ public sealed class Ticket : SoftDeleteEntity
     public Guid? VersionId { get; private set; }
     public Guid ModuleId { get; private set; }
     public Guid? SubModuleId { get; private set; }
-    public string Subject { get; private set; } = null!;
+    
+    public string Title { get; private set; } = null!;
     public string Description { get; private set; } = null!;
     public TicketStatus Status { get; private set; } = TicketStatus.New;
+    public TicketType Type { get; private set; }
+    public TicketPriority Priority { get; private set; }
+    public TicketCategory Category { get; private set; }
+    public string? ModuleName { get; private set; }
+    public string? Department { get; private set; }
+    public string? Region { get; private set; }
+
     public string? ProductType { get; private set; }
     public string? SolutionType { get; private set; }
     public string? FixType { get; private set; }
@@ -45,76 +56,100 @@ public sealed class Ticket : SoftDeleteEntity
     public int CustomerReplyCount { get; private set; }
     public DateTime? ModifiedAt { get; private set; }
     public string? ModifiedBy { get; private set; }
+    public DateTimeOffset? ResolvedAt { get; private set; }
+    public DateTimeOffset? ClosedAt { get; private set; }
 
     public CsatSurvey? CsatSurvey { get; private set; }
     public TicketClassification? TicketClassification { get; private set; }
 
-    
     private readonly List<TicketAssignmentLog> _ticketAssignmentLogs = new();
     public IReadOnlyCollection<TicketAssignmentLog> TicketAssignmentLogs => _ticketAssignmentLogs.AsReadOnly();
-
 
     private readonly List<TicketAttachment> _ticketAttachments = new();
     public IReadOnlyCollection<TicketAttachment> TicketAttachments => _ticketAttachments.AsReadOnly();
 
-
     private readonly List<TicketComment> _ticketComments = new();
     public IReadOnlyCollection<TicketComment> TicketComments => _ticketComments.AsReadOnly();
-
 
     private readonly List<TicketCustomField> _ticketCustomFields = new();
     public IReadOnlyCollection<TicketCustomField> TicketCustomFields => _ticketCustomFields.AsReadOnly();
 
-
     private readonly List<TicketRiskScore> _ticketRiskScores = new();
     public IReadOnlyCollection<TicketRiskScore> TicketRiskScores => _ticketRiskScores.AsReadOnly();
-
 
     private readonly List<TicketStatusHistory> _ticketStatusHistories = new();
     public IReadOnlyCollection<TicketStatusHistory> TicketStatusHistories => _ticketStatusHistories.AsReadOnly();
 
-
     private readonly List<TicketWatcher> _ticketWatchers = new();
     public IReadOnlyCollection<TicketWatcher> TicketWatchers => _ticketWatchers.AsReadOnly();
-
 
     private readonly List<TicketRelation> _ticketRelations = new();
     public IReadOnlyCollection<TicketRelation> TicketRelations => _ticketRelations.AsReadOnly();
 
-
     private readonly List<TicketRelation> _childRelations = new();
     public IReadOnlyCollection<TicketRelation> ChildRelations => _childRelations.AsReadOnly();
 
+    private readonly List<TicketTag> _ticketTags = new();
+    public IReadOnlyCollection<TicketTag> TicketTags => _ticketTags.AsReadOnly();
+
+    private readonly List<TicketActivity> _ticketActivities = new();
+    public IReadOnlyCollection<TicketActivity> TicketActivities => _ticketActivities.AsReadOnly();
+
+    private readonly List<INotification> _domainEvents = new();
+    public IReadOnlyList<INotification> DomainEvents => _domainEvents.AsReadOnly();
+
+    public void ClearDomainEvents() => _domainEvents.Clear();
+
     private static readonly Dictionary<TicketStatus, TicketStatus[]> AllowedTransitions = new()
     {
-        {TicketStatus.New, new[] { TicketStatus.Open } },
-        {TicketStatus.Open, new[] { TicketStatus.InProgress, TicketStatus.PendingCustomer, TicketStatus.PendingInternal, TicketStatus.OnHold, TicketStatus.ProductRoadmap, TicketStatus.Resolved}},
-        {TicketStatus.InProgress, new[] { TicketStatus.PendingCustomer, TicketStatus.PendingInternal, TicketStatus.OnHold, TicketStatus.Resolved }},
-        {TicketStatus.PendingCustomer, new[] { TicketStatus.InProgress, TicketStatus.Resolved }},
-        {TicketStatus.PendingInternal, new[] { TicketStatus.InProgress, TicketStatus.Resolved }},
-        {TicketStatus.OnHold, new[] { TicketStatus.Open, TicketStatus.InProgress }},
-        {TicketStatus.ProductRoadmap, new[] { TicketStatus.Open }},
-        {TicketStatus.Resolved, new[] { TicketStatus.Closed, TicketStatus.Reopened }},
-        {TicketStatus.Reopened, new[] { TicketStatus.InProgress, TicketStatus.PendingCustomer }},
-        {TicketStatus.Closed, Array.Empty<TicketStatus>() }
+        { TicketStatus.New,        new[] { TicketStatus.Open } },
+        { TicketStatus.Open,       new[] { TicketStatus.Assigned } },
+        { TicketStatus.Assigned,   new[] { TicketStatus.InProgress } },
+        { TicketStatus.InProgress, new[] { TicketStatus.Pending, TicketStatus.Resolved } },
+        { TicketStatus.Pending,    new[] { TicketStatus.InProgress } },
+        { TicketStatus.Resolved,   new[] { TicketStatus.Closed, TicketStatus.Reopened } },
+        { TicketStatus.Closed,     new[] { TicketStatus.Reopened } },
+        { TicketStatus.Reopened,   new[] { TicketStatus.Assigned } },
     };
 
     private Ticket() { }
 
-    private Ticket(Guid companyId, Guid moduleId, string subject, string description, Guid? createdByUserId)
+    private Ticket(Guid companyId, Guid moduleId, string title, string description, Guid? createdByUserId, TicketCategory category, TicketPriority priority, string? moduleName, Guid? assignedAgentId, string? department, string? region, Guid? contactId)
     {
         CompanyId = companyId;
         ModuleId = moduleId;
-        Subject = subject;
+        Title = title;
         Description = description;
         CreatedByUserId = createdByUserId;
+        Category = category;
+        Priority = priority;
+        ModuleName = moduleName;
+        AssignedAgentId = assignedAgentId;
+        Department = department;
+        Region = region;
+        ContactId = contactId;
+        
         CustomerReplyCount = 0;
         CustomerCallTaken = false;
         SlaExcluded = false;
         IsAutoResolved = false;
         ForceP1 = false;
+        Status = TicketStatus.New;
     }
-    public static Ticket Create(Guid companyId, Guid moduleId, string subject, string description, Guid? createdByUserId = null)
+
+    public static Ticket Create(
+        Guid companyId, 
+        Guid moduleId, 
+        string subject, 
+        string description, 
+        Guid? createdByUserId = null,
+        TicketCategory category = TicketCategory.Support,
+        TicketPriority priority = TicketPriority.Medium,
+        string? moduleName = null,
+        Guid? assignedAgentId = null,
+        string? department = null,
+        string? region = null,
+        Guid? contactId = null)
     {
         if (companyId == Guid.Empty)
             throw new TicketDomainException("Company ID is required.");
@@ -125,15 +160,96 @@ public sealed class Ticket : SoftDeleteEntity
         if (string.IsNullOrWhiteSpace(subject))
             throw new TicketDomainException("Ticket subject cannot be empty.");
 
+        if (subject.Length < 5 || subject.Length > 100)
+            throw new TicketDomainException("Title must be between 5 and 100 characters.");
+
         if (string.IsNullOrWhiteSpace(description))
             throw new TicketDomainException("Ticket description cannot be empty.");
 
-        var ticket = new Ticket(companyId, moduleId, subject, description, createdByUserId);
+        if (description.Length > 5000)
+            throw new TicketDomainException("Description cannot exceed 5000 characters.");
+
+        var ticket = new Ticket(
+            companyId, 
+            moduleId, 
+            subject, 
+            description, 
+            createdByUserId,
+            category,
+            priority,
+            moduleName,
+            assignedAgentId,
+            department,
+            region,
+            contactId
+        );
+
+        ticket.AddActivity("Ticket Created", null, TicketStatus.New.ToString(), createdByUserId);
 
         ticket._ticketStatusHistories.Add(TicketStatusHistory.Create(ticket.Id, null, TicketStatus.New, createdByUserId, "Ticket Created"));
 
         return ticket;
     }
+
+    public void SetTicketNumber(string ticketNumber)
+    {
+        if (string.IsNullOrWhiteSpace(ticketNumber))
+            throw new TicketDomainException("Ticket number cannot be empty.");
+
+        TicketNumber = ticketNumber;
+
+        // Raise the created event only after the ticket number is properly assigned
+        _domainEvents.Add(new TicketCreatedDomainEvent(
+            Id,
+            TicketNumber,
+            Title,
+            CreatedByUserId,
+            AssignedAgentId,
+            Category,
+            Priority,
+            Department,
+            Region
+        ));
+    }
+
+    public void UpdateTicket(string title, string description, TicketPriority priority, TicketCategory category, List<string> tags, Guid modifiedBy)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Length < 5 || title.Length > 100)
+            throw new TicketDomainException("Title must be between 5 and 100 characters.");
+
+        if (string.IsNullOrWhiteSpace(description) || description.Length > 5000)
+            throw new TicketDomainException("Description must be between 1 and 5000 characters.");
+
+        var oldTitle = Title;
+        var oldDesc = Description;
+        var oldPriority = Priority;
+        var oldCategory = Category;
+
+        Title = title;
+        Description = description;
+        Priority = priority;
+        Category = category;
+
+        // Only log activities for values that actually changed
+        if (oldTitle != Title)
+            AddActivity("Title Changed", oldTitle, Title, modifiedBy);
+        if (oldDesc != Description)
+            AddActivity("Description Changed", oldDesc, Description, modifiedBy);
+        if (oldPriority != Priority)
+            AddActivity("Priority Changed", oldPriority.ToString(), Priority.ToString(), modifiedBy);
+        if (oldCategory != Category)
+            AddActivity("Category Changed", oldCategory.ToString(), Category.ToString(), modifiedBy);
+
+        // Manage tags
+        _ticketTags.Clear();
+        foreach (var tag in tags)
+        {
+            _ticketTags.Add(TicketTag.Create(Id, tag));
+        }
+
+        Touch(modifiedBy);
+    }
+
     public void ChangeStatus(TicketStatus newStatus, Guid changedBy, string? reason = null)
     {
         if (Status == newStatus)
@@ -145,12 +261,16 @@ public sealed class Ticket : SoftDeleteEntity
         var oldStatus = Status;
         Status = newStatus;
 
+        AddActivity("Status Changed", oldStatus.ToString(), newStatus.ToString(), changedBy);
+
         _ticketStatusHistories.Add(TicketStatusHistory.Create(Id, oldStatus, newStatus, changedBy, reason));
         
+        _domainEvents.Add(new TicketStatusChangedDomainEvent(Id, oldStatus, newStatus, changedBy));
+
         Touch(changedBy);
     }
 
-    private void Touch(Guid? userId)
+    private void Touch(Guid userId)
     {
         UpdatedAt = DateTimeOffset.UtcNow;
         UpdatedBy = userId;
@@ -174,10 +294,19 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         var previousAgent = AssignedAgentId;
-
         AssignedAgentId = agentId;
 
-        _ticketAssignmentLogs.Add(TicketAssignmentLog.Create(Id,previousAgent,agentId,assignedBy,notes));
+        AddActivity("Assignee Changed", previousAgent?.ToString(), agentId.ToString(), assignedBy);
+
+        _ticketAssignmentLogs.Add(TicketAssignmentLog.Create(Id, previousAgent, agentId, assignedBy, notes));
+
+        // Auto transition from Open to Assigned if assigned
+        if (Status == TicketStatus.Open)
+        {
+            ChangeStatus(TicketStatus.Assigned, assignedBy, "Assigned Agent");
+        }
+
+        _domainEvents.Add(new TicketAssignedDomainEvent(Id, TicketNumber, agentId, assignedBy));
 
         Touch(assignedBy);
     }
@@ -221,21 +350,19 @@ public sealed class Ticket : SoftDeleteEntity
             throw new TicketDomainException("User is already watching this ticket.");
 
         var watcher = TicketWatcher.Create(Id, userId, addedBy);
-
         _ticketWatchers.Add(watcher);
     }
 
     public void RemoveWatcher(Guid userId)
     {
         var watcher = _ticketWatchers.FirstOrDefault(x => x.UserId == userId);
-
         if (watcher is null)
         {
             throw new TicketDomainException("Watcher not found.");
         }
-
         _ticketWatchers.Remove(watcher);
     }
+
     public void AddComment(TicketComment comment, Guid addedBy)
     {
         ArgumentNullException.ThrowIfNull(comment);
@@ -243,7 +370,6 @@ public sealed class Ticket : SoftDeleteEntity
         if (comment.IsCustomerReply)
         {
             CustomerReplyCount++;
-            Touch(null);
         }
         else
         {
@@ -251,6 +377,15 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         _ticketComments.Add(comment);
+
+        AddActivity("Comment Added", null, comment.Body, addedBy);
+
+        _domainEvents.Add(new TicketCommentAddedDomainEvent(
+            Id,
+            comment.Id,
+            comment.Body,
+            comment.MentionedUsers
+        ));
     }
 
     public void AddRelation(TicketRelation relation)
@@ -285,17 +420,9 @@ public sealed class Ticket : SoftDeleteEntity
             throw new TicketDomainException("Cannot resolve a closed ticket.");
         }
 
-        if (!CustomerCallTaken)
-        {
-            throw new TicketDomainException("Customer call must be recorded before resolution.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Rca))
-        {
-            throw new TicketDomainException("RCA is required before resolving.");
-        }
-
         ChangeStatus(TicketStatus.Resolved, resolvedBy, resolutionSummary);
+        ResolvedAt = DateTimeOffset.UtcNow;
+        _domainEvents.Add(new TicketResolvedDomainEvent(Id, TicketNumber, resolvedBy));
     }
 
     public void ProvideRootCauseAnalysis(string rca, Guid modifiedBy)
@@ -315,6 +442,7 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         ChangeStatus(TicketStatus.Reopened, reopenedBy, reason);
+        _domainEvents.Add(new TicketReopenedDomainEvent(Id, TicketNumber, reopenedBy));
     }
 
     public void Close(Guid closedBy, string notes)
@@ -323,12 +451,13 @@ public sealed class Ticket : SoftDeleteEntity
             throw new TicketDomainException("Only resolved tickets can be closed.");
 
         ChangeStatus(TicketStatus.Closed, closedBy, notes);
+        ClosedAt = DateTimeOffset.UtcNow;
+        _domainEvents.Add(new TicketClosedDomainEvent(Id, TicketNumber, closedBy));
     }
 
     public void AddAttachment(TicketAttachment attachment)
     {
         ArgumentNullException.ThrowIfNull(attachment);
-
         _ticketAttachments.Add(attachment);
     }
 
@@ -383,8 +512,8 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         var previousStatus = Status;
-
         Status = TicketStatus.Closed;
+        ClosedAt = DateTimeOffset.UtcNow;
 
         _ticketStatusHistories.Add(
             TicketStatusHistory.Create(
@@ -394,6 +523,26 @@ public sealed class Ticket : SoftDeleteEntity
                 mergedBy,
                 $"Merged into {masterTicketNumber}"));
 
+        AddActivity("Ticket Merged", previousStatus.ToString(), $"Closed (Merged into {masterTicketNumber})", mergedBy);
+
+        _domainEvents.Add(new TicketMergedDomainEvent(Id, TicketNumber, masterTicketNumber, mergedBy));
+
         Touch(mergedBy);
+    }
+
+    public void AddTag(string tagName, Guid? addedBy)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+            return;
+        if (!_ticketTags.Any(t => t.TagName.Equals(tagName, StringComparison.OrdinalIgnoreCase)))
+        {
+            _ticketTags.Add(TicketTag.Create(Id, tagName));
+            AddActivity("Tag Added", null, tagName, addedBy);
+        }
+    }
+
+    public void AddActivity(string activityType, string? oldValue, string? newValue, Guid? performedBy)
+    {
+        _ticketActivities.Add(TicketActivity.Create(Id, activityType, oldValue, newValue, performedBy));
     }
 }

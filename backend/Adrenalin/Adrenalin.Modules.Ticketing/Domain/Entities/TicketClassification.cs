@@ -34,4 +34,17 @@ public sealed class TicketClassification : BaseEntity
     public DateTime ClassifiedAt { get; private set; }
 
     public Ticket Ticket { get; private set; } = null!;
+
+    private TicketClassification() { }
+
+    public static TicketClassification Create(Guid ticketId, string finalLabel)
+    {
+        return new TicketClassification
+        {
+            Id = Guid.NewGuid(),
+            TicketId = ticketId,
+            FinalLabel = finalLabel,
+            ClassifiedAt = DateTime.UtcNow
+        };
+    }
 }

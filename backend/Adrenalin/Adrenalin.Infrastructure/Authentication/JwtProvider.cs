@@ -24,7 +24,9 @@ namespace Adrenalin.Infrastructure.Authentication
     public string GenerateToken(
         Guid userId,
         string email, IEnumerable<string> roles,
-        IEnumerable<string> permissions)
+        IEnumerable<string> permissions,
+        string? firstName = null,
+        string? lastName = null)
     {
         var claims = new List<Claim>
         {
@@ -40,6 +42,21 @@ namespace Adrenalin.Infrastructure.Authentication
                 JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString())
         };
+
+        if (!string.IsNullOrWhiteSpace(firstName))
+        {
+            claims.Add(new(JwtRegisteredClaimNames.GivenName, firstName));
+        }
+        if (!string.IsNullOrWhiteSpace(lastName))
+        {
+            claims.Add(new(JwtRegisteredClaimNames.FamilyName, lastName));
+        }
+        var fullName = $"{firstName} {lastName}".Trim();
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            claims.Add(new("name", fullName));
+        }
+
         foreach (var role in roles)
         {
             claims.Add(

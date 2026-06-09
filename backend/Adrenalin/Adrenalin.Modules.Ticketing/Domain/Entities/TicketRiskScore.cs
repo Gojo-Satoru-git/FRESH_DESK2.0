@@ -49,4 +49,18 @@ public sealed class TicketRiskScore : BaseEntity
     public DateTime ComputedAt { get; private set; }
 
     public Ticket Ticket { get; private set; } = null!;
+
+    private TicketRiskScore() { }
+
+    public static TicketRiskScore Create(Guid ticketId, string assignedPriority, decimal finalScore)
+    {
+        return new TicketRiskScore
+        {
+            Id = Guid.NewGuid(),
+            TicketId = ticketId,
+            AssignedPriority = assignedPriority,
+            FinalScore = finalScore,
+            ComputedAt = DateTime.UtcNow
+        };
+    }
 }

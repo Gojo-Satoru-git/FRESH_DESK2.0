@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using Adrenalin.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;

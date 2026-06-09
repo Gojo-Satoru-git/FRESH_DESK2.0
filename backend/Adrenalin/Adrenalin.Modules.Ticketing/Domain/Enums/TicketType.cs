@@ -9,5 +9,7 @@ public enum TicketType
     Query,
     ServiceRequest,
     Clarification,
-    EnvironmentIssue
+    EnvironmentIssue,
+    FeatureRequest,
+    Support
 }
