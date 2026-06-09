@@ -89,7 +89,7 @@ public async Task<IActionResult> VerifyEmail(
         Message = "Email verified successfully"
     });
 }
-[HttpPost("forgot-password")]
+  [HttpGet("forgot-password")]
 public async Task<IActionResult> ForgotPassword(
     ForgotPasswordRequestDTO request,
     CancellationToken cancellationToken)
@@ -103,24 +103,8 @@ public async Task<IActionResult> ForgotPassword(
     {
         Message =
             "If the email exists, a password reset link has been sent."
-    });
-}
-[HttpPost("reset-password")]
-public async Task<IActionResult> ResetPassword(
-    ResetPasswordRequestDTO request,
-    CancellationToken cancellationToken)
-{
-    await _dispatcher.Send(
-        new ResetPasswordCommand(
-            request.Token,
-            request.NewPassword),
-        cancellationToken);
-
-    return Ok(new
-    {
-        Message =
-            "Password reset successful"
-    });
+    }
+    ); 
 }
 [HttpPost("resend-verification")]
 public async Task<IActionResult> ResendVerification(

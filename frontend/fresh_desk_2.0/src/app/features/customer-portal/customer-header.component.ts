@@ -1,4 +1,3 @@
-// shared/customer-header/customer-header.component.ts
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -12,48 +11,45 @@ import { AuthService } from '../../core/auth/auth.service';
     <div class="flex min-h-screen">
 
       <!-- ================= SIDEBAR ================= -->
-      <aside class="w-80  bg-[#012A4A] px-4 py-6 text-white">
-        <div class="mb-10">
-          <span class="text-4xl ml-10 font-bold block">Adrenalin</span>
-          <span class="text-xl ml-10 opacity-80">Support Portal</span>
-        </div>
+      <aside
+        class="bg-[#012A4A] text-white transition-all duration-300"
+        [class.w-80]="isSidebarOpen()"
+        [class.w-0]="!isSidebarOpen()"
+        [class.overflow-hidden]="!isSidebarOpen()"
+      >
 
-        <nav class="space-y-3 mt-25">
-          <a
-            routerLink="/customer-portal"
-            routerLinkActive="bg-blue-500"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="block px-6 py-3 text-xl font-semibold rounded-xl
-                   transition hover:bg-gray-700"
-          >
+        <!-- ☰ BUTTON (ONLY WHEN SIDEBAR OPEN) -->
+        @if (isSidebarOpen()) {
+          <div class="px-4 pt-4  ">
+            <button
+              (click)="toggleSidebar()"
+              class="h-10 w-10 rounded-lg bg-white text-[#012A4A]
+                     flex items-center justify-center font-bold"
+            >
+              ☰
+            </button>
+          </div>
+        }
+
+        <!-- BRAND -->
+         
+
+        <!-- NAV -->
+        <nav class="space-y-3 mt-40 px-4">
+          <a routerLink="/customer-portal" routerLinkActive="bg-blue-500"
+             [routerLinkActiveOptions]="{ exact: true }"
+             class="block px-6 py-3 text-xl font-semibold rounded-xl hover:bg-gray-700">
             Dashboard
           </a>
 
-          <a
-            routerLink="/customer-portal/raise-ticket"
-            routerLinkActive="bg-blue-500"
-            class="block px-6 py-3 text-xl font-semibold rounded-xl
-                   transition hover:bg-gray-700"
-          >
-            New Ticket
-          </a>
-
-          <a
-            routerLink="/customer-portal/my-tickets"
-            routerLinkActive="bg-blue-500"
-            class="block px-6 py-3 text-xl font-semibold rounded-xl
-                   transition hover:bg-gray-700"
-          >
+         
+          <a routerLink="/customer-portal/my-tickets" routerLinkActive="bg-blue-500"
+             class="block px-6 py-3 text-xl font-semibold rounded-xl hover:bg-gray-700">
             My Tickets
           </a>
 
-          <a
-            
-            routerLink="/customer-portal/knowledge-base"
-            routerLinkActive="bg-blue-500"
-            class="block px-6 py-3 text-xl font-semibold rounded-xl
-                   transition hover:bg-gray-700"
-          >
+          <a routerLink="/customer-portal/knowledge-base" routerLinkActive="bg-blue-500"
+             class="block px-6 py-3 text-xl font-semibold rounded-xl hover:bg-gray-700">
             Knowledge Base
           </a>
         </nav>
@@ -62,92 +58,57 @@ import { AuthService } from '../../core/auth/auth.service';
       <!-- ================= RIGHT SIDE ================= -->
       <div class="flex-1 flex flex-col">
 
-        <!-- HEADER BAR -->
+        <!-- HEADER -->
         <header class="flex items-center px-6 py-4 bg-white relative">
-          <img src="log.png" class="h-48 w-48 -mt-10 object-contain" />
+
+          <!-- ☰ BUTTON (ONLY WHEN SIDEBAR CLOSED) -->
+          @if (!isSidebarOpen()) {
+            <button
+              (click)="toggleSidebar()"
+              class="h-10 w-10 mr-4 rounded-lg bg-gray-100
+                     hover:bg-gray-200 flex items-center justify-center"
+            >
+              ☰
+            </button>
+          }
+
+          <!-- LOGO -->
+          <img src="log.png" class="h-40 w-40 object-contain" />
 
           <div class="flex-1"></div>
-
-          <!-- Notification -->
-          <button
-            class="h-10 w-12 rounded-xl bg-gray-100 -mt-10 hover:bg-blue-500
-                   flex items-center justify-center transition"
-          >
-            <img src="notification.png" class="h-5 w-5" />
-          </button>
 
           <!-- Avatar -->
           <button
             (click)="toggleMenu()"
-            class="ml-4  h-14 w-14 rounded-full -mt-10 bg-[#012A4A]
-                   text-white flex items-center justify-center
-                   font-semibold relative z-20"
+            class="h-14 w-14 rounded-full bg-[#012A4A]
+                   text-white flex items-center justify-center font-semibold"
           >
             A
           </button>
 
           <!-- PROFILE DROPDOWN -->
-         <!-- PROFILE DROPDOWN -->
-@if (isMenuOpen()) {
-  <div
-    class="
-      absolute right-6 top-30
-      w-56
-      bg-white
-      rounded-xl
-      shadow-lg
-      border border-gray-200
-      z-10
-    "
-  >
+          @if (isMenuOpen()) {
+            <div class="absolute right-6 top-35 w-56 bg-white rounded-xl shadow-lg border">
+              <a routerLink="/customer-portal/profile"
+                 (click)="closeMenu()"
+                 class="flex items-center gap-3 px-5 py-3 hover:bg-gray-100">
+                <img src="profile.png" class="w-5 h-5" />
+                My Profile
+              </a>
 
-    <!-- My Profile -->
-    <a
-      routerLink="/customer-portal/profile"
-      (click)="closeMenu()"
-      class="
-        flex items-center gap-3
-        px-5 py-3
-        text-lg font-medium
-        text-gray-700
-        hover:bg-gray-100
-        rounded-t-xl
-      "
-    >
-      <img
-        src="profile.png"
-        alt="Profile"
-        class="w-5 h-5 object-contain"
-      />
-      <span>My Profile</span>
-    </a>
-
-    <!-- Logout -->
-    <button
-      (click)="logout()"
-      class="
-        w-full
-        flex items-center gap-3
-        px-5 py-3
-        text-lg font-medium
-        text-red-600
-        hover:bg-red-50
-        rounded-b-xl
-      "
-    >
-      <img
-        src="logout.png"
-        alt="Logout"
-        class="w-5 h-5 object-contain"
-      />
-      <span>Logout</span>
-    </button>
-
-  </div>
-}
+              <button
+                (click)="logout()"
+                class="w-full flex items-center gap-3 px-5 py-3
+                       text-red-600 hover:bg-red-50"
+              >
+                <img src="logout.png" class="w-5 h-5" />
+                Logout
+              </button>
+            </div>
+          }
         </header>
 
-        <!-- PAGE CONTENT -->
+        <!-- CONTENT -->
         <main class="flex-1 p-6">
           <router-outlet></router-outlet>
         </main>
@@ -156,9 +117,14 @@ import { AuthService } from '../../core/auth/auth.service';
   `
 })
 export class CustomerHeaderComponent {
-  private router = inject(Router);
   private authService = inject(AuthService);
+
+  isSidebarOpen = signal(true);
   isMenuOpen = signal(false);
+
+  toggleSidebar() {
+    this.isSidebarOpen.update(v => !v);
+  }
 
   toggleMenu() {
     this.isMenuOpen.update(v => !v);
