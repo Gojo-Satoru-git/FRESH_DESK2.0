@@ -105,4 +105,21 @@ public async Task<IActionResult> ForgotPassword(
             "If the email exists, a password reset link has been sent."
     });
 }
+[HttpPost("reset-password")]
+public async Task<IActionResult> ResetPassword(
+    ResetPasswordRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new ResetPasswordCommand(
+            request.Token,
+            request.NewPassword),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message =
+            "Password reset successful"
+    });
+}
 }
