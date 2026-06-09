@@ -25,8 +25,9 @@ export class RaiseTicketComponent implements OnInit {
   isDragOver = false;
   isSubmitting = false;
   submitted = false;
-
-  modules = ['Change Request', 'Clarification', 'Environment Issues', 'New Requirements', 'Service Requests', 'Software Enhancement','Software Problem', 'Other'];
+ 
+  category = ['Bug','Enhancement','Feature Requests','Service Requests','Customization','Incident','Environment Issues','Change Request','New Features'];
+  modules = ['Data Correction','Patch deployment','Configuration','Clarification','Server Outage','Ad hoc','Known issue'];
   priorities = ['Low', 'Medium', 'High', 'Critical'];
   kbSuggestions = signal<any[]>([]);
   showCancelConfirm = signal<boolean>(false);
