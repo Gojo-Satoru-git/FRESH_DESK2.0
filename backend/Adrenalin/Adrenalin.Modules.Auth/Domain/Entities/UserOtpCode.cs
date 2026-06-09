@@ -4,6 +4,19 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
 {
     public sealed class UserOtpCode : AuditableEntity
     {
+        public UserOtpCode(
+    Guid userId,
+    string codeHash,
+    string purpose,
+    DateTimeOffset expiresAt,
+    string? deliveryTarget = null)
+{
+    UserId = userId;
+    CodeHash = codeHash;
+    Purpose = purpose;
+    ExpiresAt = expiresAt;
+    DeliveryTarget = deliveryTarget;
+}
         public Guid UserId { get; private set; }
 
         public string CodeHash { get; private set; } = string.Empty;
@@ -20,5 +33,14 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
 
         public bool IsUsed { get; private set; }
         public User User { get; private set; } = null!;
+        public void MarkUsed()
+{
+    IsUsed = true;
+    VerifiedAt = DateTimeOffset.UtcNow;
+}
+public void IncrementFailedAttempts()
+{
+    FailedAttempts++;
+}
     }
 }

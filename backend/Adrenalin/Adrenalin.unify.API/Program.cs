@@ -107,6 +107,12 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IRefreshTokenRepository,
     RefreshTokenRepository>();
+builder.Services.AddScoped<
+    IOtpGenerator,
+    OtpGenerator>();
+builder.Services.AddScoped<
+    IUserOtpCodeRepository,
+    UserOtpCodeRepository>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 

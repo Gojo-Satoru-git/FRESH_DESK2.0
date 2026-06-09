@@ -122,4 +122,34 @@ public async Task<IActionResult> ResetPassword(
             "Password reset successful"
     });
 }
+[HttpPost("resend-verification")]
+public async Task<IActionResult> ResendVerification(
+    ResendVerificationRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new ResendVerificationCommand(
+            request.Email),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message = "Verification email sent."
+    });
+}
+[HttpPost("verify-email-otp")]
+public async Task<IActionResult> VerifyEmailOtp(
+    VerifyEmailOtpRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new VerifyEmailOtpCommand(
+            request.Otp),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message = "Email verified successfully"
+    });
+}
 }
