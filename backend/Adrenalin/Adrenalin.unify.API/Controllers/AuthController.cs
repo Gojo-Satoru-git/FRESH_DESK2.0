@@ -89,4 +89,20 @@ public async Task<IActionResult> VerifyEmail(
         Message = "Email verified successfully"
     });
 }
+[HttpPost("forgot-password")]
+public async Task<IActionResult> ForgotPassword(
+    ForgotPasswordRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new ForgotPasswordCommand(
+            request.Email),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message =
+            "If the email exists, a password reset link has been sent."
+    });
+}
 }
