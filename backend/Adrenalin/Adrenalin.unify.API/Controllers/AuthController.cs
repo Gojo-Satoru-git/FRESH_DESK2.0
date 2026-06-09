@@ -75,4 +75,18 @@ public sealed class AuthController : ControllerBase
             Message = "Logged out successfully"
         });
     }
+    [HttpGet("verify-email")]
+public async Task<IActionResult> VerifyEmail(
+    string token,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new VerifyEmailCommand(token),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message = "Email verified successfully"
+    });
+}
 }

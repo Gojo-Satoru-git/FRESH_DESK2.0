@@ -22,7 +22,7 @@ public sealed class UserRepository : IUserRepository
     public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         await _db.AddAsync(user, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+       
     }
     public async Task<List<string>> GetUserRolesAsync(
         Guid userId,

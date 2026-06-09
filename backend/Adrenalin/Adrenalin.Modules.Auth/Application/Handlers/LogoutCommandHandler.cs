@@ -46,8 +46,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
                     refreshToken,
                     cancellationToken);
 
-                await _refreshTokens.SaveChangesAsync(
-                    cancellationToken);
+                
             }
 
             return true;

@@ -23,6 +23,7 @@ using Scalar.AspNetCore;
 using System.Text;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
+using Adrenalin.Infrastructure.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -120,7 +121,9 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.CurrentUserService>();
+builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 
+builder.Services.AddScoped<IEmailService,FakeEmailService>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(

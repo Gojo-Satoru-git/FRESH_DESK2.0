@@ -88,8 +88,7 @@ public sealed class LoginCommandHandler
         refreshTokenEntity,
         cancellationToken);
 
-        await _refreshTokens.SaveChangesAsync(
-            cancellationToken);
+       
         return new LoginResponseDTO(
         accessToken,
     refreshToken,
