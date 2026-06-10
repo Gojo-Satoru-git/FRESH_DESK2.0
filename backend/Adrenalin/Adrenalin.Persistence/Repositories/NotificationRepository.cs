@@ -60,7 +60,7 @@ public sealed class NotificationRepository : INotificationRepository
         var emails = await (from ur in _context.UserRoles
                              join r in _context.Roles on ur.RoleId equals r.Id
                              join u in _context.Users on ur.UserId equals u.Id
-                             where r.Name == "Supervisor" && !ur.IsDeleted && !r.IsDeleted && !u.IsDeleted
+                             where r.Name == "team_lead" && !ur.IsDeleted && !r.IsDeleted && !u.IsDeleted
                              select u.Email)
                             .Distinct()
                             .ToListAsync(cancellationToken);

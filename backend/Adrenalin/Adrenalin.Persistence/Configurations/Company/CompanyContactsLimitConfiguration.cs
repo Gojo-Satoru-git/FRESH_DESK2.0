@@ -25,7 +25,7 @@ public class CompanyContactsLimitConfiguration : IEntityTypeConfiguration<Compan
         
         builder.Property(e => e.MaxContacts).HasDefaultValue(10).HasColumnName("max_contacts");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne(d => d.Company).WithOne(p => p.CompanyContactsLimit).HasForeignKey<CompanyContactsLimit>(d => d.CompanyId).HasConstraintName("company_contacts_limit_company_id_fkey");
 

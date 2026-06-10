@@ -30,7 +30,7 @@ public class CsatSurveyConfiguration : IEntityTypeConfiguration<CsatSurvey>
         
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<Contact>().WithMany().HasForeignKey(d => d.ContactId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("csat_surveys_contact_id_fkey");
 

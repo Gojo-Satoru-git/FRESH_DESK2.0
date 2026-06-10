@@ -47,7 +47,7 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         
         builder.Property(e => e.UserId).HasColumnName("user_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne(d => d.Company).WithMany(p => p.Contacts).HasForeignKey(d => d.CompanyId).HasConstraintName("contacts_company_id_fkey");
 

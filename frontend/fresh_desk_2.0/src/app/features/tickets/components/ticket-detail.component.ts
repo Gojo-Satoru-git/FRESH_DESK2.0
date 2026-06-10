@@ -180,7 +180,11 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                   @for (tag of ticket()!.tags; track tag) {
                     <span
                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-                      [class]="tag.toLowerCase() === 'sla breached' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-primary/10 text-primary border-primary/20'"
+                      [class]="
+                        tag.toLowerCase() === 'sla breached'
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : 'bg-primary/10 text-primary border-primary/20'
+                      "
                     >
                       # {{ tag }}
                     </span>
@@ -272,7 +276,10 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                       <div class="flex-1 bg-gray-50 dark:bg-gray-800/60 rounded-xl px-4 py-3">
                         <div class="flex items-center justify-between mb-1">
                           <span class="text-xs font-semibold text-text-main">{{
-                            comment.authorName || comment.contactName || comment.authorId || 'Customer'
+                            comment.authorName ||
+                              comment.contactName ||
+                              comment.authorId ||
+                              'Customer'
                           }}</span>
                           <span class="text-[10px] text-text-muted">{{
                             formatDate(comment.createdAt)
@@ -510,7 +517,10 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                   </div>
                   <div>
                     <p class="text-xs text-text-muted">Reporter</p>
-                    <p class="text-sm font-semibold text-text-main truncate max-w-[180px]" [title]="ticket()!.reporterName || ticket()!.reporterId || ''">
+                    <p
+                      class="text-sm font-semibold text-text-main truncate max-w-[180px]"
+                      [title]="ticket()!.reporterName || ticket()!.reporterId || ''"
+                    >
                       {{ ticket()!.reporterName || ticket()!.reporterId || 'Customer' }}
                     </p>
                   </div>
@@ -583,7 +593,17 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
               <div
                 class="fixed bottom-6 right-6 bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-2xl animate-fade-in z-50 flex items-center gap-2"
               >
-                <div class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-400]="!toastMessage()!.toLowerCase().includes('failed') && !toastMessage()!.toLowerCase().includes('error')" [class.bg-red-400]="toastMessage()!.toLowerCase().includes('failed') || toastMessage()!.toLowerCase().includes('error')"></div>
+                <div
+                  class="w-2.5 h-2.5 rounded-full"
+                  [class.bg-emerald-400]="
+                    !toastMessage()!.toLowerCase().includes('failed') &&
+                    !toastMessage()!.toLowerCase().includes('error')
+                  "
+                  [class.bg-red-400]="
+                    toastMessage()!.toLowerCase().includes('failed') ||
+                    toastMessage()!.toLowerCase().includes('error')
+                  "
+                ></div>
                 {{ toastMessage() }}
               </div>
             }
@@ -724,7 +744,7 @@ export class TicketDetailComponent implements OnInit {
       error: () => {
         this.isActionLoading.set(false);
         this.showToast('Failed to resolve ticket.');
-      }
+      },
     });
   }
 
@@ -741,7 +761,7 @@ export class TicketDetailComponent implements OnInit {
       error: () => {
         this.isActionLoading.set(false);
         this.showToast('Failed to close ticket.');
-      }
+      },
     });
   }
 
@@ -780,7 +800,7 @@ export class TicketDetailComponent implements OnInit {
         title: this.editTitle,
         description: t.description,
         priority: t.priority,
-        category: t.category,
+        type: t.category,
         tags: t.tags,
       })
       .subscribe({
@@ -894,7 +914,9 @@ export class TicketDetailComponent implements OnInit {
     this.isActionLoading.set(true);
     this.ticketService.assignTicket(t.id, agentId).subscribe({
       next: () => {
-        this.ticket.update((tk) => tk ? { ...tk, assignedAgentId: agentId, status: 'Assigned' } : tk);
+        this.ticket.update((tk) =>
+          tk ? { ...tk, assignedAgentId: agentId, status: 'Assigned' } : tk,
+        );
         this.loadActivities(t.id);
         this.isActionLoading.set(false);
         this.showToast('Ticket assigned successfully!');
@@ -902,7 +924,7 @@ export class TicketDetailComponent implements OnInit {
       error: (err) => {
         this.isActionLoading.set(false);
         this.showToast(err?.error?.detail ?? 'Assignment failed.');
-      }
+      },
     });
   }
 

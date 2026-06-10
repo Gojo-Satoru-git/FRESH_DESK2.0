@@ -116,7 +116,7 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;   // 'Critical' | 'High' | 'Medium' | 'Low'
-  category: string;  // 'Bug' | 'FeatureRequest' | 'Support' | 'ChangeRequest'
+  type: string;       // 'Bug' | 'FeatureRequest' | 'Support' | 'ChangeRequest'
   tags?: string[];
   assigneeId?: string | null;
   moduleName?: string | null;
@@ -127,7 +127,7 @@ export interface UpdateTicketRequest {
   title: string;
   description: string;
   priority: string;
-  category: string;
+  type: string;
   tags: string[];
 }
 

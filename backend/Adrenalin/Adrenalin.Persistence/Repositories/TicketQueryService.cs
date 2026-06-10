@@ -7,25 +7,97 @@ using Microsoft.EntityFrameworkCore;
 using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Persistence.Context;
 using Adrenalin.SharedKernel.Pagination;
+using Adrenalin.SharedKernel.Interfaces;
 
 namespace Adrenalin.Persistence.Repositories;
 
 public sealed class TicketQueryService : ITicketQueryService
 {
     private readonly AdrenalinDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public TicketQueryService(AdrenalinDbContext context)
+    public TicketQueryService(AdrenalinDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
-    public async Task<PagedResult<TicketListItemDto>> GetMyTicketsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken)
+    private async Task<IQueryable<Ticket>> ApplyVisibilityFilterAsync(IQueryable<Ticket> query, CancellationToken cancellationToken)
     {
+        var userId = _currentUserService.UserId;
+        if (!userId.HasValue) return query.Where(t => false);
+
+        var roles = await _context.UserRoles
+            .Include(ur => ur.Role)
+            .Where(ur => ur.UserId == userId.Value)
+            .Select(ur => ur.Role.Name.ToLower())
+            .ToListAsync(cancellationToken);
+
+        if (roles.Contains("admin"))
+        {
+            return query;
+        }
+        else if (roles.Contains("manager") || roles.Contains("pmo") || roles.Contains("team_lead"))
+        {
+            var userGroups = await _context.UserGroups
+                .Where(ug => ug.UserId == userId.Value)
+                .Select(ug => ug.GroupId)
+                .ToListAsync(cancellationToken);
+
+            return query.Where(t => t.GroupId.HasValue && userGroups.Contains(t.GroupId.Value));
+        }
+        else if (roles.Contains("senior_agent") || roles.Contains("junior_agent"))
+        {
+            return query.Where(t => t.AssignedAgentId == userId.Value);
+        }
+        else if (roles.Contains("customer_admin"))
+        {
+            var companyId = await _context.Contacts
+                .Where(c => c.UserId == userId.Value && !c.IsDeleted)
+                .Select(c => c.CompanyId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (companyId != Guid.Empty)
+            {
+                return query.Where(t => t.CompanyId == companyId);
+            }
+            return query.Where(t => t.CreatedByUserId == userId.Value);
+        }
+        else // default to customer
+        {
+            return query.Where(t => t.CreatedByUserId == userId.Value);
+        }
+    }
+
+    public async Task<PagedResult<TicketListItemDto>> GetMyTicketsAsync(Guid userId, string? status, string? term, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var isInternal = _currentUserService.Roles.Intersect(new[] { "admin", "manager", "pmo", "team_lead", "senior_agent", "junior_agent" }, StringComparer.OrdinalIgnoreCase).Any();
+
         var query = _context.Tickets
             .AsNoTracking()
-            .Where(t => t.CreatedByUserId == userId);
+            .Where(t => t.CreatedByUserId == userId || t.ContactId == userId);
+
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            var t = term.Trim().ToLower();
+            query = query.Where(x => (x.TicketNumber != null && x.TicketNumber.ToLower().Contains(t)) || x.Title.ToLower().Contains(t) || x.Description.ToLower().Contains(t));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && status.ToLower() != "all")
+        {
+            if (status.ToLower() == "open")
+            {
+                var openStatuses = new[] { TicketStatus.New, TicketStatus.Open, TicketStatus.InProgress, TicketStatus.Reopened };
+                query = query.Where(x => openStatuses.Contains(x.Status));
+            }
+            else if (Enum.TryParse<TicketStatus>(status, true, out var parsedStatus))
+            {
+                query = query.Where(x => x.Status == parsedStatus);
+            }
+        }
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -40,7 +112,7 @@ public sealed class TicketQueryService : ITicketQueryService
                 t.Status.ToString(),
                 t.Priority.ToString(),
                 t.Description.Length > 200 ? t.Description.Substring(0, 200) + "..." : t.Description,
-                t.AssignedAgentId,
+                isInternal ? t.AssignedAgentId : null,
                 t.CompanyId,
                 t.CreatedAt,
                 t.UpdatedAt
@@ -58,6 +130,8 @@ public sealed class TicketQueryService : ITicketQueryService
 
     public async Task<PagedResult<TicketListItemDto>> GetAssignedTicketsAsync(Guid agentId, int page, int pageSize, CancellationToken cancellationToken)
     {
+        var isInternal = _currentUserService.Roles.Intersect(new[] { "admin", "manager", "pmo", "team_lead", "senior_agent", "junior_agent" }, StringComparer.OrdinalIgnoreCase).Any();
+
         var query = _context.Tickets
             .AsNoTracking()
             .Where(t => t.AssignedAgentId == agentId);
@@ -75,7 +149,7 @@ public sealed class TicketQueryService : ITicketQueryService
                 t.Status.ToString(),
                 t.Priority.ToString(),
                 t.Description.Length > 200 ? t.Description.Substring(0, 200) + "..." : t.Description,
-                t.AssignedAgentId,
+                isInternal ? t.AssignedAgentId : null,
                 t.CompanyId,
                 t.CreatedAt,
                 t.UpdatedAt
@@ -100,18 +174,15 @@ public sealed class TicketQueryService : ITicketQueryService
             query = query.Where(t => t.CompanyId == companyId.Value);
         }
 
-        if (userId.HasValue)
-        {
-            query = query.Where(t => t.CreatedByUserId == userId.Value || t.AssignedAgentId == userId.Value);
-        }
+        query = await ApplyVisibilityFilterAsync(query, cancellationToken);
 
         var tickets = await query.Select(t => t.Status).ToListAsync(cancellationToken);
 
-        var activeStatuses = new[] { TicketStatus.New, TicketStatus.Open, TicketStatus.Assigned, TicketStatus.InProgress, TicketStatus.Reopened };
+        var activeStatuses = new[] { TicketStatus.New, TicketStatus.Open, TicketStatus.InProgress, TicketStatus.Reopened };
 
         var totalActive = tickets.Count(s => activeStatuses.Contains(s));
         var inProgress = tickets.Count(s => s == TicketStatus.InProgress);
-        var pendingReply = tickets.Count(s => s == TicketStatus.Pending);
+        var pendingReply = tickets.Count(s => s == TicketStatus.PendingCustomer || s == TicketStatus.PendingInternal);
         var resolvedClosed = tickets.Count(s => s == TicketStatus.Resolved || s == TicketStatus.Closed);
 
         return new TicketDashboardDto(totalActive, inProgress, pendingReply, resolvedClosed);
@@ -119,10 +190,13 @@ public sealed class TicketQueryService : ITicketQueryService
 
     public async Task<PagedResult<TicketListItemDto>> SearchTicketsAsync(SearchTicketsQuery request, CancellationToken cancellationToken)
     {
+        var isInternal = _currentUserService.Roles.Intersect(new[] { "admin", "manager", "pmo", "team_lead", "senior_agent", "junior_agent" }, StringComparer.OrdinalIgnoreCase).Any();
+
         var query = _context.Tickets
-            .Include(t => t.TicketTags)
             .AsNoTracking()
             .AsQueryable();
+
+        query = await ApplyVisibilityFilterAsync(query, cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(request.Term))
         {
@@ -150,7 +224,6 @@ public sealed class TicketQueryService : ITicketQueryService
                 (t.TicketNumber != null && t.TicketNumber.ToLower().Contains(term)) ||
                 t.Title.ToLower().Contains(term) ||
                 t.Description.ToLower().Contains(term) ||
-                t.TicketTags.Any(tag => tag.TagName.ToLower().Contains(term)) ||
                 (t.CreatedByUserId.HasValue && matchingUserIds.Contains(t.CreatedByUserId.Value)) ||
                 (t.ContactId.HasValue && matchingContactIds.Contains(t.ContactId.Value))
             );
@@ -166,9 +239,9 @@ public sealed class TicketQueryService : ITicketQueryService
             query = query.Where(t => t.Priority == priority);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Category) && Enum.TryParse<TicketCategory>(request.Category, true, out var category))
+        if (!string.IsNullOrWhiteSpace(request.Type) && Enum.TryParse<TicketType>(request.Type, true, out var type))
         {
-            query = query.Where(t => t.Category == category);
+            query = query.Where(t => t.Type == type);
         }
 
         if (request.AssigneeId.HasValue)
@@ -179,16 +252,6 @@ public sealed class TicketQueryService : ITicketQueryService
         if (request.ReporterId.HasValue)
         {
             query = query.Where(t => t.CreatedByUserId == request.ReporterId.Value || t.ContactId == request.ReporterId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Department))
-        {
-            query = query.Where(t => t.Department == request.Department);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Region))
-        {
-            query = query.Where(t => t.Region == request.Region);
         }
 
         if (request.CreatedFrom.HasValue)
@@ -214,7 +277,7 @@ public sealed class TicketQueryService : ITicketQueryService
                 t.Status.ToString(),
                 t.Priority.ToString(),
                 t.Description.Length > 200 ? t.Description.Substring(0, 200) + "..." : t.Description,
-                t.AssignedAgentId,
+                isInternal ? t.AssignedAgentId : null,
                 t.CompanyId,
                 t.CreatedAt,
                 t.UpdatedAt
@@ -232,38 +295,64 @@ public sealed class TicketQueryService : ITicketQueryService
 
     public async Task<IReadOnlyList<TicketActivityDto>> GetTicketActivitiesAsync(Guid ticketId, CancellationToken cancellationToken)
     {
-        var activities = await _context.TicketActivities
+        var statusHistories = await _context.TicketStatusHistories
             .AsNoTracking()
-            .Where(a => a.TicketId == ticketId)
-            .OrderByDescending(a => a.PerformedAt)
+            .Where(h => h.TicketId == ticketId)
+            .Select(h => new TicketActivityDto(
+                h.Id,
+                "StatusChange",
+                h.FromStatus != null ? h.FromStatus.ToString() : null,
+                h.ToStatus.ToString(),
+                h.ChangedBy,
+                h.ChangedAt,
+                null
+            ))
             .ToListAsync(cancellationToken);
 
-        var performerIds = activities.Where(a => a.PerformedBy.HasValue).Select(a => a.PerformedBy!.Value).Distinct().ToList();
-        var userDisplayNames = new Dictionary<Guid, string>();
-        if (performerIds.Any())
+        var assignmentLogs = await _context.TicketAssignmentLogs
+            .AsNoTracking()
+            .Where(a => a.TicketId == ticketId)
+            .Select(a => new TicketActivityDto(
+                a.Id,
+                "Assignment",
+                a.FromAgentId.HasValue ? a.FromAgentId.Value.ToString() : null,
+                a.ToAgentId.ToString(),
+                a.ChangedBy,
+                a.AssignedAt,
+                null
+            ))
+            .ToListAsync(cancellationToken);
+
+        var activities = statusHistories.Concat(assignmentLogs)
+            .OrderByDescending(a => a.PerformedAt)
+            .ToList();
+
+        var userIds = activities.Where(a => a.PerformedBy.HasValue).Select(a => a.PerformedBy!.Value).Distinct().ToList();
+        if (userIds.Any())
         {
             var users = await _context.Users
-                .Where(u => performerIds.Contains(u.Id) && !u.IsDeleted)
-                .Select(u => new { u.Id, u.Email, u.FirstName, u.LastName })
+                .Where(u => userIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email })
                 .ToListAsync(cancellationToken);
-            userDisplayNames = users.ToDictionary(
+
+            var userDict = users.ToDictionary(
                 u => u.Id,
                 u => {
                     var fullName = $"{u.FirstName} {u.LastName}".Trim();
                     return !string.IsNullOrWhiteSpace(fullName) ? fullName : u.Email.Split('@').First();
                 }
             );
+
+            for (int i = 0; i < activities.Count; i++)
+            {
+                if (activities[i].PerformedBy.HasValue && userDict.TryGetValue(activities[i].PerformedBy!.Value, out var name))
+                {
+                    activities[i] = activities[i] with { PerformedByName = name };
+                }
+            }
         }
 
-        return activities.Select(a => new TicketActivityDto(
-            a.Id,
-            a.ActivityType,
-            a.OldValue,
-            a.NewValue,
-            a.PerformedBy,
-            a.PerformedAt,
-            PerformedByName: a.PerformedBy.HasValue && userDisplayNames.TryGetValue(a.PerformedBy.Value, out var pbn) ? pbn : null
-        )).ToList();
+        return activities;
     }
 
     public async Task<IReadOnlyList<CommentDto>> GetTicketCommentsAsync(Guid ticketId, bool includeInternal, CancellationToken cancellationToken)
@@ -275,7 +364,7 @@ public sealed class TicketQueryService : ITicketQueryService
 
         if (!includeInternal)
         {
-            query = query.Where(c => c.Visibility != CommentVisibility.Internal);
+            query = query.Where(c => !c.IsPrivate);
         }
 
         var comments = await query
@@ -334,7 +423,7 @@ public sealed class TicketQueryService : ITicketQueryService
             c.AuthorId,
             c.ContactId,
             c.Body,
-            c.Visibility.ToString(),
+            c.IsPrivate ? "Internal" : "Public",
             c.CreatedAt,
             c.Attachments.Select(a => new AttachmentDto(
                 a.Id,

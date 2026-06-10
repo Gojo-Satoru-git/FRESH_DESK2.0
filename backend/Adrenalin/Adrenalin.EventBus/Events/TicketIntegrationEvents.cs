@@ -60,3 +60,12 @@ public sealed record TicketMergedIntegrationEvent(
     string MasterTicketNumber,
     Guid MergedBy
 );
+
+public sealed record TicketStatusChangedIntegrationEvent(
+    Guid TicketId,
+    string TicketNumber,
+    string FromStatus,
+    string ToStatus,
+    Guid ChangedBy,
+    string? Reason
+);

@@ -48,8 +48,7 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
             .HasColumnName("resource")
             .IsRequired();
 
-        builder.Property(e => e.RowVersion)
-            .HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         
         builder.Property(e => e.UpdatedAt)
             .HasColumnName("updated_at");

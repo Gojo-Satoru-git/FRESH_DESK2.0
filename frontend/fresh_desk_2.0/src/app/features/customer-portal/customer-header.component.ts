@@ -10,10 +10,16 @@ import { AuthService } from '../../core/auth/auth.service';
   template: `
     <div class="flex min-h-screen">
 
+      <!-- ================= MOBILE OVERLAY ================= -->
+      @if (isSidebarOpen()) {
+        <div class="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm" (click)="toggleSidebar()"></div>
+      }
+
       <!-- ================= SIDEBAR ================= -->
       <aside
-        class="bg-[#012A4A] text-white transition-all duration-300"
-        [class.w-80]="isSidebarOpen()"
+        class="bg-[#012A4A] text-white transition-all duration-300 fixed md:relative z-50 h-full"
+        [class.w-72]="isSidebarOpen()"
+        [class.md:w-80]="isSidebarOpen()"
         [class.w-0]="!isSidebarOpen()"
         [class.overflow-hidden]="!isSidebarOpen()"
       >
@@ -59,7 +65,7 @@ import { AuthService } from '../../core/auth/auth.service';
       <div class="flex-1 flex flex-col">
 
         <!-- HEADER -->
-        <header class="flex items-center px-6 -mt-4 bg-white relative">
+        <header class="flex items-center px-4 md:px-6 -mt-4 bg-white relative">
 
           <!-- ☰ BUTTON (ONLY WHEN SIDEBAR CLOSED) -->
           @if (!isSidebarOpen()) {
@@ -73,7 +79,7 @@ import { AuthService } from '../../core/auth/auth.service';
           }
 
           <!-- LOGO -->
-          <img src="log.png" class="h-40 w-40 object-contain" />
+          <img src="log.png" class="h-24 md:h-40 w-24 md:w-40 object-contain" />
 
           <div class="flex-1"></div>
 

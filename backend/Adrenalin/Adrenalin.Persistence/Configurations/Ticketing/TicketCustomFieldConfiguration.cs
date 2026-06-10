@@ -26,7 +26,7 @@ public class TicketCustomFieldConfiguration : IEntityTypeConfiguration<TicketCus
         
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne(d => d.Ticket).WithMany(p => p.TicketCustomFields).HasForeignKey(d => d.TicketId).HasConstraintName("ticket_custom_fields_ticket_id_fkey");
     }

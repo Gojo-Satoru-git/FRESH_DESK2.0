@@ -15,8 +15,8 @@ import { environment } from '../../../environments/environment.development';
     ReactiveFormsModule,
     ThemeSwitcherComponent,
     UiButtonComponent,
-    UiInputComponent,
-    RouterLink,
+    // UiInputComponent,
+    // RouterLink,
   ],
   templateUrl: './login.component.html',
 })
@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit {
           this.activeBanner.set(banners[0]);
         }
       },
-      error: () => this.activeBanner.set(null)
+      error: () => this.activeBanner.set(null),
     });
   }
 
@@ -70,7 +70,7 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.isLoading.set(false);
         const token = res.userId.accessToken;
-        
+
         // Decode token to build User object
         const user = this.authService.getUserFromToken(token);
         if (user) {
@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set(err.error?.message || err.message || 'Invalid email or password.');
-      }
+      },
     });
   }
 }

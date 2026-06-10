@@ -73,14 +73,14 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<TicketClassification> TicketClassifications { get; set; }
     public virtual DbSet<TicketComment> TicketComments { get; set; }
     public virtual DbSet<TicketCustomField> TicketCustomFields { get; set; }
-    public virtual DbSet<TicketRelation> TicketRelations { get; set; }
-    public virtual DbSet<TicketWatcher> TicketWatchers { get; set; }
+    
+    
     public virtual DbSet<TicketRiskScore> TicketRiskScores { get; set; }
     public virtual DbSet<TicketStatusGraph> TicketStatusGraphs { get; set; }
     public virtual DbSet<TicketStatusGraphScope> TicketStatusGraphScopes { get; set; }
     public virtual DbSet<TicketStatusHistory> TicketStatusHistories { get; set; }
-    public virtual DbSet<TicketTag> TicketTags { get; set; }
-    public virtual DbSet<TicketActivity> TicketActivities { get; set; }
+    
+    
     public virtual DbSet<TokenBlacklist> TokenBlacklists { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserGroup> UserGroups { get; set; }
@@ -101,8 +101,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
             .HasPostgresEnum("notification", "delivery_status", new[] { "sent", "failed", "bounced", "pending" })
             .HasPostgresEnum("notification", "notification_channel", new[] { "email", "in_app", "sms" })
             .HasPostgresEnum("sla", "trigger_event", new[] { "ticket_created", "ticket_updated", "time_based" })
-            .HasPostgresEnum("ticket", "ticket_priority", new[] { "urgent", "high", "medium", "low" })
-            .HasPostgresEnum("ticket", "ticket_source", new[] { "email", "portal", "phone" })
+            .HasPostgresEnum<TicketPriority>("ticket", "ticket_priority")
+            .HasPostgresEnum<TicketSource>("ticket", "ticket_source")
             .HasPostgresEnum<TicketStatus>("ticket", "ticket_status")
             .HasPostgresEnum("ticket", "ticket_type", new[] { "bug", "enhancement", "incident", "change_request", "query", "service_request", "clarification", "environment_issue" })
             .HasPostgresExtension("btree_gin")
@@ -120,9 +120,12 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
         foreach (var entry in ChangeTracker.Entries())
         {
             if (entry.State == EntityState.Modified &&
-                (entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketActivity ||
+                (
                  entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketAssignmentLog ||
-                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketStatusHistory))
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketStatusHistory ||
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketComment ||
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketAttachment ||
+                 entry.Entity is Adrenalin.Modules.Ticketing.Domain.Entities.TicketCustomField))
             {
                 entry.State = EntityState.Added;
             }

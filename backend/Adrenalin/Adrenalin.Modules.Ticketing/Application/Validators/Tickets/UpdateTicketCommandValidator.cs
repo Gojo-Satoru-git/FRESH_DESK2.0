@@ -21,6 +21,6 @@ public sealed class UpdateTicketCommandValidator : AbstractValidator<UpdateTicke
             .MaximumLength(5000).WithMessage("Description cannot exceed 5000 characters.");
 
         RuleFor(x => x.Priority).IsInEnum();
-        RuleFor(x => x.Category).IsInEnum();
+        RuleFor(x => x.Type).IsInEnum();
     }
 }

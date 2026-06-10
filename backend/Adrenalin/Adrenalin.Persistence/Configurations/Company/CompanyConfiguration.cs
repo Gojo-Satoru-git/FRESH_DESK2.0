@@ -72,7 +72,7 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Adrenalin.Modules.C
         
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.CamUserId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("companies_cam_user_id_fkey");
 

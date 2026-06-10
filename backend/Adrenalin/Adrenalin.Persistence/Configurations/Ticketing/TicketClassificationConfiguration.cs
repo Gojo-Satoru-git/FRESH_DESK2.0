@@ -50,8 +50,8 @@ public class TicketClassificationConfiguration : IEntityTypeConfiguration<Ticket
         
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
-        builder.HasOne(d => d.Ticket).WithOne(p => p.TicketClassification).HasForeignKey<TicketClassification>(d => d.TicketId).HasConstraintName("ticket_classification_ticket_id_fkey");
+        builder.HasOne(d => d.Ticket).WithOne().HasForeignKey<TicketClassification>(d => d.TicketId).HasConstraintName("ticket_classification_ticket_id_fkey");
     }
 }

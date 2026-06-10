@@ -9,7 +9,7 @@ namespace Adrenalin.Modules.Ticketing.Application.Queries;
 
 public interface ITicketQueryService
 {
-    Task<PagedResult<TicketListItemDto>> GetMyTicketsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken);
+    Task<PagedResult<TicketListItemDto>> GetMyTicketsAsync(Guid userId, string? status, string? term, int page, int pageSize, CancellationToken cancellationToken);
     
     Task<PagedResult<TicketListItemDto>> GetAssignedTicketsAsync(Guid agentId, int page, int pageSize, CancellationToken cancellationToken);
     

@@ -16,7 +16,7 @@ public sealed class GroupsController : ControllerBase
     public GroupsController(IDispatcher dispatcher) => _dispatcher = dispatcher;
 
     [HttpGet]
-    [Authorize(Policy = "rbac:group:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(IReadOnlyList<GroupDto>), 200)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
@@ -25,7 +25,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = "rbac:group:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(GroupDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
@@ -35,7 +35,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpGet("{id:guid}/members")]
-    [Authorize(Policy = "rbac:group:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(GroupWithMembersDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetWithMembers(Guid id, CancellationToken ct)
@@ -45,7 +45,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(object), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create([FromBody] CreateGroupRequest req, CancellationToken ct)
@@ -60,7 +60,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateGroupRequest req, CancellationToken ct)
@@ -73,7 +73,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
@@ -85,7 +85,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/members/add")]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> AddMember(Guid id, [FromBody] AddMemberRequest req, CancellationToken ct)
@@ -98,7 +98,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/members/remove")]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> RemoveMember(Guid id, [FromBody] UserIdRequest req, CancellationToken ct)
@@ -111,7 +111,7 @@ public sealed class GroupsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/members/{userId:guid}/lead")]
-    [Authorize(Policy = "rbac:group:manage")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SetLead(Guid id, Guid userId, [FromBody] SetLeadRequest req, CancellationToken ct)
