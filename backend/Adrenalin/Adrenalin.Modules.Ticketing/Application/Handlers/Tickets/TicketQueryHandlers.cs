@@ -20,7 +20,7 @@ public sealed class GetMyTicketsQueryHandler : IRequestHandler<GetMyTicketsQuery
 
     public async Task<PagedResult<TicketListItemDto>> Handle(GetMyTicketsQuery request, CancellationToken cancellationToken)
     {
-        return await _queryService.GetMyTicketsAsync(request.UserId, request.Page, request.PageSize, cancellationToken);
+        return await _queryService.GetMyTicketsAsync(request.UserId, request.Status, request.Term, request.Page, request.PageSize, cancellationToken);
     }
 }
 

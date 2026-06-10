@@ -21,15 +21,15 @@ public class TicketStatusHistoryConfiguration : IEntityTypeConfiguration<TicketS
         
         builder.Property(e => e.ChangedBy).HasColumnName("changed_by");
         
-        builder.Property(e => e.FromStatus).HasConversion<string>().HasMaxLength(40).HasColumnName("from_status");
+        builder.Property(e => e.FromStatus).HasColumnName("from_status").HasConversion<string>();
         
         builder.Property(e => e.Reason).HasColumnName("reason");
         
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
-        builder.Property(e => e.ToStatus).HasConversion<string>().HasMaxLength(40).HasColumnName("to_status");
+        builder.Property(e => e.ToStatus).HasColumnName("to_status").HasConversion<string>();
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.ChangedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_status_history_changed_by_fkey");
 

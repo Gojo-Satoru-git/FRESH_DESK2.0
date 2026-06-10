@@ -32,15 +32,16 @@ public class TicketCommentConfiguration : IEntityTypeConfiguration<TicketComment
         
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
 
-        builder.Property(e => e.Visibility).HasConversion<string>().HasMaxLength(30).HasColumnName("visibility");
+        builder.Property(e => e.IsPrivate).HasColumnName("is_private");
 
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
         builder.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").HasColumnName("updated_at");
         
-        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        builder.Ignore(e => e.UpdatedBy);
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
+        builder.Ignore(e => e.MentionedUsers);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.AuthorId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_comments_author_id_fkey");
 

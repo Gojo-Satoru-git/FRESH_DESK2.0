@@ -41,7 +41,7 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .HasMaxLength(20)
             .HasColumnName("region_code");
 
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.Property(e => e.TierCode)
             .HasMaxLength(10)

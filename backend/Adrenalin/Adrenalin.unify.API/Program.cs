@@ -33,6 +33,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
+dataSourceBuilder.MapEnum<TicketPriority>("ticket.ticket_priority");
+dataSourceBuilder.MapEnum<TicketSource>("ticket.ticket_source");
 dataSourceBuilder.MapEnum<RevocationReason>("auth.revocation_reason");
 dataSourceBuilder.EnableUnmappedTypes();
 
@@ -46,7 +48,12 @@ builder.Services.AddDbContext<AdrenalinDbContext>(options =>
         npgsql => npgsql
             .MigrationsAssembly("Adrenalin.Persistence")
             .MapEnum<TicketStatus>("ticket_status", "ticket")
-            .MapEnum<RevocationReason>("revocation_reason", "auth")));
+            .MapEnum<TicketPriority>("ticket_priority", "ticket")
+            .MapEnum<TicketSource>("ticket_source", "ticket")
+            .MapEnum<RevocationReason>("revocation_reason", "auth")
+        )
+        .UseSnakeCaseNamingConvention()
+    );
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(
@@ -253,8 +260,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Static files for KB attachments
-var kbStoragePath = builder.Configuration["KbStorage:BasePath"]
-    ?? Path.Combine(builder.Environment.ContentRootPath, "uploads", "kb-attachments");
+var rawKbPath = builder.Configuration["KbStorage:BasePath"];
+if (string.IsNullOrWhiteSpace(rawKbPath))
+{
+    rawKbPath = Path.Combine(builder.Environment.ContentRootPath, "uploads", "kb-attachments");
+}
+var kbStoragePath = Path.GetFullPath(rawKbPath);
 
 if (!Directory.Exists(kbStoragePath))
     Directory.CreateDirectory(kbStoragePath);
@@ -263,6 +274,23 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(kbStoragePath),
     RequestPath = "/kb-attachments"
+});
+
+// Static files for ticket attachments
+var rawAttachmentsPath = builder.Configuration["FileStorage:LocalPath"];
+if (string.IsNullOrWhiteSpace(rawAttachmentsPath))
+{
+    rawAttachmentsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+}
+var attachmentsStoragePath = Path.GetFullPath(rawAttachmentsPath);
+
+if (!Directory.Exists(attachmentsStoragePath))
+    Directory.CreateDirectory(attachmentsStoragePath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(attachmentsStoragePath),
+    RequestPath = "" // since fileUrl starts with 'attachments/', mapping root serves them at /attachments/...
 });
 
 app.MapControllers();

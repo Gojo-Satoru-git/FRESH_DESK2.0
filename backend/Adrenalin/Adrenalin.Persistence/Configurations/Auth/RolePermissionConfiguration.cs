@@ -28,7 +28,7 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         builder.Property(e => e.PermissionId).HasColumnName("permission_id");
         builder.Property(e => e.RoleId).HasColumnName("role_id");
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 

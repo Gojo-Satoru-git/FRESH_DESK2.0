@@ -81,7 +81,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(30)
             .HasColumnName("phone");
 
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.Property(e => e.UpdatedAt)
             .HasDefaultValueSql("now()")

@@ -51,4 +51,5 @@ public class FakeCurrentUserService : ICurrentUserService
 {
     public Guid? UserId { get; set; }
     public bool IsAuthenticated => UserId.HasValue;
+    public IEnumerable<string> Roles { get; set; } = new List<string>();
 }

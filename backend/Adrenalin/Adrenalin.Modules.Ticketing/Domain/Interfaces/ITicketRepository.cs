@@ -9,9 +9,9 @@ public interface ITicketRepository
 
     Task<bool> ExistsAsync(Guid ticketId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Ticket>> GetTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, int page, int pageSize, CancellationToken cancellationToken);
+    
 
-    Task<int> CountTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, CancellationToken cancellationToken = default);
+    
     
     Task<Guid?> GetUserCompanyIdAsync(Guid userId, CancellationToken cancellationToken = default);
     

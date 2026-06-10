@@ -1,4 +1,3 @@
-using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 using System;
 using System.Collections.Generic;
@@ -9,8 +8,7 @@ public sealed record CreateTicketCommand(
     string Title,
     string Description,
     string Priority,
-    string Category,
-    List<string>? Tags = null,
+    string Type,
     Guid? ActorId = null,
     bool IsCustomer = false,
     string? SenderEmail = null,

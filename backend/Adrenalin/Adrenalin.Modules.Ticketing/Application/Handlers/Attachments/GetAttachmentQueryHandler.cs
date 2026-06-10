@@ -1,11 +1,12 @@
 using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
-using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Adrenalin.Modules.Ticketing.Application.Handlers;
 
@@ -62,23 +63,21 @@ public sealed class GetAttachmentQueryHandler : IRequestHandler<GetAttachmentQue
             if (attachment.CommentId.HasValue)
             {
                 var comment = ticket.TicketComments.FirstOrDefault(c => c.Id == attachment.CommentId.Value);
-                if (comment != null && comment.Visibility != CommentVisibility.Public)
+                if (comment != null && comment.IsPrivate)
                 {
-                    isAuthorized = currentUserId == ticket.AssignedAgentId ||
-                                   ticket.TicketWatchers.Any(w => w.UserId == currentUserId);
+                    // Internal comments only accessible by assigned agent (or maybe other agents, but restricted for now)
+                    isAuthorized = currentUserId == ticket.AssignedAgentId;
                 }
                 else
                 {
                     isAuthorized = currentUserId == ticket.CreatedByUserId ||
-                                   currentUserId == ticket.AssignedAgentId ||
-                                   ticket.TicketWatchers.Any(w => w.UserId == currentUserId);
+                                   currentUserId == ticket.AssignedAgentId;
                 }
             }
             else
             {
                 isAuthorized = currentUserId == ticket.CreatedByUserId ||
-                               currentUserId == ticket.AssignedAgentId ||
-                               ticket.TicketWatchers.Any(w => w.UserId == currentUserId);
+                               currentUserId == ticket.AssignedAgentId;
             }
         }
 

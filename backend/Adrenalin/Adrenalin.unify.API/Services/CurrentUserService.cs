@@ -26,4 +26,13 @@ public class CurrentUserService : ICurrentUserService
             .FindFirstValue(ClaimTypes.Email);
 
     public bool IsAuthenticated => UserId.HasValue;
+
+    public IEnumerable<string> Roles
+    {
+        get
+        {
+            var roles = _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role).Select(c => c.Value);
+            return roles ?? Enumerable.Empty<string>();
+        }
+    }
 }

@@ -6,7 +6,7 @@ using Adrenalin.SharedKernel.Pagination;
 
 namespace Adrenalin.Modules.Ticketing.Application.Queries;
 
-public sealed record GetMyTicketsQuery(Guid UserId, int Page = 1, int PageSize = 10) : IRequest<PagedResult<TicketListItemDto>>;
+public sealed record GetMyTicketsQuery(Guid UserId, string? Status = null, string? Term = null, int Page = 1, int PageSize = 10) : IRequest<PagedResult<TicketListItemDto>>;
 
 public sealed record GetAssignedTicketsQuery(Guid AgentId, int Page = 1, int PageSize = 10) : IRequest<PagedResult<TicketListItemDto>>;
 
@@ -16,11 +16,11 @@ public sealed record SearchTicketsQuery(
     string? Term,
     string? Status,
     string? Priority,
-    string? Category,
+    string? Type,
     Guid? AssigneeId,
     Guid? ReporterId,
-    string? Department,
-    string? Region,
+    
+    
     DateTimeOffset? CreatedFrom,
     DateTimeOffset? CreatedTo,
     int Page = 1,

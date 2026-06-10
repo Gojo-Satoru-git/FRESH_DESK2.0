@@ -38,7 +38,7 @@ public sealed class KbArticle : SoftDeleteEntity
     public KbFolder? Folder { get; private set; }
 
     private readonly List<KbAttachment> _attachments = [];
-    public IReadOnlyList<KbAttachment> Attachments => _attachments.AsReadOnly();
+    public IReadOnlyList<KbAttachment> Attachments => _attachments;
 
     private readonly List<INotification> _domainEvents = [];
     public IReadOnlyList<INotification> DomainEvents => _domainEvents.AsReadOnly();

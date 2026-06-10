@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Ticketing.Application.Commands;
-using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 
@@ -25,7 +24,6 @@ public sealed class DeleteTicketCommandHandler : IRequestHandler<DeleteTicketCom
             throw new TicketDomainException($"Ticket '{request.TicketId}' was not found.");
 
         ticket.Delete();
-        ticket.AddActivity("Ticket Deleted", null, "Soft Deleted", request.PerformedBy);
         _ticketRepository.Update(ticket);
 
         return ticket.Id;

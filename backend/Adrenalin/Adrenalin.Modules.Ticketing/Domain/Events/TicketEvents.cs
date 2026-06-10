@@ -7,14 +7,13 @@ namespace Adrenalin.Modules.Ticketing.Domain.Events;
 
 public sealed record TicketCreatedDomainEvent(
     Guid TicketId,
-    string TicketNumber,
+    string? TicketNumber,
     string Title,
     Guid? ReporterId,
     Guid? AssigneeId,
-    TicketCategory Category,
+    TicketType Type,
     TicketPriority Priority,
-    string? Department,
-    string? Region
+    Guid CompanyId
 ) : INotification;
 
 public sealed record TicketAssignedDomainEvent(
