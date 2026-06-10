@@ -208,8 +208,6 @@ if (args.Contains("--seed"))
     {
         var context = scope.ServiceProvider.GetRequiredService<AdrenalinDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        await Adrenalin.Persistence.Context.DbSeeder.SeedTemplatesAsync(context);
-        await Adrenalin.Persistence.Context.DbSeeder.SeedRolesAndPermissionsAsync(context, hasher);
     }
     return;
 }

@@ -25,9 +25,10 @@ public sealed class LoginCommandHandler
         IUserRepository users,
         IPasswordHasher passwordHasher,
         IJwtProvider jwtProvider,
-    IRefreshTokenRepository refreshTokens,
-    IRefreshTokenGenerator refreshTokenGenerator,
-    ITokenHasher tokenHasher)
+        IRefreshTokenRepository refreshTokens,
+        IRefreshTokenGenerator refreshTokenGenerator,
+        ITokenHasher tokenHasher
+    )
     {
         _users = users;
         _passwordHasher = passwordHasher;
@@ -42,16 +43,22 @@ public sealed class LoginCommandHandler
         CancellationToken cancellationToken)
     {
         var user = await _users.GetByEmailAsync(request.Email, cancellationToken);
+ 
+        Console.WriteLine($"EMAIL: {request.Email}");
+        Console.WriteLine($"USER FOUND: {user != null}");
 
         if (user is null)
             throw new Exception("Invalid email or password");
 
+        Console.WriteLine($"DB HASH: {user.PasswordHash}");
+        
         var isValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
 
         if (!isValid)
         {
             throw new InvalidCredentialsException();
         }
+
         var roles =
        await _users.GetUserRolesAsync(
            user.Id,
