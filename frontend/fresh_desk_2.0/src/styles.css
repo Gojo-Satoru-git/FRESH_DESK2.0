@@ -1,67 +1,87 @@
 @import 'tailwindcss';
 
-/* 1. Map Tailwind utility classes to dynamic CSS variables */
+/* 1. Map Tailwind utility classes to dynamic CSS variables & Brand Colors */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Fonts from the Adrenalin Style Guide */
+  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Montserrat', sans-serif;
 
+  /* Your dynamic layout mapping (Theme switching) */
   --color-primary: var(--theme-primary);
   --color-primary-hover: var(--theme-primary-hover);
   --color-surface: var(--theme-surface);
   --color-background: var(--theme-background);
-  --color-text-main: var(--theme-text); /* Custom mapping to avoid core conflicts */
+  --color-text-main: var(--theme-text); 
   --color-text-muted: var(--theme-text-muted);
+
+  /* --- ADRENALIN MAX 2.0 EXACT BRAND COLORS --- */
+  /* These will generate explicit Tailwind classes like bg-table-light-gray */
+  --color-primary-blue: #2066D1;
+  --color-text-dark: #383850;
+  --color-text-white: #FAFAFA;
+  --color-card-white: #FDFDFD;
+  --color-table-light-gray: #F6F9FC;
+  --color-table-dark-gray: #EFF3FB;
+  --color-text-light: #747480;
+  --color-disabled-gray: #C5C5C5;
+  --color-empty-state-gray: #F1F1FA;
+  
+  /* Semantic / Status Colors */
+  --color-success-green: #509675;
+  --color-revision-amber: #F57536;
+  --color-error-red: #E86161;
+  --color-light-success: #AECD8B;
+  --color-light-revision: #F08460;
+  --color-light-error: #EAA0A0;
 }
 
 @layer base {
-  /* 2. Light Mode Colors (Your new Enterprise Navy Blue) */
+  /* 2. Light Mode Colors (Now mapped to Adrenalin Max 2.0 Specs) */
   :root {
-    --theme-primary: #012a4a;
-    --theme-primary-hover: #013a6b;
-    --theme-surface: #ffffff;
-    --theme-background: #f9fafb;
-    --theme-text: #111827;
-    --theme-text-muted: #6b7280;
+    --theme-primary: #2066D1;      /* Adrenalin Primary Blue */
+    --theme-primary-hover: #1850A3;/* Darkened Primary Blue for hover */
+    --theme-surface: #FDFDFD;      /* Adrenalin Card White */
+    --theme-background: #FFFFFF;   /* Adrenalin Background White */
+    --theme-text: #383850;         /* Adrenalin Text Dark */
+    --theme-text-muted: #747480;   /* Adrenalin Text Light */
   }
 
-  /* 3. Dark Mode Colors (Brightened for accessibility on dark backgrounds) */
+  /* 3. Dark Mode Colors (Kept sleek, tinted with brand colors) */
   .dark {
-    --theme-primary: #135ec0;
-    --theme-primary-hover: #0077b6;
+    --theme-primary: #64ADCE;      /* Adrenalin Light Primary Blue */
+    --theme-primary-hover: #54A5DD;/* Adrenalin Holiday Blue */
     --theme-surface: #1f2937;
     --theme-background: #111827;
-    --theme-text: #f3f4f6;
-    --theme-text-muted: #9ca3af;
+    --theme-text: #FAFAFA;         /* Adrenalin Text White */
+    --theme-text-muted: #C5C5C5;   /* Adrenalin Disabled Gray */
   }
 
   /* 4. Global Body Resets */
   body {
-    /* Notice we use text-text-main here based on our @theme mapping */
-    @apply bg-background text-text-main transition-colors duration-300 font-sans;
-
+    @apply bg-background text-text-main antialiased;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  
+  /* Force Montserrat on all headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
 }
 
+/* 5. Custom Utilities & Animations */
 @utility scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-  
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
   &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    display: none; 
   }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
