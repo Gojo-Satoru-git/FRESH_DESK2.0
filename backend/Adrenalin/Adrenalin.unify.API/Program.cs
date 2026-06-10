@@ -26,7 +26,7 @@ using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
 using Adrenalin.Infrastructure.Email;
 using Adrenalin.Persistence.Repositories.Auth;
-using Adrenalin.Modules.Auth.Domain.Enums;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── 1. Database — single AdrenalinDbContext ───────────────────────────────────

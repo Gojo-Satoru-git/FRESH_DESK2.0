@@ -29,7 +29,7 @@ public sealed class RefreshToken :BaseEntity
     IpAddress = ipAddress;
     IsRevoked = false;
 }
-    public Guid Id { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public Guid UserId { get; private set; }
