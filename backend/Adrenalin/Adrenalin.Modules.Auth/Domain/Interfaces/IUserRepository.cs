@@ -29,5 +29,6 @@ namespace Adrenalin.Modules.Auth.Domain.Interfaces
         Task<IReadOnlyList<string>> GetEffectivePermissionsAsync(
             Guid userId,
             CancellationToken cancellationToken);
+        
     }
 }

@@ -80,6 +80,17 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
                 EmailVerified = false
             };
         }
+        public void VerifyEmail()
+{
+    EmailVerified = true;
+    EmailVerifiedAt = DateTimeOffset.UtcNow;
+}
+public void ChangePassword(
+    string passwordHash)
+{
+    PasswordHash = passwordHash;
+    PasswordChangedAt = DateTime.UtcNow;
+}
     }
 
 }

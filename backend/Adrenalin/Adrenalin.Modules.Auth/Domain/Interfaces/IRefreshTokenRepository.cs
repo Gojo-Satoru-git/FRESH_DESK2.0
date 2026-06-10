@@ -21,5 +21,9 @@ namespace Adrenalin.Modules.Auth.Domain.Interfaces
     Task UpdateAsync(
     RefreshToken refreshToken,
     CancellationToken cancellationToken);
+    Task<List<RefreshToken>> GetByUserIdAsync(
+    Guid userId,
+    CancellationToken cancellationToken);
     }
+    
 }

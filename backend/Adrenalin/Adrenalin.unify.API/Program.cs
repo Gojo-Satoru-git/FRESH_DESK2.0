@@ -20,9 +20,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
+using Adrenalin.Modules.Auth.Domain.Enums;
 using System.Text;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
+using Adrenalin.Infrastructure.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +32,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
+dataSourceBuilder.MapEnum<RevocationReason>("auth.revocation_reason");
 dataSourceBuilder.EnableUnmappedTypes();
 var dataSource = dataSourceBuilder.Build();
 
@@ -37,7 +40,11 @@ builder.Services.AddDbContext<AdrenalinDbContext>(options =>
     options.UseNpgsql(dataSource,
         npgsql => npgsql
             .MigrationsAssembly("Adrenalin.Persistence")
-            .MapEnum<TicketStatus>("ticket_status", "ticket")));
+            .MapEnum<TicketStatus>("ticket_status", "ticket")
+            .MapEnum<RevocationReason>("revocation_reason", "auth")
+        )
+        .UseSnakeCaseNamingConvention()
+    );
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(
@@ -114,8 +121,16 @@ builder.Services.AddTicketingApplication();
 builder.Services.AddKbModule();
 
 // ── RabbitMQ EventBus ──────────────────────────────────────────────────────────
-builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
-builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", true);
+if (rabbitMqEnabled)
+{
+    builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
+    builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+}
+else
+{
+    builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.InMemoryEventBus>();
+}
 
 // ── Email Polling & Receiving ────────────────────────────────────────────────
 builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
@@ -135,7 +150,9 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.CurrentUserService>();
+builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 
+builder.Services.AddScoped<IEmailService,FakeEmailService>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(
@@ -200,8 +217,6 @@ if (args.Contains("--seed"))
     {
         var context = scope.ServiceProvider.GetRequiredService<AdrenalinDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        await Adrenalin.Persistence.Context.DbSeeder.SeedTemplatesAsync(context);
-        await Adrenalin.Persistence.Context.DbSeeder.SeedRolesAndPermissionsAsync(context, hasher);
     }
     return;
 }

@@ -1,187 +1,162 @@
+<div>
+  <h1 class="text-4xl font-semibold mb-2">Raise a new ticket</h1>
+  <p class="text-2xl text-gray-500 mb-6">
+    Describe your issue and our team will respond shortly.
+  </p>
 
+  <div class="w-full">
+    <form
+      [formGroup]="ticketForm"
+      (ngSubmit)="onSubmit()"
+      class="bg-white p-2 rounded-xl"
+    >
+      <label class="block text-2xl font-bold mb-2">
+        Subject <span class="text-red-400">*</span>
+      </label>
+      <input
+        formControlName="subject"
+        placeholder="Brief summary of the issue"
+        class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-xl mb-4"
+      />
 
-<!-- ================= PAGE ================= -->
-<div class="min-h-screen bg-slate-50">
-  <div class="max-w-7xl mx-auto px-4">
-
-    <h1 class="text-4xl font-semibold mb-2">Raise a new ticket</h1>
-    <p class="text-2xl text-gray-500 mb-6">
-      Describe your issue and our team will respond shortly.
-    </p>
-
-    <!-- ========== MAIN GRID ========== -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-      <!-- ================= LEFT: FORM ================= -->
-      <div class="lg:col-span-2">
-        <form
-          [formGroup]="ticketForm"
-          (ngSubmit)="onSubmit()"
-          class="bg-white p-10 rounded-xl shadow-2xl"
+      <div class="mb-4">
+        <label class="block text-2xl font-bold mb-2">
+          Category <span class="text-red-400">*</span>
+        </label>
+        <select
+          formControlName="category"
+          class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-xl"
         >
-          <!-- SUBJECT -->
+          <option value="" disabled>Select category</option>
+          <option *ngFor="let m of category" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+        <div>
           <label class="block text-2xl font-bold mb-2">
-            Subject <span class="text-red-400">*</span>
+            Solution <span class="text-red-400">*</span>
           </label>
-          <input
-            formControlName="subject"
-            placeholder="Brief summary of the issue"
-            class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-2xl mb-4"
-          />
-
-          <!-- MODULE + PRIORITY -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-              <label class="block text-2xl font-bold mb-2">
-                Module <span class="text-red-400">*</span>
-              </label>
-              <select
-                formControlName="module"
-                class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-2xl"
-              >
-                <option value="" disabled>Select module</option>
-                <option *ngFor="let m of modules" [value]="m">{{ m }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-2xl font-bold mb-2">
-                Priority <span class="text-red-400">*</span>
-              </label>
-              <select
-                formControlName="priority"
-                class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-2xl"
-              >
-                <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- DESCRIPTION -->
-          <label class="block text-2xl font-bold mb-2">
-            Description <span class="text-red-400">*</span>
-          </label>
-          <textarea
-            formControlName="description"
-            placeholder="Provide details of the issue"
-            class="w-full h-60 px-3 py-3 text-xl border border-gray-200 rounded-2xl shadow-2xl mb-6"
-          ></textarea>
-
-          <!-- ATTACHMENTS -->
-          <label class="block text-2xl font-bold mb-2">Attachments</label>
-          <div
-            class="w-full p-6 mb-6 border-2 border-dashed rounded-xl
-                   flex flex-col items-center justify-center gap-2
-                   bg-slate-50 hover:bg-slate-100 cursor-pointer transition"
-            [class.border-blue-400]="isDragOver"
-            [class.bg-blue-50]="isDragOver"
-            (dragover)="isDragOver = true"
-            (dragleave)="isDragOver = false"
-            (drop)="onFileDrop($event)"
+          <select
+            formControlName="module"
+            class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-xl"
           >
-            <input type="file" multiple hidden #fileInput (change)="onFileSelect($event)" />
-            <img src="upload.png" class="h-10 w-10" />
-            <p class="text-xl text-gray-600">
-              Drag & drop files here or
-              <span class="text-blue-600 font-bold underline" (click)="fileInput.click()">browse</span>
-            </p>
-            <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX</p>
-          </div>
+            <option value="" disabled>Select Solution</option>
+            <option *ngFor="let m of modules" [value]="m">{{ m }}</option>
+          </select>
+        </div>
 
-          <!-- ATTACHED FILES -->
-          <div *ngIf="attachedFiles.length > 0" class="mb-6">
-            <p class="text-xl font-bold mb-2">Attached Files</p>
-            <ul class="space-y-2">
-              <li
-                *ngFor="let file of attachedFiles; let i = index"
-                class="flex justify-between items-center bg-slate-100 px-4 py-2 rounded-lg"
-              >
-                <span class="text-lg truncate">{{ file.name }}</span>
-                <button type="button" class="text-red-600 font-bold" (click)="removeFile(i)">✕</button>
-              </li>
-            </ul>
-          </div>
-
-          <!-- ACTIONS -->
-          <div class="flex justify-end gap-3">
-            <button
-              type="button"
-              (click)="onCancel()"
-              class="px-5 py-2 text-xl font-bold text-white bg-gray-400 rounded-xl hover:bg-gray-600 transition"
-            >Cancel</button>
-            <button
-              type="submit"
-              [disabled]="isSubmitting"
-              class="px-5 py-2 text-xl font-bold text-white
-                    bg-blue-500 rounded-xl hover:bg-blue-600
-                    disabled:bg-gray-400 disabled:cursor-not-allowed
-                    transition"
-            >
-              {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- ================= RIGHT: KB ARTICLES ================= -->
-      <div class="bg-white p-6 rounded-xl shadow-2xl h-fit sticky top-6">
-        <h2 class="text-2xl font-bold mb-2">Related KB Articles</h2>
-        <p class="text-lg text-gray-500 mb-4">Suggestions will appear here as you type your subject.</p>
-
-        <ng-container *ngIf="kbSuggestions().length > 0; else noKb">
-          <div class="space-y-4">
-            <div
-              *ngFor="let kb of kbSuggestions()"
-              class="p-4 border border-gray-200 rounded-lg hover:bg-slate-50 cursor-pointer transition"
-            >
-              <p class="font-semibold text-lg">{{ kb.title }}</p>
-              <p class="text-sm text-gray-500">{{ kb.description }}</p>
-            </div>
-          </div>
-        </ng-container>
-
-        <ng-template #noKb>
-          <div class="p-4 border border-dashed rounded-lg text-center text-gray-400">
-            No related articles found.
-          </div>
-        </ng-template>
-      </div>
-
-    </div>
-
-    <!-- Cancel Confirmation Modal -->
-    @if (showCancelConfirm()) {
-      <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-gray-200 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
-          <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold text-slate-800 mb-3">Discard details?</h3>
-          <p class="text-base text-gray-500 mb-8 leading-relaxed">
-            Are you sure you want to discard the details?
-          </p>
-          <div class="flex justify-center gap-4">
-            <button (click)="keepEditing()" class="px-6 py-2.5 text-base font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition">
-              No
-            </button>
-            <button (click)="confirmCancel()" class="px-6 py-2.5 text-base font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md shadow-red-500/20 transition">
-              Yes
-            </button>
-          </div>
+        <div>
+          <label class="block text-2xl font-bold mb-2">
+            Priority <span class="text-red-400">*</span>
+          </label>
+          <select
+            formControlName="priority"
+            class="w-full h-14 px-3 text-xl border border-gray-200 rounded-2xl shadow-xl"
+          >
+            <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+          </select>
         </div>
       </div>
-    }
 
-    <!-- Toast notification -->
-    @if (toastMessage()) {
+      <label class="block text-2xl font-bold mb-2">
+        Description <span class="text-red-400">*</span>
+      </label>
+     <textarea
+  formControlName="description"
+  placeholder="Provide details of the issue"
+  class="w-full h-60 px-3 py-3 text-xl border border-gray-200 rounded-2xl shadow-xl mb-2"
+  (input)="onDescriptionInput($event)"
+></textarea>
+
+<!-- Word Counter -->
+<div class="text-right text-sm text-gray-500 mb-6">
+  {{ descriptionWordCount() }} / {{ MAX_WORDS }} words
+</div>
+
+      <label (click)="fileInput.click()" class="block text-2xl font-bold mb-2">Attachments</label>
       <div
-        class="fixed bottom-6 right-6 bg-slate-900 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl animate-fade-in z-50 flex items-center gap-2"
+        class="w-full p-6 mb-6 border-2 border-dashed rounded-xl
+               flex flex-col items-center justify-center gap-2
+               bg-slate-50 hover:bg-slate-100 cursor-pointer transition"
+        [class.border-blue-400]="isDragOver"
+        [class.bg-blue-50]="isDragOver"
+        (dragover)="isDragOver = true"
+        (dragleave)="isDragOver = false"
+        (drop)="onFileDrop($event)"
       >
-        <div class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-400]="!toastMessage()!.toLowerCase().includes('failed')" [class.bg-red-400]="toastMessage()!.toLowerCase().includes('failed')"></div>
-        {{ toastMessage() }}
+        <input type="file" multiple hidden #fileInput (change)="onFileSelect($event)" />
+        <img src="upload.png" class="h-10 w-10" />
+        <p class="text-xl text-gray-600">
+          Drag & drop files here or
+          <span class="text-blue-600 font-bold underline" (click)="fileInput.click()">browse</span>
+        </p>
+        <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX, mp4</p>
       </div>
-    }
+
+      <div *ngIf="attachedFiles.length > 0" class="mb-6">
+        <p class="text-xl font-bold mb-2">Attached Files</p>
+        <ul class="space-y-2">
+          <li
+            *ngFor="let file of attachedFiles; let i = index"
+            class="flex justify-between items-center bg-slate-100 px-4 py-2 rounded-lg"
+          >
+            <span class="text-lg truncate">{{ file.name }}</span>
+            <button type="button" class="text-red-600 font-bold" (click)="removeFile(i)">✕</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="px-5 py-2 text-xl font-bold text-white bg-gray-400 rounded-xl hover:bg-gray-600 transition"
+        >Cancel</button>
+        <button
+          type="submit"
+          [disabled]="isSubmitting"
+          class="px-5 py-2 text-xl font-bold text-white
+                 bg-blue-500 rounded-xl hover:bg-blue-600
+                 disabled:bg-gray-400 disabled:cursor-not-allowed
+                 transition"
+        >
+          {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+        </button>
+      </div>
+    </form>
   </div>
+
+  @if (showCancelConfirm()) {
+    <div class="fixed inset-0 z-50 bg-transparent backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white border border-gray-200 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
+        <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800 mb-3">Discard details?</h3>
+        <p class="text-base text-gray-500 mb-8 leading-relaxed">
+          Are you sure you want to discard the details?
+        </p>
+        <div class="flex justify-center gap-4">
+          <button (click)="keepEditing()" class="px-6 py-2.5 text-base font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition">
+            No
+          </button>
+          <button (click)="confirmCancel()" class="px-6 py-2.5 text-base font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md shadow-red-500/20 transition">
+            Yes
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (toastMessage()) {
+    <div
+      class="fixed bottom-6 right-6 bg-slate-900 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl animate-fade-in z-50 flex items-center gap-2"
+    >
+      <div class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-400]="!toastMessage()!.toLowerCase().includes('failed')" [class.bg-red-400]="toastMessage()!.toLowerCase().includes('failed')"></div>
+      {{ toastMessage() }}
+    </div>
+  }
 </div>

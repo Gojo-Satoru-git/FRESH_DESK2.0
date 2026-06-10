@@ -21,7 +21,7 @@ public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand
                 return Result<Guid>.Failure($"A role named '{cmd.Name}' already exists.");
             var role = Role.Create(cmd.Name, cmd.Description, cmd.ActorId);
             _roles.Add(role);
-            await _roles.SaveChangesAsync(ct);
+           
             return Result<Guid>.Success(role.Id);
         }
         catch (Exception ex) { return Result<Guid>.Failure(ex.Message); }

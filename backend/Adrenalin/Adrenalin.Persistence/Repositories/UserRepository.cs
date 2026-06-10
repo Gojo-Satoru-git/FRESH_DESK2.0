@@ -16,13 +16,14 @@ public sealed class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        return await _db.Users.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+        var normalizedEmail = email.ToUpperInvariant();
+        return await _db.Users.FirstOrDefaultAsync(x => x.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         await _db.AddAsync(user, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+       
     }
     public async Task<List<string>> GetUserRolesAsync(
         Guid userId,
@@ -86,4 +87,14 @@ public sealed class UserRepository : IUserRepository
                 .Select(rp => rp.Permission.Resource + ":" + rp.Permission.Action))
             .Distinct()
             .ToListAsync(ct);
+    public async Task<List<RefreshToken>>
+    GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+{
+    return await _db.RefreshTokens
+        .Where(x => x.UserId == userId)
+        .ToListAsync(cancellationToken);
+}
+
 }

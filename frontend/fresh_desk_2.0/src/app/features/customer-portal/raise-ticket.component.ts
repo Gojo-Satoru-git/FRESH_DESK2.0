@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -18,17 +18,40 @@ export class RaiseTicketComponent implements OnInit {
   private router = inject(Router);
   private ticketService = inject(TicketService);
   
+  @Output() ticketCreated = new EventEmitter<void>();
+
   ticketForm!: FormGroup;
   attachedFiles: File[] = [];
   isDragOver = false;
   isSubmitting = false;
   submitted = false;
-
-  modules = ['Change Request', 'Clarification', 'Environment Issues', 'New Requirements', 'Service Requests', 'Software Enhancement','Software Problem', 'Other'];
+ 
+  category = ['Bug','Enhancement','Feature Requests','Service Requests','Customization','Incident','Environment Issues','Change Request','New Features'];
+  modules = ['Data Correction','Patch deployment','Configuration','Clarification','Server Outage','Ad hoc','Known issue'];
   priorities = ['Low', 'Medium', 'High', 'Critical'];
   kbSuggestions = signal<any[]>([]);
   showCancelConfirm = signal<boolean>(false);
   toastMessage = signal<string | null>(null);
+
+  readonly MAX_WORDS = 300;
+descriptionWordCount = signal(0);
+
+onDescriptionInput(event: Event): void {
+  const textarea = event.target as HTMLTextAreaElement;
+  const words = textarea.value
+    .trim()
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+
+  if (words.length > this.MAX_WORDS) {
+    textarea.value = words.slice(0, this.MAX_WORDS).join(' ');
+    this.ticketForm.get('description')?.setValue(textarea.value);
+    this.descriptionWordCount.set(this.MAX_WORDS);
+    return;
+  }
+
+  this.descriptionWordCount.set(words.length);
+}
 
   private showToast(msg: string) {
     this.toastMessage.set(msg);
@@ -38,39 +61,31 @@ export class RaiseTicketComponent implements OnInit {
   ngOnInit(): void {
     this.ticketForm = this.fb.group({
       subject: ['', [Validators.required, Validators.minLength(5)]],
+      category: ['', Validators.required],
       module: ['', Validators.required],
       priority: ['Medium'],
-      description: ['', [Validators.required, Validators.minLength(20)]],
-    });
-
-    this.ticketForm.get('subject')!.valueChanges.subscribe(value => {
-      this.updateKbSuggestions(value);
-    });
+      description: ['', [
+  Validators.required,
+  Validators.minLength(20),
+  Validators.maxLength(3000) // safety fallback
+]],
+    }); 
   }
 
-  updateKbSuggestions(subject: string) {
-    if (!subject || subject.length < 2) {
-      this.kbSuggestions.set([]);
-      return;
+  private readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+onFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files) return;
+
+  for (const file of Array.from(input.files)) {
+    if (file.size > this.MAX_FILE_SIZE) {
+      this.showToast(`"${file.name}" exceeds 50 MB limit`);
+      continue;
     }
-    this.http.get<{ items: any[] }>(`${environment.apiUrl}/api/kb/articles?titleQuery=${encodeURIComponent(subject)}&pageSize=5`).subscribe({
-      next: (res: any) => {
-        const mapped = (res.items || []).map((item: any) => ({
-          title: item.title,
-          description: item.articleType || 'Knowledge Base Article'
-        }));
-        this.kbSuggestions.set(mapped);
-      },
-      error: () => {
-        this.kbSuggestions.set([]);
-      }
-    });
+    this.attachedFiles.push(file);
   }
-
-  onFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files) this.attachedFiles.push(...Array.from(input.files));
-  }
+}
 
   onFileDrop(event: DragEvent) {
     event.preventDefault();
@@ -83,6 +98,7 @@ export class RaiseTicketComponent implements OnInit {
   removeFile(index: number) {
     this.attachedFiles.splice(index, 1);
   }
+
   onCancel(): void {
     if (this.ticketForm.dirty || this.attachedFiles.length > 0) {
       this.showCancelConfirm.set(true);
@@ -94,6 +110,7 @@ export class RaiseTicketComponent implements OnInit {
   confirmCancel(): void {
     this.ticketForm.reset({
       subject: '',
+      category: '',
       module: '',
       priority: 'Medium',
       description: ''
@@ -104,6 +121,7 @@ export class RaiseTicketComponent implements OnInit {
     this.showCancelConfirm.set(false);
     this.ticketForm.markAsPristine();
     this.ticketForm.markAsUntouched();
+    this.ticketCreated.emit();
   }
 
   keepEditing(): void {
@@ -123,7 +141,8 @@ export class RaiseTicketComponent implements OnInit {
       title: this.ticketForm.value.subject,
       description: this.ticketForm.value.description,
       priority: this.ticketForm.value.priority,
-      category: this.ticketForm.value.module,
+      category: this.ticketForm.value.category,
+      module: this.ticketForm.value.module,
       tags: []
     };
 
@@ -143,6 +162,7 @@ export class RaiseTicketComponent implements OnInit {
     });
   }
 
+  
   private uploadFiles(ticketId: string): void {
     let uploadedCount = 0;
     this.attachedFiles.forEach(file => {
@@ -170,7 +190,7 @@ export class RaiseTicketComponent implements OnInit {
     this.isSubmitting = false;
     this.showToast('Ticket submitted successfully!');
     setTimeout(() => {
-      this.router.navigate(['/customer-portal']);
+      this.ticketCreated.emit();
     }, 1500);
   }
 }
