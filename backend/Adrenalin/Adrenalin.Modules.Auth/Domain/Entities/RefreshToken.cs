@@ -8,7 +8,7 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-public sealed class RefreshToken : AuditableEntity
+public sealed class RefreshToken :BaseEntity
 {
     public RefreshToken(
     Guid userId,
@@ -16,7 +16,7 @@ public sealed class RefreshToken : AuditableEntity
     Guid familyId,
     DateTimeOffset expiresAt,
     string? deviceInfo = null,
-    string? ipAddress = null)
+    IPAddress? ipAddress = null)
 {
     UserId = userId;
     TokenHash = tokenHash;
@@ -35,7 +35,8 @@ public sealed class RefreshToken : AuditableEntity
 
     public string? DeviceInfo { get; private set; }
 
-  public string? IpAddress { get; private set; }
+  public IPAddress? IpAddress { get; private set; }
+     public string? UserAgent { get; private set; }
 
     public DateTimeOffset IssuedAt { get; private set; }
 
@@ -44,8 +45,11 @@ public sealed class RefreshToken : AuditableEntity
     public DateTimeOffset? LastUsedAt { get; private set; }
 
     public bool IsRevoked { get; private set; }
-
+    public DateTimeOffset? RotatedAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }
+    public string? CreatedByIp { get; private set; }
+
+    public string? RevokedByIp { get; private set; }
 
     public RevocationReason? RevokedReason { get; private set; }
 

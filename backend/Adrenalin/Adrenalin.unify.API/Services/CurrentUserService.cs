@@ -20,6 +20,10 @@ public class CurrentUserService : ICurrentUserService
             return Guid.TryParse(userIdString, out var userId) ? userId : null;
         }
     }
+        public string? Email =>
+        _httpContextAccessor.HttpContext?
+            .User?
+            .FindFirstValue(ClaimTypes.Email);
 
     public bool IsAuthenticated => UserId.HasValue;
 }

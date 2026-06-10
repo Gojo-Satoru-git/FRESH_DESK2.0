@@ -3,7 +3,7 @@ using Adrenalin.SharedKernel.Entities;
 namespace Adrenalin.Modules.Auth.Domain.Entities
 {
 
-    public sealed class UserVerificationToken : AuditableEntity
+    public sealed class UserVerificationToken :BaseEntity
     {
         public UserVerificationToken(
             Guid userId,
@@ -29,6 +29,7 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
             IsUsed = true;
             VerifiedAt = DateTimeOffset.UtcNow;
         }
+        
         public Guid UserId { get; private set; }
 
         public string TokenHash { get; private set; } = string.Empty;
@@ -36,6 +37,8 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
         public string Purpose { get; private set; } = string.Empty;
 
         public DateTimeOffset ExpiresAt { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
 
         public DateTimeOffset? VerifiedAt { get; private set; }
 

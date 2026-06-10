@@ -75,7 +75,7 @@ public sealed class LoginCommandHandler
 
         var tokenHash =
             _tokenHasher.Hash(refreshToken);
-        string? ipAddress = request.IpAddress;
+        IPAddress? ipAddress = request.IpAddress;
 
         
         var refreshTokenEntity = new RefreshToken(

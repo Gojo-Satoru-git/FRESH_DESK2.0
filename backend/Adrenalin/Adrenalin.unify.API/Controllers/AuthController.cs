@@ -41,7 +41,7 @@ public sealed class AuthController : ControllerBase
     {
 
         var userId = await _dispatcher.Send(
-            new LoginCommand(request.Email, request.Password, HttpContext.Connection.RemoteIpAddress?.ToString(),
+            new LoginCommand(request.Email, request.Password, HttpContext.Connection.RemoteIpAddress,
     HttpContext.Request.Headers["User-Agent"]),
             cancellationToken);
 
@@ -134,6 +134,23 @@ public async Task<IActionResult> VerifyEmailOtp(
     return Ok(new
     {
         Message = "Email verified successfully"
+    });
+}
+[HttpPost("reset-password")]
+public async Task<IActionResult> ResetPassword(
+    ResetPasswordRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new ResetPasswordCommand(
+            request.Token,
+            request.NewPassword),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message =
+            "Password reset successful"
     });
 }
 }

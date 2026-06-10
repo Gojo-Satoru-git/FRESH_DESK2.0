@@ -46,5 +46,6 @@ public class UserOtpCodeConfiguration : IEntityTypeConfiguration<UserOtpCode>
         builder.HasOne(d => d.User).WithMany(p => p.UserOtpCodes)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("user_otp_codes_user_id_fkey");
+        
     }
 }

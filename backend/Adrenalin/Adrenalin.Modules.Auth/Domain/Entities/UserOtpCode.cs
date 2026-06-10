@@ -2,7 +2,7 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities
 {
-    public sealed class UserOtpCode : AuditableEntity
+    public sealed class UserOtpCode :BaseEntity
     {
         public UserOtpCode(
     Guid userId,
@@ -26,6 +26,7 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
         public string? DeliveryTarget { get; private set; }
 
         public DateTimeOffset ExpiresAt { get; private set; }
+        public DateTimeOffset CreatedAt { get; private set; }
 
         public DateTimeOffset? VerifiedAt { get; private set; }
 
