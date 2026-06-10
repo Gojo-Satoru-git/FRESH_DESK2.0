@@ -24,9 +24,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasDefaultValueSql("gen_random_uuid()")
             .HasColumnName("id");
 
-        builder.Property(e => e.CreatedAt)
-            .HasDefaultValueSql("now()")
-            .HasColumnName("created_at");
 
         builder.Property(e => e.DeviceInfo)
             .HasMaxLength(255)
@@ -64,5 +61,37 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.HasOne(d => d.User).WithMany(p => p.RefreshTokens)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("refresh_tokens_user_id_fkey");
+        builder.Property(e => e.UserAgent)
+    .HasColumnName("user_agent");
+
+builder.Property(e => e.RotatedAt)
+    .HasColumnName("rotated_at");
+
+builder.Property(e => e.CreatedByIp)
+    .HasColumnName("created_by_ip");
+
+builder.Property(e => e.RevokedByIp)
+    .HasColumnName("revoked_by_ip");
+
+builder.Property(e => e.RevokedReason)
+    .HasColumnName("revoked_reason");
+builder.Ignore(e => e.RowVersion);
+builder.Property(e => e.UserAgent)
+    .HasColumnName("user_agent");
+
+builder.Property(e => e.CreatedByIp)
+    .HasMaxLength(45)
+    .HasColumnName("created_by_ip");
+
+builder.Property(e => e.RevokedByIp)
+    .HasMaxLength(45)
+    .HasColumnName("revoked_by_ip");
+
+builder.Property(e => e.RotatedAt)
+    .HasColumnName("rotated_at");
+
+builder.Property(e => e.RevokedReason)
+    .HasColumnName("revoked_reason");
+        
     }
 }

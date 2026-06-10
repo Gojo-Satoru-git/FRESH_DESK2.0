@@ -81,11 +81,9 @@ public sealed class LoginCommandHandler
 
         var tokenHash =
             _tokenHasher.Hash(refreshToken);
-        string? ipAddress = request.IpAddress;
+       
 
-        var parsedIp = !string.IsNullOrWhiteSpace(request.IpAddress) 
-            ? IPAddress.Parse(request.IpAddress) 
-            : null;
+        
 
         var refreshTokenEntity = new RefreshToken(
          user.Id,
@@ -93,7 +91,7 @@ public sealed class LoginCommandHandler
          Guid.NewGuid(),                // familyId
          DateTimeOffset.UtcNow.AddDays(7),
           request.DeviceInfo,
-         parsedIp);
+         request.IpAddress);
 
         await _refreshTokens.AddAsync(
         refreshTokenEntity,

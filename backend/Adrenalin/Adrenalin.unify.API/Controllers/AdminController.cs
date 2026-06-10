@@ -1,0 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Adrenalin.Modules.Auth.Application.Commands;
+using Adrenalin.Modules.Auth.Application.DTOs;
+using Adrenalin.SharedKernel.Mediator;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Adrenalin.unify.API.Controllers
+{
+    [Authorize(Policy = "user:create")]
+    [ApiController]
+    [Route("api/admin")]
+
+    public sealed class AdminController: ControllerBase
+    {
+        private readonly IDispatcher _dispatcher;
+
+    public AdminController(
+        IDispatcher dispatcher)
+    {
+        _dispatcher = dispatcher;
+    }
+    [HttpPost("internal-users")]
+    public async Task<IActionResult> CreateInternalUser(
+        CreateInternalUserRequestDTO request,
+        CancellationToken cancellationToken)
+    {
+        var userId =
+            await _dispatcher.Send(
+                new CreateInternalUserCommand(
+                    request.Email,
+                    request.FirstName,
+                    request.LastName,
+                    request.Phone,
+                    request.RoleId),
+                cancellationToken);
+
+        return Ok(new
+        {
+            UserId = userId
+        });
+    }
+    }
+}

@@ -19,13 +19,19 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
         private readonly IUserVerificationTokenRepository _verificationTokens;
         private readonly ITokenHasher _tokenHasher;
         private readonly IEmailService _emailService;
-        public RegisterUserCommandHandler(IUserRepository users, IPasswordHasher hasher, IUserVerificationTokenRepository verificationTokens, ITokenHasher tokenHasher, IEmailService emailService)
+        private readonly IUserOtpCodeRepository _otpRepository;
+private readonly IOtpGenerator _otpGenerator;
+        public RegisterUserCommandHandler(IUserRepository users, IPasswordHasher hasher, IUserVerificationTokenRepository verificationTokens, ITokenHasher tokenHasher,IUserOtpCodeRepository otpRepository,
+IOtpGenerator otpGenerator,
+IEmailService emailService)
         {
             _users = users;
             _hasher = hasher;
             _verificationTokens = verificationTokens;
             _tokenHasher = tokenHasher; 
             _emailService = emailService;
+            _otpRepository = otpRepository;
+_otpGenerator = otpGenerator;
         }
         public async Task<Guid> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
@@ -43,25 +49,28 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
                 request.Username,
                 request.Phone);
             await _users.AddAsync(user, cancellationToken);
-            var rawToken =Guid.NewGuid().ToString();
-            var verificationUrl =
-    $"http://localhost:5088/api/auth/verify-email?token={rawToken}";
+            var otp =
+    _otpGenerator.Generate();
 
-        await _emailService.SendAsync(
+var otpHash =
+    _tokenHasher.Hash(otp);
+
+var otpEntity =
+    new UserOtpCode(
+        user.Id,
+        otpHash,
+        OtpPurposes.EmailVerification,
+        DateTimeOffset.UtcNow.AddMinutes(10),
+        user.Email);
+
+await _otpRepository.AddAsync(
+    otpEntity,
+    cancellationToken);
+
+await _emailService.SendAsync(
     user.Email,
-    "Verify Your Email",
-    verificationUrl);
-            var tokenHash =
-                _tokenHasher.Hash(rawToken);
-
-            var verificationToken =
-                new UserVerificationToken(
-                    user.Id,
-                    tokenHash,
-                    VerificationPurposes.EmailVerification,
-                    DateTimeOffset.UtcNow.AddHours(24));
-
-            await _verificationTokens.AddAsync(verificationToken, cancellationToken);
+    "Email Verification OTP",
+    $"Your OTP is {otp}");
 
 
 
