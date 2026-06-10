@@ -164,7 +164,7 @@ export class KnowledgeBaseComponent implements OnInit {
         this.folders.set(tree || []);
         
         // Fetch published articles
-        this.http.get<any>(`${environment.apiUrl}/api/kb/articles?status=Published&pageSize=1000`).subscribe({
+        this.http.get<any>(`${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000`).subscribe({
           next: (res) => {
             const articles = res.items || [];
             const counts: Record<string, number> = {};
@@ -225,9 +225,25 @@ export class KnowledgeBaseComponent implements OnInit {
   }
 
   viewFolder(folderId: string) {
+    // Find the clicked folder node so we can pass its full subtree in router state.
+    // articles.component uses this to collect all descendant folder IDs and fetch
+    // articles from each one (the API folderId filter is exact-match only).
+    const node = this.findFolderNode(this.folders(), folderId);
     this.router.navigate(['/customer-portal/knowledge-base/articles'], {
-      queryParams: { folderId }
+      queryParams: { folderId },
+      state: { folderNode: node }
     });
+  }
+
+  findFolderNode(nodes: any[], id: string): any | null {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children?.length) {
+        const found = this.findFolderNode(node.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
   viewArticle(articleId: string) {
