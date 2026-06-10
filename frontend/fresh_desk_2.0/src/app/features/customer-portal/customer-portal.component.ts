@@ -12,12 +12,13 @@ interface Ticket {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Open' | 'Pending' | 'Resolved';
   lastUpdated: string;
+  rawDate: Date; // Added to handle precise runtime date filtering
 }
 
 @Component({
   selector: 'app-customer-portal',
   standalone: true,
-  imports: [CommonModule, RouterLink, RaiseTicketComponent, FormsModule], // Added FormsModule here
+  imports: [CommonModule, RaiseTicketComponent, FormsModule], // Added FormsModule here
   template: `
     @if (activeBanner(); as banner) {
       <div class="mx-6 mt-4 p-5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-4 shadow-sm animate-fade-in">
@@ -74,11 +75,11 @@ interface Ticket {
       </div>
     </section>
 
-<section class="px-6 mt-16">
+    <section class="px-6 mt-16">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 bg-gray-50 border border-b-0 border-gray-200 rounded-t-2xl">
         <div>
-          <p class="text-4xl font-bold text-[#012A4A]">Recent Tickets</p>
-          <p class="text-gray-500 mt-2 text-2xl">Your latest tickets</p>
+          <p class="text-4xl font-bold text-[#012A4A]">Tickets by Organisation</p>
+          <p class="text-gray-500 mt-2 text-2xl">Organisation latest tickets</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-6">
@@ -123,12 +124,23 @@ interface Ticket {
             </select>
           </div>
 
-          <a
-            routerLink="/customer-portal/my-tickets"
-            class="px-6 py-2 rounded-xl text-black text-lg font-semibold hover:bg-blue-600 hover:text-white transition"
-          >
-            View All
-          </a>
+          <div class="flex items-center gap-2">
+            <label class="text-lg font-bold text-slate-500 uppercase tracking-wider">Created On:</label>
+            <select
+              [(ngModel)]="selectedDateFilter"
+              class="h-11 px-3 text-base border rounded-xl shadow-sm focus:outline-none font-bold min-w-[140px] cursor-pointer transition-colors duration-200"
+              [ngClass]="{
+                'bg-slate-100 border-slate-300 text-slate-700': selectedDateFilter() === 'All',
+                'bg-purple-100 border-purple-300 text-purple-800': selectedDateFilter() !== 'All'
+              }"
+            >
+              <option value="All" class="bg-white text-slate-700">All Time</option>
+              <option value="Today" class="bg-white text-slate-700 font-semibold">Today</option>
+              <option value="7Days" class="bg-white text-slate-700 font-semibold">Last 7 Days</option>
+              <option value="30Days" class="bg-white text-slate-700 font-semibold">Last 30 Days</option>
+            </select>
+          </div>
+          
         </div>
       </div>
 
@@ -208,12 +220,14 @@ export class CustomerPortalComponent implements OnInit {
   // Active filter state elements
   selectedStatus = signal<string>('All');
   selectedPriority = signal<string>('All');
+  selectedDateFilter = signal<string>('All'); // Added signal state for date filtering
 
   // Computed array tracking automated runtime UI filters
   filteredTickets = computed(() => {
     let list = this.tickets();
     const statusFilter = this.selectedStatus();
     const priorityFilter = this.selectedPriority();
+    const dateFilter = this.selectedDateFilter();
 
     if (statusFilter !== 'All') {
       list = list.filter(t => t.status === statusFilter);
@@ -221,6 +235,23 @@ export class CustomerPortalComponent implements OnInit {
 
     if (priorityFilter !== 'All') {
       list = list.filter(t => t.priority === priorityFilter);
+    }
+
+    if (dateFilter !== 'All') {
+      const now = new Date();
+      list = list.filter(t => {
+        const diffTime = now.getTime() - t.rawDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (dateFilter === 'Today') {
+          return now.toDateString() === t.rawDate.toDateString();
+        } else if (dateFilter === '7Days') {
+          return diffDays <= 7;
+        } else if (dateFilter === '30Days') {
+          return diffDays <= 30;
+        }
+        return true;
+      });
     }
 
     return list;
@@ -274,7 +305,8 @@ export class CustomerPortalComponent implements OnInit {
             subject: t.title,
             priority,
             status,
-            lastUpdated: this.formatTimeAgo(t.updatedAt || t.createdAt)
+            lastUpdated: this.formatTimeAgo(t.updatedAt || t.createdAt || new Date().toISOString()),
+            rawDate: new Date(t.createdAt || t.updatedAt || new Date().toISOString()) // Safely applied current date fallback
           };
         })
       );

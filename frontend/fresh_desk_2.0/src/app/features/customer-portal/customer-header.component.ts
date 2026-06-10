@@ -59,13 +59,13 @@ import { AuthService } from '../../core/auth/auth.service';
       <div class="flex-1 flex flex-col">
 
         <!-- HEADER -->
-        <header class="flex items-center px-6 py-4 bg-white relative">
+        <header class="flex items-center px-6 -mt-4 bg-white relative">
 
           <!-- ☰ BUTTON (ONLY WHEN SIDEBAR CLOSED) -->
           @if (!isSidebarOpen()) {
             <button
               (click)="toggleSidebar()"
-              class="h-10 w-10 mr-4 rounded-lg bg-gray-100
+              class="h-10 w-10 mr-4 ml-4 rounded-lg bg-gray-100
                      hover:bg-gray-200 flex items-center justify-center"
             >
               ☰

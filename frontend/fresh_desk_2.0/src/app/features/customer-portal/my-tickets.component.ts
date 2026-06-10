@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { environment } from '../../../environments/environment.development';
+import { RaiseTicketComponent } from '../customer-portal/raise-ticket.component';
 
 interface TicketListItem {
   id: string;
@@ -64,7 +65,7 @@ interface TicketDetail {
 @Component({
   selector: 'app-my-tickets',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RaiseTicketComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] bg-[#F8FAFC] text-slate-800 font-sans overflow-hidden">
       <!-- ================= LEFT PANEL: TICKET LIST ================= -->
@@ -75,6 +76,13 @@ interface TicketDetail {
         <div class="p-5 border-b border-slate-100 bg-white">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-[#0F172A]">My Tickets</h2>
+            <a
+        (click)="openRaiseTicket()"
+        class="flex items-center gap-1 px-2 py-2 ml-4 text-white bg-blue-400 rounded-xl font-bold text-sm hover:bg-[#025C94] transition cursor-pointer"
+      >
+        <img src="plu.png" class="w-6 h-6" />
+         New Ticket
+      </a>
             <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded-full">
               {{ filteredTickets().length }} total
             </span>
@@ -634,6 +642,26 @@ interface TicketDetail {
         </div>
       </div>
     }
+      @if (showRaiseTicket()) {
+      <div class="fixed inset-0 bg-transparent z-40" (click)="closeRaiseTicket()"></div>
+
+      <div class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+        <div
+          class="bg-white w-[95%] md:w-[700px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative pointer-events-auto"
+          (click)="$event.stopPropagation()"
+        >
+          <button
+            class="absolute top-4 right-4 text-2xl font-bold text-gray-500 hover:text-black z-10"
+            (click)="closeRaiseTicket()"
+          >
+            ✕
+          </button>
+
+          <app-raise-ticket (ticketCreated)="closeRaiseTicket()"></app-raise-ticket>
+        </div>
+      </div>
+    }
+    
 
     <!-- Toast notification -->
     @if (toastMessage()) {
@@ -665,6 +693,9 @@ export class MyTicketsComponent implements OnInit {
   isActionLoading = signal<boolean>(false);
   isSavingDetails = signal<boolean>(false);
   toastMessage = signal<string | null>(null);
+
+  showRaiseTicket = signal(false);
+
 
   showToast(msg: string) {
     this.toastMessage.set(msg);
@@ -708,6 +739,13 @@ export class MyTicketsComponent implements OnInit {
       this.selectTicket(id);
     }
     this.fetchTicketsList();
+  }
+   openRaiseTicket() {
+    this.showRaiseTicket.set(true);
+  }
+
+  closeRaiseTicket() {
+    this.showRaiseTicket.set(false);
   }
 
   fetchTicketsList() {
