@@ -33,6 +33,26 @@ export class RaiseTicketComponent implements OnInit {
   showCancelConfirm = signal<boolean>(false);
   toastMessage = signal<string | null>(null);
 
+  readonly MAX_WORDS = 300;
+descriptionWordCount = signal(0);
+
+onDescriptionInput(event: Event): void {
+  const textarea = event.target as HTMLTextAreaElement;
+  const words = textarea.value
+    .trim()
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+
+  if (words.length > this.MAX_WORDS) {
+    textarea.value = words.slice(0, this.MAX_WORDS).join(' ');
+    this.ticketForm.get('description')?.setValue(textarea.value);
+    this.descriptionWordCount.set(this.MAX_WORDS);
+    return;
+  }
+
+  this.descriptionWordCount.set(words.length);
+}
+
   private showToast(msg: string) {
     this.toastMessage.set(msg);
     setTimeout(() => this.toastMessage.set(null), 3000);
@@ -44,14 +64,28 @@ export class RaiseTicketComponent implements OnInit {
       category: ['', Validators.required],
       module: ['', Validators.required],
       priority: ['Medium'],
-      description: ['', [Validators.required, Validators.minLength(20)]],
+      description: ['', [
+  Validators.required,
+  Validators.minLength(20),
+  Validators.maxLength(3000) // safety fallback
+]],
     }); 
   }
 
-  onFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files) this.attachedFiles.push(...Array.from(input.files));
+  private readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+onFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files) return;
+
+  for (const file of Array.from(input.files)) {
+    if (file.size > this.MAX_FILE_SIZE) {
+      this.showToast(`"${file.name}" exceeds 50 MB limit`);
+      continue;
+    }
+    this.attachedFiles.push(file);
   }
+}
 
   onFileDrop(event: DragEvent) {
     event.preventDefault();
@@ -128,6 +162,7 @@ export class RaiseTicketComponent implements OnInit {
     });
   }
 
+  
   private uploadFiles(ticketId: string): void {
     let uploadedCount = 0;
     this.attachedFiles.forEach(file => {

@@ -62,13 +62,19 @@
       <label class="block text-2xl font-bold mb-2">
         Description <span class="text-red-400">*</span>
       </label>
-      <textarea
-        formControlName="description"
-        placeholder="Provide details of the issue"
-        class="w-full h-60 px-3 py-3 text-xl border border-gray-200 rounded-2xl shadow-xl mb-6"
-      ></textarea>
+     <textarea
+  formControlName="description"
+  placeholder="Provide details of the issue"
+  class="w-full h-60 px-3 py-3 text-xl border border-gray-200 rounded-2xl shadow-xl mb-2"
+  (input)="onDescriptionInput($event)"
+></textarea>
 
-      <label class="block text-2xl font-bold mb-2">Attachments</label>
+<!-- Word Counter -->
+<div class="text-right text-sm text-gray-500 mb-6">
+  {{ descriptionWordCount() }} / {{ MAX_WORDS }} words
+</div>
+
+      <label (click)="fileInput.click()" class="block text-2xl font-bold mb-2">Attachments</label>
       <div
         class="w-full p-6 mb-6 border-2 border-dashed rounded-xl
                flex flex-col items-center justify-center gap-2
@@ -85,7 +91,7 @@
           Drag & drop files here or
           <span class="text-blue-600 font-bold underline" (click)="fileInput.click()">browse</span>
         </p>
-        <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX</p>
+        <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX, mp4</p>
       </div>
 
       <div *ngIf="attachedFiles.length > 0" class="mb-6">
