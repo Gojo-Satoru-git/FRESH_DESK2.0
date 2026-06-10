@@ -126,19 +126,23 @@ interface Ticket {
 
           <div class="flex items-center gap-2">
             <label class="text-lg font-bold text-slate-500 uppercase tracking-wider">Created On:</label>
-            <select
-              [(ngModel)]="selectedDateFilter"
-              class="h-11 px-3 text-base border rounded-xl shadow-sm focus:outline-none font-bold min-w-[140px] cursor-pointer transition-colors duration-200"
+            <input
+              type="date"
+              [ngModel]="selectedDateFilter()"
+              (ngModelChange)="selectedDateFilter.set($event)"
+              class="h-11 px-3 text-base border border-slate-300 rounded-xl shadow-sm focus:outline-none font-bold min-w-[160px] cursor-pointer transition-colors duration-200"
               [ngClass]="{
-                'bg-slate-100 border-slate-300 text-slate-700': selectedDateFilter() === 'All',
-                'bg-purple-100 border-purple-300 text-purple-800': selectedDateFilter() !== 'All'
+                'bg-slate-100 text-slate-700': !selectedDateFilter(),
+                'bg-purple-100 border-purple-300 text-purple-800': !!selectedDateFilter()
               }"
-            >
-              <option value="All" class="bg-white text-slate-700">All Time</option>
-              <option value="Today" class="bg-white text-slate-700 font-semibold">Today</option>
-              <option value="7Days" class="bg-white text-slate-700 font-semibold">Last 7 Days</option>
-              <option value="30Days" class="bg-white text-slate-700 font-semibold">Last 30 Days</option>
-            </select>
+            />
+            @if (selectedDateFilter()) {
+              <button
+                (click)="selectedDateFilter.set('')"
+                class="text-slate-400 hover:text-slate-700 text-xl font-bold leading-none"
+                title="Clear date filter"
+              >✕</button>
+            }
           </div>
           
         </div>
@@ -184,11 +188,11 @@ interface Ticket {
     </section>
 
     @if (showRaiseTicket()) {
-      <div class="fixed inset-0 bg-transparent z-40" (click)="closeRaiseTicket()"></div>
+      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" (click)="closeRaiseTicket()"></div>
 
       <div class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
         <div
-          class="bg-white w-[95%] md:w-[700px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative pointer-events-auto"
+          class="bg-white w-[95%] md:w-[860px] max-h-[92vh] overflow-hidden rounded-2xl shadow-2xl border-2 border-slate-700 p-8 relative pointer-events-auto flex flex-col"
           (click)="$event.stopPropagation()"
         >
           <button
@@ -198,7 +202,9 @@ interface Ticket {
             ✕
           </button>
 
-          <app-raise-ticket (ticketCreated)="closeRaiseTicket()"></app-raise-ticket>
+          <div class="overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <app-raise-ticket (ticketCreated)="closeRaiseTicket()"></app-raise-ticket>
+          </div>
         </div>
       </div>
     }
@@ -220,7 +226,7 @@ export class CustomerPortalComponent implements OnInit {
   // Active filter state elements
   selectedStatus = signal<string>('All');
   selectedPriority = signal<string>('All');
-  selectedDateFilter = signal<string>('All'); // Added signal state for date filtering
+  selectedDateFilter = signal<string>(''); // Empty = no filter; date string = filter by that day
 
   // Computed array tracking automated runtime UI filters
   filteredTickets = computed(() => {
@@ -237,20 +243,11 @@ export class CustomerPortalComponent implements OnInit {
       list = list.filter(t => t.priority === priorityFilter);
     }
 
-    if (dateFilter !== 'All') {
-      const now = new Date();
+    if (dateFilter) {
+      // dateFilter is a date string like '2025-06-10' from the date picker
       list = list.filter(t => {
-        const diffTime = now.getTime() - t.rawDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (dateFilter === 'Today') {
-          return now.toDateString() === t.rawDate.toDateString();
-        } else if (dateFilter === '7Days') {
-          return diffDays <= 7;
-        } else if (dateFilter === '30Days') {
-          return diffDays <= 30;
-        }
-        return true;
+        const ticketDate = t.rawDate.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        return ticketDate === dateFilter;
       });
     }
 

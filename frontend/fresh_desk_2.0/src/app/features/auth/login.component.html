@@ -48,22 +48,30 @@
           </h3>
         </div>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <app-ui-input
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off" class="space-y-6">
+          <input
             id="email"
-            label="Email Address"
             type="email"
+            name="search"
+            formControlName="email"
             placeholder="test@adrenalin.com"
-            [control]="$any(loginForm.get('email'))"
-          ></app-ui-input>
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            autocomplete="off"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition bg-background text-text"
+          />
 
-          <app-ui-input
+          <input
             id="password"
-            label="Password"
             type="password"
+            name="search"
+            formControlName="password"
             placeholder="••••••••"
-            [control]="$any(loginForm.get('password'))"
-          ></app-ui-input>
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            autocomplete="new-password"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition bg-background text-text"
+          />
           <div class ="mt-5">
             <app-ui-button type="submit" [disabled]="isLoading() || loginForm.invalid">
               @if (isLoading()) {
@@ -88,13 +96,6 @@
             </app-ui-button>
           </div>
         </form>
-
-        <p class="text-center text-lg text-text-muted mt-6">
-          Don’t have an account?
-          <a routerLink="/signup" class="text-primary font-medium hover:underline ml-1">
-            Sign up
-          </a>
-        </p>
       </div>
     </div>
   </div>
