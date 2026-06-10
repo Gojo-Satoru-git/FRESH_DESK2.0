@@ -1,6 +1,3 @@
-using Adrenalin.Modules.KB.Domain.Entities;
-using Adrenalin.Modules.Ticketing.Domain.Enums;
-using Adrenalin.Persistence.Configurations.Gamification;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;

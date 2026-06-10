@@ -89,8 +89,8 @@ public async Task<IActionResult> VerifyEmail(
         Message = "Email verified successfully"
     });
 }
- 
-public async Task<IActionResult> ForgotPassword(
+    [HttpGet("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
     ForgotPasswordRequestDTO request,
     CancellationToken cancellationToken)
 {

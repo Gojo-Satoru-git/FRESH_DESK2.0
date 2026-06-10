@@ -30,13 +30,18 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
     {
         var tokenHash =
             _tokenHasher.Hash(request.Token);
+        
+            Console.WriteLine($"Raw Token: {request.Token}");
+            Console.WriteLine($"Computed Hash: {tokenHash}");
 
         var token =
             await _tokens.GetByHashAsync(
                 tokenHash,
                 cancellationToken);
 
-        if (token is null)
+            Console.WriteLine($"Token Found: {token != null}");
+
+            if (token is null)
             throw new Exception("Invalid token");
 
         if (token.IsUsed)

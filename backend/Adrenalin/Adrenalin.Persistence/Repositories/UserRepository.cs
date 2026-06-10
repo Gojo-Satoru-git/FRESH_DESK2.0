@@ -16,7 +16,8 @@ public sealed class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        return await _db.Users.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+        var normalizedEmail = email.ToUpperInvariant();
+        return await _db.Users.FirstOrDefaultAsync(x => x.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
