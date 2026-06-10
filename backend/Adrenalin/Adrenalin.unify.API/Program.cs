@@ -25,7 +25,8 @@ using System.Text;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
 using Adrenalin.Infrastructure.Email;
-
+using Adrenalin.Persistence.Repositories.Auth;
+using Adrenalin.Modules.Auth.Domain.Enums;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── 1. Database — single AdrenalinDbContext ───────────────────────────────────
@@ -34,6 +35,10 @@ var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
 dataSourceBuilder.MapEnum<RevocationReason>("auth.revocation_reason");
 dataSourceBuilder.EnableUnmappedTypes();
+
+
+dataSourceBuilder.MapEnum<RevocationReason>(
+    "auth.revocation_reason");
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AdrenalinDbContext>(options =>
@@ -41,10 +46,7 @@ builder.Services.AddDbContext<AdrenalinDbContext>(options =>
         npgsql => npgsql
             .MigrationsAssembly("Adrenalin.Persistence")
             .MapEnum<TicketStatus>("ticket_status", "ticket")
-            .MapEnum<RevocationReason>("revocation_reason", "auth")
-        )
-        .UseSnakeCaseNamingConvention()
-    );
+            .MapEnum<RevocationReason>("revocation_reason", "auth")));
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(
@@ -113,6 +115,15 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IRefreshTokenRepository,
     RefreshTokenRepository>();
+builder.Services.AddScoped<
+    IOtpGenerator,
+    OtpGenerator>();
+builder.Services.AddScoped<
+    IUserOtpCodeRepository,
+    UserOtpCodeRepository>();
+builder.Services.AddScoped<
+    IPasswordGenerator,
+    PasswordGenerator>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 
@@ -151,7 +162,8 @@ builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.CurrentUserService>();
 builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
-
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IEmailService,FakeEmailService>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
 builder.Services.AddControllers().AddJsonOptions(options =>
