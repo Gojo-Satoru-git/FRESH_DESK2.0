@@ -54,7 +54,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
     priority: 'Critical',
     category: 'Authentication',
     companyId: 'comp-alpha',
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(), 
+    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     updatedAt: new Date(Date.now() - 600000).toISOString(),
     tags: ['Auth', 'Bug', 'Production'],
     attachments: ['oauth_error_logs.txt', 'network_trace.har'],
@@ -86,7 +86,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
     priority: 'Medium',
     category: 'Infrastructure',
     companyId: 'comp-alpha',
-    createdAt: new Date(Date.now() - 86400000).toISOString(), 
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
     tags: ['Config', 'Limits'],
     attachments: ['load_test_requirements.pdf'],
@@ -126,7 +126,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
     <div class="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans flex flex-col">
       
       <header class="bg-gray-200 border-b border-slate-200 sticky top-0 z-20 rounded-xl shadow-lg w-full px-2 py-2">
-        <div class="max-w-7xl  ml-4  flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="max-w-7xl ml-4 flex flex-col md:flex-row items-center justify-between gap-4">
           
           <div class="relative w-full mr-8 md:w-80 flex-shrink-0">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
@@ -139,7 +139,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
             />
           </div>
 
-          <nav class="flex gap-1 bg-gray-200 p-1 ml-20 rounded-xl border border-slate-200/50 w-full  justify-center">
+          <nav class="flex gap-1 bg-gray-200 p-1 ml-20 rounded-xl border border-slate-200/50 w-full justify-center">
             @for (tab of statusTabs; track tab) {
               <button
                 (click)="selectedStatus.set(tab)"
@@ -155,18 +155,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
             }
           </nav>
 
-         <div class="flex items-center justify-end gap-3 w-full md:w-auto ml-40 flex-shrink-0  ">
-  <span class="text-lg font-semibold px-2.5 py-1 bg-gray-200 text-slate-600 rounded-full">
-    {{ filteredTickets().length }} total
-  </span>
-  <button
-    (click)="openRaiseTicket()"
-    class="flex items-center gap-1.5 px-4 py-2 text-white bg-blue-500 rounded-xl font-bold text-sm hover:bg-blue-600 transition shadow-sm cursor-pointer"
-  >
-    <span class="text-lg leading-none">+</span>
-    New Ticket
-  </button>
-</div>
+          
           
         </div>
       </header>
@@ -192,7 +181,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
             <p class="text-lg text-slate-400 mt-1">Adjust your upper filters or query string to load missing records.</p>
           </div>
         } @else {
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @for (ticket of filteredTickets(); track ticket.id) {
               <div
                 (click)="openTicketDetails(ticket.id)"
@@ -204,7 +193,7 @@ const SAMPLE_TICKETS: TicketDetail[] = [
                       #{{ ticket.ticketNumber }}
                     </span>
                     <div class="flex items-center gap-1.5">
-                      <span class="px-2.5 py-0.5   rounded-full text-sm font-extrabold uppercase border" [class]="getPriorityClasses(ticket.priority)">
+                      <span class="px-2.5 py-0.5 rounded-full text-sm font-extrabold uppercase border" [class]="getPriorityClasses(ticket.priority)">
                         {{ ticket.priority }}
                       </span>
                       <span class="px-2.5 py-0.5 rounded-full text-sm font-extrabold uppercase tracking-wider border" [class]="getStatusClasses(ticket.status)">
@@ -235,145 +224,140 @@ const SAMPLE_TICKETS: TicketDetail[] = [
         }
       </main>
 
+      <!-- ===================== TICKET DETAIL MODAL (LARGE, WHATSAPP CHAT) ===================== -->
       @if (showDetailModal() && ticketDetail(); as t) {
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden transform transition-all scale-100 animate-fade-in">
-            
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70 flex-shrink-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-lg font-bold px-2.5 py-1 bg-slate-200/70 text-slate-700 rounded-lg">
-                  TICKET #{{ t.ticketNumber || t.id.toUpperCase() }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-sm font-extrabold uppercase tracking-wider border" [class]="getPriorityClasses(t.priority)">
-                  {{ t.priority }} Priority
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-sm font-extrabold uppercase tracking-wider border" [class]="getStatusClasses(t.status)">
-                  {{ t.status }}
-                </span>
-              </div>
-              <button 
-                (click)="closeDetailModal()" 
-                class="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 font-bold transition text-lg cursor-pointer"
-              >
-                &times;
-              </button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-              
-              <div>
-                <h2 class="text-xl font-bold text-slate-900 mb-3">{{ t.title }}</h2>
-                <div class="text-lg text-slate-600 leading-relaxed bg-slate-50 border border-slate-200/50 rounded-xl p-4 whitespace-pre-wrap">
-                  {{ t.description }}
-                </div>
-              </div>
+  <div
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    (click)="closeDetailModal()"
+  >
+    <div
+      class="bg-white rounded-2xl w-full flex flex-col shadow-2xl border border-slate-100 overflow-hidden"
+      style="max-width: 860px; height: 90vh;"
+      (click)="$event.stopPropagation()"
+    >
+      
+      <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-base font-bold px-3 py-1 bg-slate-200/70 text-slate-700 rounded-lg">
+          TICKET #{{ t.ticketNumber || t.id.toUpperCase() }}
+        </span>
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider border" [class]="getPriorityClasses(t.priority)">
+          {{ t.priority }} Priority
+        </span>
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider border" [class]="getStatusClasses(t.status)">
+          {{ t.status }}
+        </span>
+      </div>
+      <button
+        (click)="closeDetailModal()"
+        class="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 font-bold transition text-xl cursor-pointer"
+      >
+        &times;
+      </button>
+    </div>
 
-              <div>
-                <h4 class="text-xl font-bold text-slate-900   tracking-wider mb-2.5">Uploaded Attachments</h4>
-                <div class="flex flex-wrap gap-2">
-                  @if (t.attachments && t.attachments.length > 0) {
-                    @for (file of t.attachments; track file) {
-                      <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-lg font-medium text-slate-600 hover:text-blue-600 cursor-pointer transition-colors">
-                        <span class="text-slate-400 text-lg">📎</span>
-                        <span>{{ file }}</span>
-                      </div>
-                    }
-                  } @else {
-                    <span class="text-xs text-slate-400 italic font-normal bg-slate-50 border border-dashed border-slate-200 rounded-xl px-4 py-2.5 block w-full">
-                      No attachments are appended to this ticket workspace.
-                    </span>
-                  }
-                </div>
-              </div>
+      <!-- SINGLE scrollable body -->
+      <div class="flex-1 overflow-y-auto flex flex-col">
 
-              <div class="space-y-4 pt-4 border-t border-slate-100">
-                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-               
-                  <span>Conversation History</span>
-                  <span class="text-lg bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-semibold">
-                    {{ t.comments.length }} messages
-                  </span>
-                </h3>
-
-                <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm space-y-3">
-                  <textarea
-                    rows="2"
-                    [(ngModel)]="newCommentText"
-                    placeholder="Write a message or reply to support..."
-                    class="w-full border border-slate-200 rounded-xl p-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 resize-none text-slate-700"
-                  ></textarea>
-                  <div class="flex justify-between items-center">
-                    <span class="text-sm text-slate-400">Updates sync to mock state arrays automatically.</span>
-                    <button
-                      (click)="postComment(t.id)"
-                      [disabled]="isPostingComment() || !newCommentText.trim()"
-                      class="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-                    >
-                      @if (isPostingComment()) {
-                        <span class="animate-spin inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full"></span>
-                      }
-                      <span>Send Reply</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="space-y-3.5 mt-3">
-                  @if (t.comments.length === 0) {
-                    <div class="text-center py-4 text-slate-400 text-lg italic">No message stream history log recorded.</div>
-                  } @else {
-                    @for (comment of t.comments; track comment.id) {
-                      <div
-                        class="flex gap-3.5 p-4 rounded-xl border text-xs"
-                        [class.bg-blue-50/40]="comment.contactId"
-                        [class.border-blue-100]="comment.contactId"
-                        [class.bg-slate-50/20]="comment.authorId"
-                        [class.border-slate-200/60]="comment.authorId"
-                      >
-                        <div class="flex-shrink-0">
-                          <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg text-white" [class.bg-blue-500]="comment.contactId" [class.bg-indigo-500]="comment.authorId">
-                            {{ comment.contactId ? 'ME' : 'SP' }}
-                          </div>
-                        </div>
-                        <div class="flex-1 space-y-1 min-w-0">
-                          <div class="flex items-center justify-between">
-                            <span class="font-bold text-lg  text-slate-800">
-                              {{ comment.contactId ? (comment.contactName || 'You (Contact)') : (comment.authorName || 'Support Agent') }}
-                            </span>
-                            <span class="text-sm text-slate-400 font-medium">{{ comment.createdAt | date: 'medium' }}</span>
-                          </div>
-                          <p class="text-slate-600 text-lg  whitespace-pre-wrap leading-relaxed">{{ comment.body }}</p>
-                        </div>
-                      </div>
-                    }
-                  }
-                </div>
-                
-              </div>
-            </div>
-            
+        <!-- Ticket title + description -->
+        <div class="px-6 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
+          <h2 class="text-xl font-bold text-slate-900 mb-3">{{ t.title }}</h2>
+          <div class="text-base text-slate-600 leading-relaxed bg-slate-50 border border-slate-200/50 rounded-xl p-4 whitespace-pre-wrap">
+            {{ t.description }}
           </div>
         </div>
-      }
 
-     @if (showRaiseTicket()) {
-      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm  z-40" (click)="closeRaiseTicket()"></div>
+        <!-- Attachments -->
+        @if (t.attachments && t.attachments.length > 0) {
+          <div class="px-6 py-4 border-b border-slate-100 flex-shrink-0">
+            <h4 class="text-base font-bold text-slate-900 mb-2">Uploaded Attachments</h4>
+            <div class="flex flex-wrap gap-2">
+              @for (file of t.attachments; track file) {
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:text-blue-600 cursor-pointer transition-colors">
+                  <span class="text-slate-400">📎</span>
+                  <span>{{ file }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
-      <div class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-        <div
-          class="bg-white w-[95%] md:w-[700px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative pointer-events-auto"
-          (click)="$event.stopPropagation()"
-        >
-          <button
-            class="absolute top-4 right-4 text-2xl font-bold text-gray-500 hover:text-black z-10"
-            (click)="closeRaiseTicket()"
-          >
-            ✕
-          </button>
+        <!-- Conversation section label -->
+        <div class="px-6 pt-4 pb-2 flex-shrink-0">
+          <span class="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Conversation · {{ t.comments.length }} message{{ t.comments.length !== 1 ? 's' : '' }}
+          </span>
+        </div>
 
-          <app-raise-ticket (ticketCreated)="closeRaiseTicket()"></app-raise-ticket>
+        <!-- Chat messages — grows to fill -->
+        <div class="px-6 pb-4 space-y-4">
+          @if (t.comments.length === 0) {
+            <div class="py-10 text-center text-slate-400 text-sm italic">No messages yet. Start the conversation below.</div>
+          }
+          @for (comment of t.comments; track comment.id) {
+
+            <!-- Customer message — right aligned -->
+            @if (comment.contactId) {
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-xs font-semibold text-slate-400 pr-1">
+                  {{ comment.contactName || 'You' }}
+                </span>
+                <div class="max-w-[68%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+                  <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ comment.body }}</p>
+                  <p class="text-right text-[11px] text-blue-200 mt-1">
+                    {{ comment.createdAt | date: 'shortTime' }}
+                  </p>
+                </div>
+              </div>
+
+            <!-- Agent message — left aligned -->
+            } @else {
+              <div class="flex flex-col items-start gap-1">
+                <span class="text-xs font-semibold text-slate-500 pl-1">
+                  {{ comment.authorName || 'Support Agent' }}
+                </span>
+                <div class="max-w-[68%] bg-slate-100 text-slate-800 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm border border-slate-200/60">
+                  <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ comment.body }}</p>
+                  <p class="text-right text-[11px] text-slate-400 mt-1">
+                    {{ comment.createdAt | date: 'shortTime' }}
+                  </p>
+                </div>
+              </div>
+            }
+
+          }
         </div>
       </div>
-    }
+
+      <!-- Message input — sticky at bottom, outside scroll area -->
+      <div class="flex items-end gap-2 px-4 py-3 bg-white border-t border-slate-200 flex-shrink-0">
+        <textarea
+          rows="1"
+          [(ngModel)]="newCommentText"
+          placeholder="Type a reply..."
+          (keydown.enter)="$event.preventDefault(); postComment(t.id)"
+          class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-slate-700 transition"
+          style="max-height: 120px; overflow-y: auto;"
+        ></textarea>
+        <button
+          (click)="postComment(t.id)"
+          [disabled]="isPostingComment() || !newCommentText.trim()"
+          class="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center disabled:opacity-40 transition hover:bg-blue-700 shadow-sm flex-shrink-0 cursor-pointer"
+        >
+          @if (isPostingComment()) {
+            <span class="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
 
     </div>
   `,
@@ -389,7 +373,6 @@ export class MyTicketsComponent implements OnInit {
   selectedTicketId = signal<string | null>(null);
   ticketDetail = signal<TicketDetail | null>(null);
 
-  // Modal Display Viewport Signals
   showDetailModal = signal<boolean>(false);
   showRaiseTicket = signal<boolean>(false);
 
@@ -397,6 +380,10 @@ export class MyTicketsComponent implements OnInit {
   isLoadingDetails = signal<boolean>(false);
   isPostingComment = signal<boolean>(false);
   newCommentText = '';
+
+  private setBodyScroll(locked: boolean) {
+  document.body.style.overflow = locked ? 'hidden' : '';
+}
 
   filteredTickets = computed(() => {
     return this.tickets().filter((ticket) => {
@@ -444,20 +431,24 @@ export class MyTicketsComponent implements OnInit {
     this.selectedTicketId.set(id);
     this.showDetailModal.set(true);
     this.selectTicket(id);
+    this.setBodyScroll(true);
   }
 
   closeDetailModal() {
     this.showDetailModal.set(false);
     this.selectedTicketId.set(null);
     this.ticketDetail.set(null);
+    this.setBodyScroll(false);
   }
 
   openRaiseTicket() {
     this.showRaiseTicket.set(true);
+    this.setBodyScroll(true);
   }
 
   closeRaiseTicket() {
     this.showRaiseTicket.set(false);
+    this.setBodyScroll(false);
   }
 
   selectTicket(id: string) {

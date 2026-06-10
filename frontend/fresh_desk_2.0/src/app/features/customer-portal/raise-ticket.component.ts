@@ -62,7 +62,7 @@ onDescriptionInput(event: Event): void {
     this.ticketForm = this.fb.group({
       subject: ['', [Validators.required, Validators.minLength(5)]],
       category: ['', Validators.required],
-      module: ['', Validators.required],
+      module: [''],
       priority: ['Medium'],
       description: ['', [
   Validators.required,
