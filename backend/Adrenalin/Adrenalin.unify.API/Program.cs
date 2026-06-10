@@ -20,6 +20,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Npgsql;
 using Scalar.AspNetCore;
+using Adrenalin.Modules.Auth.Domain.Enums;
 using System.Text;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
@@ -31,6 +32,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
+dataSourceBuilder.MapEnum<RevocationReason>("auth.revocation_reason");
 dataSourceBuilder.EnableUnmappedTypes();
 var dataSource = dataSourceBuilder.Build();
 
@@ -38,7 +40,11 @@ builder.Services.AddDbContext<AdrenalinDbContext>(options =>
     options.UseNpgsql(dataSource,
         npgsql => npgsql
             .MigrationsAssembly("Adrenalin.Persistence")
-            .MapEnum<TicketStatus>("ticket_status", "ticket")));
+            .MapEnum<TicketStatus>("ticket_status", "ticket")
+            .MapEnum<RevocationReason>("revocation_reason", "auth")
+        )
+        .UseSnakeCaseNamingConvention()
+    );
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(

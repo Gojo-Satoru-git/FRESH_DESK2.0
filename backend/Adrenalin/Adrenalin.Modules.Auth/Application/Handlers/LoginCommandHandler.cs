@@ -1,4 +1,3 @@
-
 using System.Net;
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Application.DTOs;
@@ -84,14 +83,17 @@ public sealed class LoginCommandHandler
             _tokenHasher.Hash(refreshToken);
         string? ipAddress = request.IpAddress;
 
-        
+        var parsedIp = !string.IsNullOrWhiteSpace(request.IpAddress) 
+            ? IPAddress.Parse(request.IpAddress) 
+            : null;
+
         var refreshTokenEntity = new RefreshToken(
          user.Id,
          tokenHash,
          Guid.NewGuid(),                // familyId
          DateTimeOffset.UtcNow.AddDays(7),
           request.DeviceInfo,
-         ipAddress);
+         parsedIp);
 
         await _refreshTokens.AddAsync(
         refreshTokenEntity,
