@@ -44,7 +44,9 @@ public sealed class CreateTicketCommandHandler
         var priorityEnum = MapPriority(request.Priority);
 
         var (moduleId, moduleName, department) = await _ticketRepository.ResolveOrCreateModuleAsync(request.Type, cancellationToken);
-
+        Console.WriteLine($"createdByUserId: {createdByUserId}");
+        Console.WriteLine($"contactId: {contactId}");
+        Console.WriteLine($"actorId: {request.ActorId}");
         if (!string.IsNullOrWhiteSpace(request.SenderEmail))
         {
             var email = request.SenderEmail.Trim();
@@ -135,8 +137,9 @@ public sealed class CreateTicketCommandHandler
         await _dispatcher.Send(
             new AssignTicketCommand(
                 TicketId: ticket.Id,
-                TriggeredBy: createdByUserId
-                                  ?? Guid.Empty,
+               TriggeredBy: createdByUserId
+          ?? request.ActorId
+          ?? Guid.Empty,
                 IsAutoAssignment: true),
             cancellationToken);
 

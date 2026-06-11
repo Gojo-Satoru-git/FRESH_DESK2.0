@@ -16,8 +16,15 @@ public class AutomationConditionEvaluator
                 .GetProperty("field").GetString() ?? "";
             var op = condition
                 .GetProperty("operator").GetString() ?? "";
-            var value = condition
-                .GetProperty("value").GetString() ?? "";
+            var valueElement = condition.GetProperty("value");
+            string value = valueElement.ValueKind switch
+            {
+                JsonValueKind.String => valueElement.GetString() ?? "",
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                JsonValueKind.Number => valueElement.GetRawText(),
+                _ => valueElement.ToString()
+            };
 
             if (!EvaluateSingle(field, op, value, ticket))
                 return false;

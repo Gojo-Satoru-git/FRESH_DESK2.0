@@ -1,4 +1,3 @@
-using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using System.Text.Json;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
@@ -7,9 +6,6 @@ using Adrenalin.SharedKernel.Contracts;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
-using Adrenalin.SharedKernel.Mediator;
-using Adrenalin.SharedKernel.Interfaces;
-using System.Linq;
 
 namespace Adrenalin.Modules.Ticketing.Application.Handlers.Tickets;
 

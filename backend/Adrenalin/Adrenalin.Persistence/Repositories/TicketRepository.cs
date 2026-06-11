@@ -37,42 +37,46 @@ public sealed class TicketRepository : ITicketRepository
     }
 
     public async Task<Guid?> GetLeastLoadedAgentInGroupAsync(
-        Guid groupId, CancellationToken ct = default)
+     Guid groupId, CancellationToken ct = default)
     {
-        // Get all agent IDs in this group
-        // via auth.user_groups junction table
-        var agentIds = await _context.UserGroups
+        // 1. Get all user IDs belonging to the target group
+        var groupUserIds = await _context.UserGroups
             .Where(ug => ug.GroupId == groupId)
             .Select(ug => ug.UserId)
             .ToListAsync(ct);
 
-        if (!agentIds.Any()) return null;
+        if (!groupUserIds.Any()) return null;
 
-        // ticket.tickets exact columns used:
-        // assigned_agent_id, status (ENUM), is_deleted
-        // Count open tickets per agent — excluding resolved/closed
         var openStatuses = new[] { "resolved", "closed" };
 
-        return await _context.Tickets
-            .Where(t =>
-                t.AssignedAgentId != null &&
-                agentIds.Contains(t.AssignedAgentId!.Value) &&
-                !openStatuses.Contains(
-                    t.Status.ToString().ToLower()) &&
-                !t.IsDeleted)
-            .GroupBy(t => t.AssignedAgentId)
-            .OrderBy(g => g.Count())
-            .Select(g => g.Key)
+        // Exact Role UUIDs for junior_agent and senior_agent from your auth.roles table
+        var allowedAgentRoleIds = new[]
+        {
+        Guid.Parse("e037e86b-260b-4ac1-b96b-8c7f21aabbe4"), // junior_agent
+        Guid.Parse("9b72bbb2-1c30-468a-9247-d084e5ab76d1")  // senior_agent
+    };
+
+        // 2. Query the users, ensuring they are in the group AND possess an allowed agent role ID
+        var leastLoadedAgentId = await _context.Users
+            .Where(u => groupUserIds.Contains(u.Id) &&
+                        _context.UserRoles.Any(ur => ur.UserId == u.Id &&
+                                                     allowedAgentRoleIds.Contains(ur.RoleId)))
+            .Select(u => new
+            {
+                AgentId = u.Id,
+                ActiveTicketCount = _context.Tickets.Count(t =>
+                    t.AssignedAgentId == u.Id &&
+                    !openStatuses.Contains(t.Status.ToString().ToLower()) &&
+                    !t.IsDeleted)
+            })
+            .OrderBy(a => a.ActiveTicketCount) // The agent with the least open work wins!
+            .Select(a => (Guid?)a.AgentId)
             .FirstOrDefaultAsync(ct);
+
+        return leastLoadedAgentId;
     }
 
-    public async Task<int> CountTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, CancellationToken cancellationToken = default)
-	{
-		var query = _context.Tickets
-			.AsNoTracking()
-			.AsQueryable();
-
-	public async Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default)
 	{
 		await _context.Tickets.AddAsync(
 			ticket,
@@ -391,8 +395,65 @@ public sealed class TicketRepository : ITicketRepository
 		);
 	}
 
+    public async Task<IReadOnlyList<Ticket>> GetTicketsAsync(
+    string? ticketNumber,
+    TicketStatus? status,
+    Guid? assignedAgentId,
+    Guid? companyId,
+    int page,
+    int pageSize,
+    CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tickets
+            .AsNoTracking()
+            .AsQueryable();
 
-	public async Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default)
+        if (!string.IsNullOrWhiteSpace(ticketNumber))
+            query = query.Where(x => x.TicketNumber == ticketNumber);
+
+        if (status.HasValue)
+            query = query.Where(x => x.Status == status.Value);
+
+        if (assignedAgentId.HasValue)
+            query = query.Where(x => x.AssignedAgentId == assignedAgentId);
+
+        if (companyId.HasValue)
+            query = query.Where(x => x.CompanyId == companyId);
+
+        return await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountTicketsAsync(
+    string? ticketNumber,
+    TicketStatus? status,
+    Guid? assignedAgentId,
+    Guid? companyId,
+    CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tickets
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(ticketNumber))
+            query = query.Where(x => x.TicketNumber == ticketNumber);
+
+        if (status.HasValue)
+            query = query.Where(x => x.Status == status.Value);
+
+        if (assignedAgentId.HasValue)
+            query = query.Where(x => x.AssignedAgentId == assignedAgentId);
+
+        if (companyId.HasValue)
+            query = query.Where(x => x.CompanyId == companyId);
+
+        return await query.CountAsync(cancellationToken);
+    }
+
+    public async Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default)
 	{
 		var company = await _context.Companies
 			.Where(c => c.Id == companyId && !c.IsDeleted)
