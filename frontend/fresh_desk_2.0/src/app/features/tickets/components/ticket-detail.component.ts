@@ -175,9 +175,9 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
               </div>
 
               <!-- Tags -->
-              @if (ticket()!.tags.length > 0) {
+              @if ((ticket()!.tags ?? []).length > 0) {
                 <div class="flex flex-wrap gap-2 mt-4">
-                  @for (tag of ticket()!.tags; track tag) {
+                  @for (tag of ticket()!.tags ?? []; track tag) {
                     <span
                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
                       [class]="
@@ -652,7 +652,7 @@ export class TicketDetailComponent implements OnInit {
     });
 
     const role = this.authService.currentUser()?.role;
-    if (role === 'admin' || role === 'supervisor') {
+    if (role === 'admin' || role === 'supervisor' || role === 'agent') {
       this.isAssignOptionAllowed.set(true);
       this.ticketService.getAgents().subscribe({
         next: (res) => {
@@ -801,7 +801,7 @@ export class TicketDetailComponent implements OnInit {
         description: t.description,
         priority: t.priority,
         type: t.category,
-        tags: t.tags,
+        tags: t.tags ?? [],
       })
       .subscribe({
         next: () => {

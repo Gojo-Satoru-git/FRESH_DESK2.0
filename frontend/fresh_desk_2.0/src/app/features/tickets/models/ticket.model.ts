@@ -100,11 +100,11 @@ export interface TicketDetails {
   updatedAt?: string;
   resolvedAt?: string;
   closedAt?: string;
-  tags: string[];
+  tags? : string[];
   comments: TicketComment[];
   statusHistory: StatusHistory[];
   assignmentLogs: AssignmentLog[];
-  activities: TicketActivity[];
+  activities?: TicketActivity[];
   reporterName?: string;
   assignedAgentName?: string;
 }
