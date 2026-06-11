@@ -21,8 +21,8 @@ public sealed class TicketRepository : ITicketRepository
 			.Include(x => x.TicketComments)
 			.ThenInclude(c => c.Attachments)
 			.Include(x => x.TicketAttachments)
-			.Include(x => x.TicketWatchers)
-			.Include(x => x.TicketRelations)
+			
+			
 			.Include(x => x.TicketStatusHistories)
 			.Include(x => x.TicketAssignmentLogs)
 			.FirstOrDefaultAsync(x => x.Id == ticketId, cancellationToken);
@@ -72,29 +72,6 @@ public sealed class TicketRepository : ITicketRepository
 			.AsNoTracking()
 			.AsQueryable();
 
-		if (!string.IsNullOrWhiteSpace(ticketNumber))
-		{
-			query = query.Where(x => x.TicketNumber == ticketNumber);
-		}
-
-		if (status.HasValue)
-		{
-			query = query.Where(x => x.Status == status.Value);
-		}
-
-		if (assignedAgentId.HasValue)
-		{
-			query = query.Where(x => x.AssignedAgentId == assignedAgentId.Value);
-		}
-
-		if (companyId.HasValue)
-		{
-			query = query.Where(x => x.CompanyId == companyId);
-		}
-
-		return await query.CountAsync(cancellationToken);
-	}
-
 	public async Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default)
 	{
 		await _context.Tickets.AddAsync(
@@ -102,38 +79,6 @@ public sealed class TicketRepository : ITicketRepository
 			cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<Ticket>> GetTicketsAsync(string? ticketNumber, TicketStatus? status, Guid? assignedAgentId, Guid? companyId, int page, int pageSize, CancellationToken cancellationToken)
-	{
-		var query = _context.Tickets
-			.AsNoTracking()
-			.AsQueryable();
-
-		if (!string.IsNullOrWhiteSpace(ticketNumber))
-		{
-			query = query.Where(x => x.TicketNumber == ticketNumber);
-		}
-
-		if (status.HasValue)
-		{
-			query = query.Where(x => x.Status == status.Value);
-		}
-
-		if (assignedAgentId.HasValue)
-		{
-			query = query.Where(x => x.AssignedAgentId == assignedAgentId);
-		}
-
-		if (companyId.HasValue)
-		{
-			query = query.Where(x => x.CompanyId == companyId);
-		}
-
-		return await query
-			.OrderByDescending(x => x.CreatedAt)
-			.Skip((page - 1) * pageSize)
-			.Take(pageSize)
-			.ToListAsync(cancellationToken);
-	}
 
 	public void Update(Ticket ticket)
 	{
@@ -380,7 +325,7 @@ public sealed class TicketRepository : ITicketRepository
 			return (module.Id, module.Label, module.Department);
 		}
 
-		var code = categoryName.ToUpperInvariant().Replace(" ", "_");
+		var code = categoryName.ToLowerInvariant().Replace(" ", "_");
 		module = Adrenalin.Modules.Lookup.Domain.Entities.Module.Create(
 			code: code,
 			label: categoryName,

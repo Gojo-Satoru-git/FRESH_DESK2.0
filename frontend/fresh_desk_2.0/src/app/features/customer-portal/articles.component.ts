@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
 interface KbArticleSummary {
@@ -144,9 +145,10 @@ interface KbArticleDetail {
                 </h1>
 
                 <!-- Article Body Content -->
-                <div class="text-sm md:text-base text-slate-600 leading-relaxed whitespace-pre-wrap font-normal prose prose-slate max-w-none">
-                  {{ art.content || 'This article has no content body.' }}
-                </div>
+                <div
+                  class="text-sm md:text-base text-slate-600 leading-relaxed font-normal prose prose-slate max-w-none"
+                  [innerHTML]="art.content || 'This article has no content body.'"
+                ></div>
 
                 <!-- Attachments Section -->
                 @if (attachments().length > 0) {
@@ -219,17 +221,23 @@ export class ArticlesComponent implements OnInit {
 
   folderId: string | null = null;
   searchQuery: string | null = null;
+  // Full folder tree node passed via router state — used to collect descendant IDs.
+  // Must be read in constructor because getCurrentNavigation() returns null after navigation completes.
+  folderNode: any | null = null;
+
+  constructor() {
+    this.folderNode = this.router.getCurrentNavigation()?.extras?.state?.['folderNode'] ?? null;
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.folderId = params['folderId'] || null;
       this.searchQuery = params['search'] || null;
-      const initialArticleId = params['articleId'] || null;
+      const initialArticleId: string | null = params['articleId'] || null;
 
       if (this.folderId) {
         this.listHeader.set('Folder Category');
-        // Let's load the folder name from API
-        this.http.get<any>(`${environment.apiUrl}/api/kb/folders/${this.folderId}`).subscribe(f => {
+        this.http.get<any>(`${environment.apiUrl}/api/kb/folders/${this.folderId}`).subscribe((f: any) => {
           if (f && f.name) this.listHeader.set(f.name);
         });
       } else if (this.searchQuery) {
@@ -242,38 +250,91 @@ export class ArticlesComponent implements OnInit {
     });
   }
 
+  // Collect the given tree node's ID plus all descendant IDs recursively.
+  private collectFolderIds(node: any): string[] {
+    const ids: string[] = [node.id as string];
+    if (node.children && node.children.length) {
+      for (const child of node.children) {
+        const childIds = this.collectFolderIds(child);
+        childIds.forEach((id: string) => ids.push(id));
+      }
+    }
+    return ids;
+  }
+
   fetchArticles(initialArticleId: string | null = null) {
     this.isLoadingList.set(true);
 
-    let url = `${environment.apiUrl}/api/kb/articles?status=Published&pageSize=1000`;
     if (this.folderId) {
-      url += `&folderId=${this.folderId}`;
-    }
-    if (this.searchQuery) {
-      url += `&titleQuery=${encodeURIComponent(this.searchQuery)}`;
-    }
-
-    this.http.get<{ items: KbArticleSummary[] }>(url).subscribe({
-      next: (res) => {
-        const items = res.items || [];
-        this.articles.set(items);
-        this.filteredArticles.set(items);
-        this.isLoadingList.set(false);
-
-        if (initialArticleId) {
-          this.selectArticle(initialArticleId);
-        } else if (items.length > 0) {
-          this.selectArticle(items[0].id);
-        } else {
-          this.selectedArticleId.set(null);
-          this.articleDetail.set(null);
-          this.attachments.set([]);
-        }
-      },
-      error: () => {
-        this.isLoadingList.set(false);
+      // The API folderId filter is exact-match only — it does NOT recurse into children.
+      // We must collect all descendant folder IDs and fire one request per folder, then merge.
+      if (this.folderNode) {
+        const folderIds = this.collectFolderIds(this.folderNode);
+        this.fetchArticlesForFolderIds(folderIds, initialArticleId);
+      } else {
+        // Fallback when navigated directly via URL (no router state): fetch one level of children.
+        this.http.get<any[]>(`${environment.apiUrl}/api/kb/folders/${this.folderId}/children`).subscribe({
+          next: (children: any[]) => {
+            const folderIds: string[] = [this.folderId!, ...(children || []).map((c: any) => c.id as string)];
+            this.fetchArticlesForFolderIds(folderIds, initialArticleId);
+          },
+          error: () => {
+            this.fetchArticlesForFolderIds([this.folderId!], initialArticleId);
+          }
+        });
       }
+    } else {
+      let url = `${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000`;
+      if (this.searchQuery) {
+        url += `&titleQuery=${encodeURIComponent(this.searchQuery)}`;
+      }
+      this.http.get<{ items: KbArticleSummary[] }>(url).subscribe({
+        next: (res: { items: KbArticleSummary[] }) => this.applyArticleResults(res.items || [], initialArticleId),
+        error: () => this.isLoadingList.set(false)
+      });
+    }
+  }
+
+  // Fire parallel requests for each folder ID, then merge and deduplicate results.
+  private fetchArticlesForFolderIds(folderIds: string[], initialArticleId: string | null) {
+    const requests = folderIds.map((id: string) =>
+      this.http.get<{ items: KbArticleSummary[] }>(
+        `${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000&folderId=${id}`
+      )
+    );
+
+    forkJoin(requests).subscribe({
+      next: (responses: { items: KbArticleSummary[] }[]) => {
+        const seen = new Set<string>();
+        const merged: KbArticleSummary[] = [];
+        for (const res of responses) {
+          for (const art of (res.items || [])) {
+            if (!seen.has(art.id)) {
+              seen.add(art.id);
+              merged.push(art);
+            }
+          }
+        }
+        this.applyArticleResults(merged, initialArticleId);
+      },
+      error: () => this.isLoadingList.set(false)
     });
+  }
+
+  private applyArticleResults(items: KbArticleSummary[], initialArticleId: string | null) {
+    this.articles.set(items);
+    this.filteredArticles.set(items);
+    this.isLoadingList.set(false);
+
+    if (initialArticleId) {
+      this.selectArticle(initialArticleId);
+    } else if (items.length > 0) {
+      this.selectArticle(items[0].id);
+    } else {
+      this.selectedArticleId.set(null);
+      this.articleDetail.set(null);
+      this.attachments.set([]);
+    }
   }
 
   selectArticle(id: string) {
@@ -282,8 +343,10 @@ export class ArticlesComponent implements OnInit {
     this.attachments.set([]);
     this.articleDetail.set(null);
 
-    this.http.get<{ article: KbArticleDetail, attachments: KbAttachment[] }>(`${environment.apiUrl}/api/kb/articles/${id}/attachments`).subscribe({
-      next: (res) => {
+    this.http.get<{ article: KbArticleDetail, attachments: KbAttachment[] }>(
+      `${environment.apiUrl}/api/kb/articles/${id}/attachments`
+    ).subscribe({
+      next: (res: { article: KbArticleDetail, attachments: KbAttachment[] }) => {
         this.articleDetail.set(res.article);
         this.attachments.set(res.attachments || []);
         this.isLoadingDetails.set(false);
@@ -300,14 +363,14 @@ export class ArticlesComponent implements OnInit {
       this.filteredArticles.set(this.articles());
     } else {
       this.filteredArticles.set(
-        this.articles().filter(art => art.title.toLowerCase().includes(query))
+        this.articles().filter((art: KbArticleSummary) => art.title.toLowerCase().includes(query))
       );
     }
   }
 
   getAbsoluteFileUrl(relativeUrl: string): string {
     if (relativeUrl.startsWith('http')) return relativeUrl;
-    return `${environment.apiUrl}/${relativeUrl}`;
+    return `${environment.apiUrl}${relativeUrl}`;
   }
 
   formatBytes(bytes?: number): string {

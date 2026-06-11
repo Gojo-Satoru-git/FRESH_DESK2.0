@@ -44,7 +44,7 @@ public class TicketStatusGraphScopeConfiguration : IEntityTypeConfiguration<Tick
         
         builder.Property(e => e.VersionId).HasColumnName("version_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_status_graph_scopes_created_by_fkey");
 

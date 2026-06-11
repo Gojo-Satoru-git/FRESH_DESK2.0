@@ -19,7 +19,7 @@ public sealed class CreateTicketCommandValidator : AbstractValidator<CreateTicke
         RuleFor(x => x.Priority)
             .NotEmpty().WithMessage("Priority is required.");
 
-        RuleFor(x => x.Category)
-            .NotEmpty().WithMessage("Category is required.");
+        RuleFor(x => x.Type)
+            .NotEmpty().WithMessage("Type is required.");
     }
 }

@@ -37,11 +37,11 @@ public class TicketAttachmentConfiguration : IEntityTypeConfiguration<TicketAtta
         
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         
-        builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+        builder.Ignore(e => e.UpdatedAt);
         
-        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        builder.Ignore(e => e.UpdatedBy);
 
         builder.HasOne(d => d.Comment).WithMany(c => c.Attachments).HasForeignKey(d => d.CommentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_attachments_comment_id_fkey");
 

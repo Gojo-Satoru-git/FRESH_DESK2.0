@@ -21,16 +21,11 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Ignore(e => e.Type);
 
-        builder.Property(e => e.Title).HasColumnName("title").HasMaxLength(100);
-        builder.Property(e => e.Category).HasConversion<string>().HasColumnName("category").HasMaxLength(30);
-        builder.Property(e => e.Priority).HasConversion<string>().HasColumnName("priority").HasMaxLength(30);
-        builder.Property(e => e.ModuleName).HasColumnName("module_name").HasMaxLength(100);
-        builder.Property(e => e.Department).HasColumnName("department").HasMaxLength(50);
-        builder.Property(e => e.Region).HasColumnName("region").HasMaxLength(50);
-        builder.Property(e => e.ResolvedAt).HasColumnName("resolved_at");
-        builder.Property(e => e.ClosedAt).HasColumnName("closed_at");
+        builder.Property(e => e.Title).HasColumnName("subject").HasMaxLength(100);
+        
+        builder.Property(e => e.Priority).HasColumnName("priority");
 
-        builder.Property(e => e.Status).HasConversion<string>().HasColumnName("status").HasMaxLength(30);
+        builder.Property(e => e.Status).HasColumnName("status");
 
         builder.HasIndex(e => new { e.IsAutoResolved, e.CreatedAt }, "idx_tickets_auto_resolved").HasFilter("((is_auto_resolved = true) AND (is_deleted = false))");
 
@@ -100,10 +95,6 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.LinkedJiraId).HasMaxLength(100).HasColumnName("linked_jira_id");
         
-        builder.Property(e => e.ModifiedAt).HasColumnName("modified_at");
-        
-        builder.Property(e => e.ModifiedBy).HasMaxLength(100).HasColumnName("modified_by");
-        
         builder.Property(e => e.ModuleId).HasColumnName("module_id");
         
         builder.Property(e => e.PriorityScore).HasPrecision(4, 2).HasComment("Computed weighted priority score (0–5). Formula: (0.30×impact) + (0.20×urgency) + (0.15×sentiment) + (0.15×sla_severity) + (0.10×type) + (0.10×tier). Mapped: ≥4.5=P1(Urgent), 3.5–4.49=P2(High), 2.5–3.49=P3(Medium), <2.5=P4(Low).").HasColumnName("priority_score");
@@ -142,7 +133,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.VersionId).HasColumnName("version_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version").IsConcurrencyToken();
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.AssignedAgentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("tickets_assigned_agent_id_fkey");
 

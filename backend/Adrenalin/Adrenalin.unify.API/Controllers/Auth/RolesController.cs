@@ -16,7 +16,7 @@ public sealed class RolesController : ControllerBase
     public RolesController(IDispatcher dispatcher) => _dispatcher = dispatcher;
 
     [HttpGet]
-    [Authorize(Policy = "rbac:role:read")]
+    [Authorize(Policy = "role:read")]
     [ProducesResponseType(typeof(IReadOnlyList<RoleDto>), 200)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
@@ -25,7 +25,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = "rbac:role:read")]
+    [Authorize(Policy = "role:read")]
     [ProducesResponseType(typeof(RoleDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
@@ -35,7 +35,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpGet("{id:guid}/permissions")]
-    [Authorize(Policy = "rbac:role:read")]
+    [Authorize(Policy = "role:read")]
     [ProducesResponseType(typeof(RoleWithPermissionsDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetWithPermissions(Guid id, CancellationToken ct)
@@ -45,7 +45,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "rbac:role:create")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(typeof(object), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create([FromBody] CreateRoleRequest req, CancellationToken ct)
@@ -59,7 +59,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "rbac:role:update")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoleRequest req, CancellationToken ct)
@@ -71,7 +71,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "rbac:role:delete")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
@@ -83,7 +83,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/permissions/grant")]
-    [Authorize(Policy = "rbac:permission:manage")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> GrantPermission(Guid id, [FromBody] PermissionIdRequest req, CancellationToken ct)
@@ -95,7 +95,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/permissions/revoke")]
-    [Authorize(Policy = "rbac:permission:manage")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> RevokePermission(Guid id, [FromBody] PermissionIdRequest req, CancellationToken ct)
@@ -107,7 +107,7 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpPut("{id:guid}/permissions")]
-    [Authorize(Policy = "rbac:permission:manage")]
+    [Authorize(Policy = "role:write")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SetPermissions(Guid id, [FromBody] SetPermissionsRequest req, CancellationToken ct)

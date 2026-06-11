@@ -3,18 +3,27 @@ using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Exceptions;
+using Adrenalin.Modules.Ticketing.Domain.Enums;
 
 using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Interfaces;
+using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Adrenalin.Modules.Ticketing.Application.Handlers;
 
 public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, GetTicketByIdResponse>
 {
     private readonly ITicketRepository _ticketRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetTicketByIdQueryHandler(ITicketRepository ticketRepository)
+    public GetTicketByIdQueryHandler(ITicketRepository ticketRepository, ICurrentUserService currentUserService)
     {
         _ticketRepository = ticketRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<GetTicketByIdResponse> Handle(GetTicketByIdQuery request, CancellationToken cancellationToken)
@@ -26,10 +35,12 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
             throw new TicketDomainException($"Ticket '{request.TicketId}' was not found.");
         }
 
-        var comments = request.IncludeInternalComments
+        var isInternal = _currentUserService.Roles.Intersect(new[] { "admin", "manager", "pmo", "team_lead", "senior_agent", "junior_agent" }, StringComparer.OrdinalIgnoreCase).Any();
+
+        var comments = (request.IncludeInternalComments && isInternal)
             ? ticket.TicketComments
             : ticket.TicketComments
-                .Where(x => x.Visibility != Adrenalin.Modules.Ticketing.Domain.Enums.CommentVisibility.Internal);
+                .Where(x => !x.IsPrivate);
 
         // Collect all referenced user IDs and contact IDs to resolve in batch
         var userIds = new List<Guid>();
@@ -39,11 +50,6 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
         foreach (var comment in ticket.TicketComments)
         {
             if (comment.AuthorId.HasValue) userIds.Add(comment.AuthorId.Value);
-        }
-        
-        foreach (var activity in ticket.TicketActivities)
-        {
-            if (activity.PerformedBy.HasValue) userIds.Add(activity.PerformedBy.Value);
         }
 
         var contactIds = ticket.TicketComments
@@ -72,28 +78,73 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
         string? reporterName = ticket.CreatedByUserId.HasValue && userDisplayNames.TryGetValue(ticket.CreatedByUserId.Value, out var rn) ? rn : null;
         string? assignedAgentName = ticket.AssignedAgentId.HasValue && userDisplayNames.TryGetValue(ticket.AssignedAgentId.Value, out var an) ? an : null;
 
+        var statusString = ticket.Status.ToString();
+        if (!isInternal && new[] { TicketStatus.PendingInternal, TicketStatus.OnHold, TicketStatus.ProductRoadmap, TicketStatus.PendingApproval, TicketStatus.ComplianceReview, TicketStatus.DualAgentConfirm }.Contains(ticket.Status))
+        {
+            statusString = "InProgress";
+        }
+
+        var internalStatuses = new[] { TicketStatus.PendingInternal, TicketStatus.OnHold, TicketStatus.ProductRoadmap, TicketStatus.PendingApproval, TicketStatus.ComplianceReview, TicketStatus.DualAgentConfirm };
+        
+        var mappedHistory = new List<StatusHistoryDto>();
+        if (isInternal)
+        {
+            mappedHistory = ticket.TicketStatusHistories
+                .OrderByDescending(x => x.ChangedAt)
+                .Select(x => new StatusHistoryDto(
+                    x.Id,
+                    x.FromStatus?.ToString(),
+                    x.ToStatus.ToString(),
+                    x.ChangedBy,
+                    x.Reason,
+                    x.ChangedAt
+                ))
+                .ToList();
+        }
+        else
+        {
+            var chronologicalHistory = ticket.TicketStatusHistories.OrderBy(x => x.ChangedAt).ToList();
+            string? lastMappedToStatus = null;
+            
+            foreach (var history in chronologicalHistory)
+            {
+                var mappedFromStatus = history.FromStatus.HasValue 
+                    ? (internalStatuses.Contains(history.FromStatus.Value) ? "InProgress" : history.FromStatus.Value.ToString()) 
+                    : null;
+                    
+                var mappedToStatus = internalStatuses.Contains(history.ToStatus) ? "InProgress" : history.ToStatus.ToString();
+                
+                if (mappedToStatus == lastMappedToStatus)
+                {
+                    continue; // Skip consecutive duplicates for customer view
+                }
+                
+                mappedHistory.Add(new StatusHistoryDto(
+                    history.Id, 
+                    mappedFromStatus, 
+                    mappedToStatus, 
+                    history.ChangedBy, 
+                    history.Reason, 
+                    history.ChangedAt
+                ));
+                lastMappedToStatus = mappedToStatus;
+            }
+            mappedHistory.Reverse(); // Return newest first to match OrderByDescending
+        }
+
         return new GetTicketByIdResponse(
             Id:             ticket.Id,
             TicketNumber:   ticket.TicketNumber,
             Title:          ticket.Title,
             Description:    ticket.Description,
-            Status:         ticket.Status.ToString(),
+            Status:         statusString,
             Priority:       ticket.Priority.ToString(),
-            Category:       ticket.Category.ToString(),
-            AssignedAgentId: ticket.AssignedAgentId,
+            Type:           ticket.Type.ToString(),
+            AssignedAgentId: isInternal ? ticket.AssignedAgentId : null,
             ReporterId:     ticket.CreatedByUserId,
             CompanyId:      ticket.CompanyId,
-            Department:     ticket.Department,
-            Region:         ticket.Region,
-            ModuleName:     ticket.ModuleName,
             CreatedAt:      ticket.CreatedAt,
             UpdatedAt:      ticket.UpdatedAt,
-            ResolvedAt:     ticket.ResolvedAt,
-            ClosedAt:       ticket.ClosedAt,
-
-            Tags: ticket.TicketTags
-                .Select(t => t.TagName)
-                .ToList(),
 
             Comments: comments
                 .OrderByDescending(x => x.CreatedAt)
@@ -102,7 +153,7 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
                     x.AuthorId,
                     x.ContactId,
                     x.Body,
-                    x.Visibility.ToString(),
+                    x.IsPrivate ? "Internal" : "Public",
                     x.CreatedAt,
                     Attachments: x.Attachments
                         .Select(a => new AttachmentDto(
@@ -119,19 +170,9 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
                 ))
                 .ToList(),
 
-            StatusHistory: ticket.TicketStatusHistories
-                .OrderByDescending(x => x.ChangedAt)
-                .Select(x => new StatusHistoryDto(
-                    x.Id,
-                    x.FromStatus?.ToString(),
-                    x.ToStatus.ToString(),
-                    x.ChangedBy,
-                    x.Reason,
-                    x.ChangedAt
-                ))
-                .ToList(),
+            StatusHistory: mappedHistory,
 
-            AssignmentLogs: ticket.TicketAssignmentLogs
+            AssignmentLogs: isInternal ? ticket.TicketAssignmentLogs
                 .OrderByDescending(x => x.AssignedAt)
                 .Select(x => new AssignmentLogDto(
                     x.Id,
@@ -141,26 +182,7 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
                     x.Notes,
                     x.AssignedAt
                 ))
-                .ToList(),
-
-            Watchers: ticket.TicketWatchers
-                .OrderByDescending(x => x.AddedAt)
-                .Select(x => new WatcherDto(
-                    x.Id,
-                    x.UserId,
-                    x.AddedAt
-                ))
-                .ToList(),
-
-            Relations: ticket.TicketRelations
-                .OrderByDescending(x => x.Id)
-                .Select(x => new RelationDto(
-                    x.Id,
-                    x.ParentTicketId,
-                    x.ChildTicketId,
-                    x.RelationType.ToString()
-                ))
-                .ToList(),
+                .ToList() : new List<AssignmentLogDto>(),
 
             Attachments: ticket.TicketAttachments
                 .Where(x => x.CommentId == null)
@@ -174,21 +196,8 @@ public sealed class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQue
                 ))
                 .ToList(),
 
-            Activities: ticket.TicketActivities
-                .OrderByDescending(x => x.PerformedAt)
-                .Select(x => new TicketActivityDto(
-                    x.Id,
-                    x.ActivityType,
-                    x.OldValue,
-                    x.NewValue,
-                    x.PerformedBy,
-                    x.PerformedAt,
-                    PerformedByName: x.PerformedBy.HasValue && userDisplayNames.TryGetValue(x.PerformedBy.Value, out var pbn) ? pbn : null
-                ))
-                .ToList(),
-
             ReporterName: reporterName,
-            AssignedAgentName: assignedAgentName
+            AssignedAgentName: isInternal ? assignedAgentName : null
         );
     }
-}
+}

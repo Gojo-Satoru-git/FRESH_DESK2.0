@@ -62,8 +62,8 @@ public class TicketRiskScoreConfiguration : IEntityTypeConfiguration<TicketRiskS
         
         builder.Property(e => e.UsersAffectedScore).HasPrecision(4, 2).HasColumnName("users_affected_score");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
-        builder.HasOne(d => d.Ticket).WithMany(p => p.TicketRiskScores).HasForeignKey(d => d.TicketId).HasConstraintName("ticket_risk_scores_ticket_id_fkey");
+        builder.HasOne(d => d.Ticket).WithMany().HasForeignKey(d => d.TicketId).HasConstraintName("ticket_risk_scores_ticket_id_fkey");
     }
 }

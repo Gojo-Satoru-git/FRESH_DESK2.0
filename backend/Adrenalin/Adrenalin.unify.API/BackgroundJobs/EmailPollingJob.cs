@@ -71,8 +71,8 @@ public sealed class EmailPollingJob : BackgroundService
                             Title: title,
                             Description: description,
                             Priority: "Medium",
-                            Category: "Support",
-                            Tags: new System.Collections.Generic.List<string>(),
+                            Type: "Incident",
+                            
                             ActorId: null,
                             IsCustomer: false,
                             SenderEmail: email.SenderEmail

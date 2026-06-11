@@ -21,14 +21,14 @@ public sealed class TicketCreatedDomainEventHandler : INotificationHandler<Ticke
     {
         await _eventBus.PublishAsync(new TicketCreatedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber,
+            notification.TicketNumber ?? string.Empty,
             notification.Title,
             notification.ReporterId,
             notification.AssigneeId,
-            notification.Category.ToString(),
+            notification.Type.ToString(),
             notification.Priority.ToString(),
-            notification.Department,
-            notification.Region
+            null, // Department (removed)
+            null  // Region (removed)
         ), cancellationToken);
     }
 }
@@ -46,7 +46,7 @@ public sealed class TicketAssignedDomainEventHandler : INotificationHandler<Tick
     {
         await _eventBus.PublishAsync(new TicketAssignedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber ?? "",
+            notification.TicketNumber ?? string.Empty,
             notification.AssigneeId,
             notification.AssignedBy,
             "Ticket Assigned"
@@ -57,18 +57,27 @@ public sealed class TicketAssignedDomainEventHandler : INotificationHandler<Tick
 public sealed class TicketStatusChangedDomainEventHandler : INotificationHandler<TicketStatusChangedDomainEvent>
 {
     private readonly IEventBus _eventBus;
+    private readonly Adrenalin.Modules.Ticketing.Domain.Interfaces.ITicketRepository _ticketRepository;
 
-    public TicketStatusChangedDomainEventHandler(IEventBus eventBus)
+    public TicketStatusChangedDomainEventHandler(IEventBus eventBus, Adrenalin.Modules.Ticketing.Domain.Interfaces.ITicketRepository ticketRepository)
     {
         _eventBus = eventBus;
+        _ticketRepository = ticketRepository;
     }
 
     public async Task Handle(TicketStatusChangedDomainEvent notification, CancellationToken cancellationToken)
     {
-        // Specific lifecycle transitions handled by dedicated domain event handlers
-        // (TicketResolvedDomainEventHandler, TicketClosedDomainEventHandler, etc.)
-        // This handler handles generic status changes only.
-        await Task.CompletedTask;
+        var ticket = await _ticketRepository.GetByIdAsync(notification.TicketId, cancellationToken);
+        var ticketNumber = ticket?.TicketNumber ?? "";
+
+        await _eventBus.PublishAsync(new TicketStatusChangedIntegrationEvent(
+            notification.TicketId,
+            ticketNumber,
+            notification.OldStatus.ToString(),
+            notification.NewStatus.ToString(),
+            notification.ChangedBy,
+            "Status Changed"
+        ), cancellationToken);
     }
 }
 
@@ -108,7 +117,7 @@ public sealed class TicketResolvedDomainEventHandler : INotificationHandler<Tick
     {
         await _eventBus.PublishAsync(new TicketResolvedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber ?? "",
+            notification.TicketNumber ?? string.Empty,
             notification.ResolvedBy,
             "Ticket Resolved"
         ), cancellationToken);
@@ -128,7 +137,7 @@ public sealed class TicketClosedDomainEventHandler : INotificationHandler<Ticket
     {
         await _eventBus.PublishAsync(new TicketClosedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber ?? "",
+            notification.TicketNumber ?? string.Empty,
             notification.ClosedBy,
             "Ticket Closed"
         ), cancellationToken);
@@ -148,7 +157,7 @@ public sealed class TicketReopenedDomainEventHandler : INotificationHandler<Tick
     {
         await _eventBus.PublishAsync(new TicketReopenedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber ?? "",
+            notification.TicketNumber ?? string.Empty,
             notification.ReopenedBy,
             "Ticket Reopened"
         ), cancellationToken);
@@ -168,7 +177,7 @@ public sealed class TicketMergedDomainEventHandler : INotificationHandler<Ticket
     {
         return _eventBus.PublishAsync(new TicketMergedIntegrationEvent(
             notification.TicketId,
-            notification.TicketNumber ?? "",
+            notification.TicketNumber ?? string.Empty,
             notification.MasterTicketNumber,
             notification.MergedBy
         ), cancellationToken);

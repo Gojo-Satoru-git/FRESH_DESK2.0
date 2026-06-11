@@ -22,7 +22,7 @@ public sealed class AutoResolutionLog : BaseEntity
     public DateTimeOffset MatchedAt { get; private set; }
 
     private readonly List<string> _keywordMatches = new();
-    public IReadOnlyCollection<string> KeywordMatches => _keywordMatches.AsReadOnly();
+    public IReadOnlyCollection<string> KeywordMatches => _keywordMatches;
     private AutoResolutionLog() 
     { 
         MatchPhase = string.Empty;

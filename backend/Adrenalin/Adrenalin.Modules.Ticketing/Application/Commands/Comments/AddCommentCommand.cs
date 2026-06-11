@@ -1,4 +1,4 @@
-﻿using Adrenalin.Modules.Ticketing.Domain.Enums;
+using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 
 namespace Adrenalin.Modules.Ticketing.Application.Commands;
@@ -8,5 +8,5 @@ public sealed record AddCommentCommand(
     Guid? AuthorId,
     Guid? ContactId,
     string Body,
-    CommentVisibility Visibility
+    bool IsPrivate
 ) : IRequest<Guid>;

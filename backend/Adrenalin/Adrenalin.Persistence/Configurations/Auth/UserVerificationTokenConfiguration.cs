@@ -47,5 +47,7 @@ public class UserVerificationTokenConfiguration : IEntityTypeConfiguration<UserV
         builder.HasOne(d => d.User).WithMany(p => p.UserVerificationTokens)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("user_verification_tokens_user_id_fkey");
+        builder.Ignore(e => e.RowVersion);
+        
     }
 }

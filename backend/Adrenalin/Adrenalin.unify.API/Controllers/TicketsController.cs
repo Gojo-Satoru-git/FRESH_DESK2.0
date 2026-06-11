@@ -62,8 +62,7 @@ public sealed class TicketsController : ControllerBase
             request.Title,
             request.Description,
             request.Priority,
-            request.Category,
-            request.Tags,
+            request.Type,
             actorId.Value
         );
 
@@ -159,18 +158,31 @@ public sealed class TicketsController : ControllerBase
             isCustomer ? null : (actorId ?? request.AuthorId),
             isCustomer ? (actorId ?? request.ContactId) : request.ContactId,
             request.Body,
-            request.Visibility
+            request.IsPrivate
         );
 
-        var commentId = await _dispatcher.Send(command);
-
-        return Ok(commentId);
+        try
+        {
+            var commentId = await _dispatcher.Send(command);
+            return Ok(commentId);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            var failedEntities = string.Join(", ", ex.Entries.Select(e => $"{e.Metadata.Name} (State: {e.State})"));
+            Console.WriteLine($"[CRITICAL DEBUG] DbUpdateConcurrencyException on entities: {failedEntities}");
+            throw;
+        }
     }
 
     [HttpGet("{ticketId:guid}/comments")]
     [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetComments(Guid ticketId, [FromQuery] bool includeInternal = false, CancellationToken cancellationToken = default)
     {
+        if (User.IsInRole("customer"))
+        {
+            includeInternal = false;
+        }
+
         var query = new GetTicketCommentsQuery(ticketId, includeInternal);
         var response = await _dispatcher.Send(query, cancellationToken);
         return Ok(response);
@@ -178,7 +190,7 @@ public sealed class TicketsController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "ticket:read")]
-    public async Task<IActionResult> GetTickets([FromQuery] GetTicketsQuery query, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTickets([FromQuery] SearchTicketsQuery query, CancellationToken cancellationToken)
     {
         var response = await _dispatcher.Send(query, cancellationToken);
         return Ok(response);
@@ -186,12 +198,12 @@ public sealed class TicketsController : ControllerBase
 
     [HttpGet("my")]
     [Authorize(Policy = "ticket:read")]
-    public async Task<IActionResult> GetMyTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetMyTickets([FromQuery] string? status = null, [FromQuery] string? term = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var actorId = GetActorId();
         if (!actorId.HasValue) return Unauthorized();
 
-        var query = new GetMyTicketsQuery(actorId.Value, page, pageSize);
+        var query = new GetMyTicketsQuery(actorId.Value, status, term, page, pageSize);
         var response = await _dispatcher.Send(query, cancellationToken);
         return Ok(response);
     }
@@ -228,7 +240,8 @@ public sealed class TicketsController : ControllerBase
     [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetById(Guid ticketId)
     {
-        var query = new GetTicketByIdQuery(ticketId);
+        var isCustomer = User.IsInRole("customer");
+        var query = new GetTicketByIdQuery(ticketId, IncludeInternalComments: !isCustomer);
         var response = await _dispatcher.Send(query);
 
         return Ok(response);
@@ -431,6 +444,5 @@ public sealed record UpdateTicketRequest(
     string Title,
     string Description,
     TicketPriority Priority,
-    TicketCategory Category,
-    List<string> Tags
+    TicketType Type
 );

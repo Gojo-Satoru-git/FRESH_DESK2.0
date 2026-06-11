@@ -41,7 +41,7 @@ public class StatusTransitionConfiguration : IEntityTypeConfiguration<StatusTran
         
         builder.Property(e => e.ToStatus).HasMaxLength(40).HasColumnName("to_status");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         

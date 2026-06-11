@@ -33,7 +33,7 @@ public class TicketAssignmentLogConfiguration : IEntityTypeConfiguration<TicketA
         
         builder.Property(e => e.ToAgentId).HasColumnName("to_agent_id");
         
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.ChangedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_assignment_log_changed_by_fkey");
 

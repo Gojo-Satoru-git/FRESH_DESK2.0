@@ -35,7 +35,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
         builder.Property(e => e.CreatedBy).HasColumnName("created_by");
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         builder.Property(e => e.RoleId).HasColumnName("role_id");
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         builder.Property(e => e.UserId).HasColumnName("user_id");

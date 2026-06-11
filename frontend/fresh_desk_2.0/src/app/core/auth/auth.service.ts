@@ -95,9 +95,9 @@ export class AuthService {
         const lowerRoles = roles.map((r) => r.toLowerCase());
         if (lowerRoles.includes('admin')) {
           role = 'admin';
-        } else if (lowerRoles.includes('agent')) {
+        } else if (lowerRoles.some(r => r === 'agent' || r.endsWith('_agent'))) {
           role = 'agent';
-        } else if (lowerRoles.includes('supervisor')) {
+        } else if (lowerRoles.includes('supervisor') || lowerRoles.includes('team_lead')) {
           role = 'supervisor';
         } else if (lowerRoles.includes('customer')) {
           role = 'customer';

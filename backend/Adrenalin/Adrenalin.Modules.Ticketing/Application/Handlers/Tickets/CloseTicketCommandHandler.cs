@@ -3,16 +3,20 @@ using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Interfaces;
+using System.Linq;
 
 namespace Adrenalin.Modules.Ticketing.Application.Handlers;
 
 public sealed class CloseTicketCommandHandler : IRequestHandler<CloseTicketCommand, Guid>
 {
     private readonly ITicketRepository _ticketRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CloseTicketCommandHandler(ITicketRepository ticketRepository)
+    public CloseTicketCommandHandler(ITicketRepository ticketRepository, ICurrentUserService currentUserService)
     {
         _ticketRepository = ticketRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Guid> Handle(CloseTicketCommand request, CancellationToken cancellationToken)
@@ -21,6 +25,14 @@ public sealed class CloseTicketCommandHandler : IRequestHandler<CloseTicketComma
         if (ticket is null)
         {
             throw new TicketDomainException($"Ticket '{request.TicketId}' was not found.");
+        }
+
+        var roles = _currentUserService.Roles.ToList();
+        var isCustomer = roles.Contains("customer", StringComparer.OrdinalIgnoreCase);
+
+        if (isCustomer && ticket.CreatedByUserId != request.ClosedBy)
+        {
+            throw new TicketDomainException("Customers can only close their own tickets.");
         }
 
         var userCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.ClosedBy, cancellationToken);

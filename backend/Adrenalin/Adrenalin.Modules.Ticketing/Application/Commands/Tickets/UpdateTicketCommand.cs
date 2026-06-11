@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 
@@ -10,7 +9,6 @@ public sealed record UpdateTicketCommand(
     string Title,
     string Description,
     TicketPriority Priority,
-    TicketCategory Category,
-    List<string> Tags,
+    TicketType Type,
     Guid ModifiedBy
 ) : IRequest<Guid>;

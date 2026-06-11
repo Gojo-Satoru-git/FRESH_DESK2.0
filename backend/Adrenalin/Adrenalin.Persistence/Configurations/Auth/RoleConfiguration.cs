@@ -31,7 +31,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .HasMaxLength(80)
             .HasColumnName("name");
 
-        builder.Property(e => e.RowVersion).HasColumnName("row_version");
+        builder.Ignore(e => e.RowVersion);
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 

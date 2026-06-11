@@ -20,6 +20,19 @@ public class CurrentUserService : ICurrentUserService
             return Guid.TryParse(userIdString, out var userId) ? userId : null;
         }
     }
+        public string? Email =>
+        _httpContextAccessor.HttpContext?
+            .User?
+            .FindFirstValue(ClaimTypes.Email);
 
     public bool IsAuthenticated => UserId.HasValue;
+
+    public IEnumerable<string> Roles
+    {
+        get
+        {
+            var roles = _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role).Select(c => c.Value);
+            return roles ?? Enumerable.Empty<string>();
+        }
+    }
 }

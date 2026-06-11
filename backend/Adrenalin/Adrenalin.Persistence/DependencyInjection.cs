@@ -44,6 +44,9 @@ public static class PersistenceServiceCollectionExtensions
         // ── Notification ──────────────────────────────────────────────────────
         services.AddScoped<Adrenalin.Modules.Notification.Domain.Interfaces.INotificationRepository, NotificationRepository>();
 
+        // ── Workflow ──────────────────────────────────────────────────────────
+        services.AddScoped<IWorkflowValidator, WorkflowValidator>();
+
         return services;
     }
 }

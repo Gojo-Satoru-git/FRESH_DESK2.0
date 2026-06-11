@@ -5,6 +5,11 @@ using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
+using Adrenalin.SharedKernel.Mediator;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Adrenalin.Modules.Ticketing.Application.Handlers.Tickets;
 
@@ -35,14 +40,11 @@ public sealed class CreateTicketCommandHandler
         Guid? contactId = null;
         Guid? createdByUserId = null;
 
-        // 1. Resolve Category and Priority
-        var categoryEnum = MapCategory(request.Category);
+        var typeEnum = MapType(request.Type);
         var priorityEnum = MapPriority(request.Priority);
 
-        // 2. Resolve Module, ModuleName, and Department
-        var (moduleId, moduleName, department) = await _ticketRepository.ResolveOrCreateModuleAsync(request.Category, cancellationToken);
+        var (moduleId, moduleName, department) = await _ticketRepository.ResolveOrCreateModuleAsync(request.Type, cancellationToken);
 
-        // 3. Resolve Contact & Company
         if (!string.IsNullOrWhiteSpace(request.SenderEmail))
         {
             var email = request.SenderEmail.Trim();
@@ -106,43 +108,26 @@ public sealed class CreateTicketCommandHandler
             }
         }
 
-        var region = await _ticketRepository.GetCompanyRegionAsync(companyId, cancellationToken);
+        var source = !string.IsNullOrWhiteSpace(request.SenderEmail) ? TicketSource.Email : TicketSource.Portal;
 
         var ticket = Ticket.Create(
             companyId: companyId,
             moduleId: moduleId,
             subject: request.Title,
             description: request.Description,
+            type: typeEnum,
+            source: source,
             createdByUserId: createdByUserId,
-            category: categoryEnum,
             priority: priorityEnum,
-            moduleName: !string.IsNullOrWhiteSpace(request.ModuleName) ? request.ModuleName : moduleName,
             assignedAgentId: null,
-            department: department,
-            region: region,
             contactId: contactId
         );
 
         ticket.SetTicketNumber(ticketNumber);
 
-        var actor = createdByUserId ?? contactId ?? Guid.Empty;
-
-        // Transition from New to Open immediately upon creation
-        ticket.ChangeStatus(TicketStatus.Open, actor, "Ticket Created");
-
-        // Assign agent if provided
-        if (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty)
-        {
-            ticket.AssignAgent(request.AssigneeId.Value, actor, "Assigned upon creation");
-        }
-
-        if (request.Tags != null)
-        {
-            foreach (var tag in request.Tags)
-            {
-                ticket.AddTag(tag, actor);
-            }
-        }
+        // Enforce Workflow: Tickets must start unassigned so they land in the Lead/Manager queue.
+        // Agents cannot see them until explicitly assigned.
+        // request.AssigneeId is ignored intentionally.
 
         await _ticketRepository.AddAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -158,24 +143,24 @@ public sealed class CreateTicketCommandHandler
         return ticket.Id;
     }
 
-    private TicketCategory MapCategory(string category)
+    private TicketType MapType(string type)
     {
-        var normalized = category.Trim().ToLowerInvariant();
+        var normalized = type.Trim().ToLowerInvariant();
         if (normalized.Contains("change request") || normalized.Contains("changerequest"))
-            return TicketCategory.ChangeRequest;
+            return TicketType.ChangeRequest;
         if (normalized.Contains("enhancement") || normalized.Contains("feature request") || normalized.Contains("feature") || normalized.Contains("new requirements"))
-            return TicketCategory.FeatureRequest;
+            return TicketType.FeatureRequest;
         if (normalized.Contains("bug") || normalized.Contains("software problem") || normalized.Contains("incident") || normalized.Contains("environment issue"))
-            return TicketCategory.Bug;
+            return TicketType.Bug;
 
-        return TicketCategory.Support;
+        return TicketType.Support;
     }
 
     private TicketPriority MapPriority(string priority)
     {
         var normalized = priority.Trim().ToLowerInvariant();
         if (normalized.Contains("urgent") || normalized.Contains("critical"))
-            return TicketPriority.Critical;
+            return TicketPriority.Urgent;
         if (normalized.Contains("high"))
             return TicketPriority.High;
         if (normalized.Contains("low"))

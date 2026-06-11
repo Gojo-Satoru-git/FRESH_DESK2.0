@@ -1,6 +1,7 @@
 using Adrenalin.Modules.Ticketing.Domain.Exceptions;
-using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Entities;
+using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Entities;
@@ -11,14 +12,14 @@ public sealed class TicketComment : SoftDeleteEntity
     public Guid? AuthorId { get; private set; }
     public Guid? ContactId { get; private set; }
     public string Body { get; private set; } = null!;    
-    public CommentVisibility Visibility { get; private set; }
+    public bool IsPrivate { get; private set; }
     public Ticket Ticket { get; private set; } = null!;
     
     public string CommentText => Body;
     public List<string> MentionedUsers { get; private set; } = new();
 
     private readonly List<TicketAttachment> _attachments = new();
-    public IReadOnlyCollection<TicketAttachment> Attachments => _attachments.AsReadOnly();
+    public IReadOnlyCollection<TicketAttachment> Attachments => _attachments;
 
     public bool IsCustomerReply => ContactId.HasValue;
 
@@ -31,17 +32,17 @@ public sealed class TicketComment : SoftDeleteEntity
         TicketId = destinationTicketId;
     }
 
-    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, CommentVisibility visibility, List<string> mentionedUsers)
+    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, bool isPrivate, List<string> mentionedUsers)
     {
         TicketId = ticketId;
         AuthorId = authorId;
         ContactId = contactId;
         Body = body;
-        Visibility = visibility;
+        IsPrivate = isPrivate;
         MentionedUsers = mentionedUsers;
     }
 
-    public static TicketComment Create(Guid ticketId, Guid? authorId, Guid? contactId, string body, CommentVisibility visibility)
+    public static TicketComment Create(Guid ticketId, Guid? authorId, Guid? contactId, string body, bool isPrivate)
     {
         if (ticketId == Guid.Empty)
             throw new TicketDomainException("TicketId cannot be empty.");
@@ -58,7 +59,7 @@ public sealed class TicketComment : SoftDeleteEntity
         if (authorId.HasValue && contactId.HasValue)
             throw new TicketDomainException("Cannot set both AuthorId and ContactId.");
 
-        if (contactId.HasValue && visibility == CommentVisibility.Internal)
+        if (contactId.HasValue && isPrivate)
             throw new TicketDomainException("Customer comments cannot be internal.");
 
         if (string.IsNullOrWhiteSpace(body))
@@ -83,7 +84,7 @@ public sealed class TicketComment : SoftDeleteEntity
             authorId,
             contactId,
             body.Trim(),
-            visibility,
+            isPrivate,
             mentioned
         );
 

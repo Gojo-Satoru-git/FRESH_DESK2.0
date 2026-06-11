@@ -100,11 +100,11 @@ export interface TicketDetails {
   updatedAt?: string;
   resolvedAt?: string;
   closedAt?: string;
-  tags: string[];
+  tags? : string[];
   comments: TicketComment[];
   statusHistory: StatusHistory[];
   assignmentLogs: AssignmentLog[];
-  activities: TicketActivity[];
+  activities?: TicketActivity[];
   reporterName?: string;
   assignedAgentName?: string;
 }
@@ -116,7 +116,7 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;   // 'Critical' | 'High' | 'Medium' | 'Low'
-  category: string;  // 'Bug' | 'FeatureRequest' | 'Support' | 'ChangeRequest'
+  type: string;       // 'Bug' | 'FeatureRequest' | 'Support' | 'ChangeRequest'
   tags?: string[];
   assigneeId?: string | null;
   moduleName?: string | null;
@@ -127,7 +127,7 @@ export interface UpdateTicketRequest {
   title: string;
   description: string;
   priority: string;
-  category: string;
+  type: string;
   tags: string[];
 }
 

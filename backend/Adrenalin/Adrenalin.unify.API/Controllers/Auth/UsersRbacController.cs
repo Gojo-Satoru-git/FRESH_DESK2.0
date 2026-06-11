@@ -16,7 +16,7 @@ public sealed class UsersRbacController : ControllerBase
     public UsersRbacController(IDispatcher dispatcher) => _dispatcher = dispatcher;
 
     [HttpGet]
-    [Authorize(Policy = "rbac:user:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(PagedResultDto<UserSummaryDto>), 200)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? email = null,
@@ -30,7 +30,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpGet("{id:guid}/roles")]
-    [Authorize(Policy = "rbac:user:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(UserWithRolesDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetWithRoles(Guid id, CancellationToken ct)
@@ -40,7 +40,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpGet("{id:guid}/permissions")]
-    [Authorize(Policy = "rbac:user:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(IReadOnlyList<string>), 200)]
     public async Task<IActionResult> GetEffectivePermissions(Guid id, CancellationToken ct)
     {
@@ -49,7 +49,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpGet("{id:guid}/groups")]
-    [Authorize(Policy = "rbac:user:read")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(IReadOnlyList<GroupDto>), 200)]
     public async Task<IActionResult> GetGroups(Guid id, CancellationToken ct)
     {
@@ -58,7 +58,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpPost("{id:guid}/roles/assign")]
-    [Authorize(Policy = "rbac:user:assign")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleIdRequest req, CancellationToken ct)
@@ -70,7 +70,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpPost("{id:guid}/roles/remove")]
-    [Authorize(Policy = "rbac:user:assign")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> RemoveRole(Guid id, [FromBody] RoleIdRequest req, CancellationToken ct)
@@ -82,7 +82,7 @@ public sealed class UsersRbacController : ControllerBase
     }
 
     [HttpPut("{id:guid}/roles")]
-    [Authorize(Policy = "rbac:user:assign")]
+    [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SetRoles(Guid id, [FromBody] SetRolesRequest req, CancellationToken ct)

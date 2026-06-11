@@ -62,7 +62,7 @@ onDescriptionInput(event: Event): void {
     this.ticketForm = this.fb.group({
       subject: ['', [Validators.required, Validators.minLength(5)]],
       category: ['', Validators.required],
-      module: ['', Validators.required],
+      module: [''],
       priority: ['Medium'],
       description: ['', [
   Validators.required,
@@ -132,6 +132,7 @@ onFileSelect(event: Event) {
     this.submitted = true;
     if (this.ticketForm.invalid) {
       this.ticketForm.markAllAsTouched();
+      this.showToast('Please fill all required fields correctly (Subject > 5 chars, Description > 20 chars).');
       return;
     }
     
@@ -141,8 +142,8 @@ onFileSelect(event: Event) {
       title: this.ticketForm.value.subject,
       description: this.ticketForm.value.description,
       priority: this.ticketForm.value.priority,
-      category: this.ticketForm.value.category,
-      module: this.ticketForm.value.module,
+      type: this.ticketForm.value.category,
+      moduleName: this.ticketForm.value.module,
       tags: []
     };
 
