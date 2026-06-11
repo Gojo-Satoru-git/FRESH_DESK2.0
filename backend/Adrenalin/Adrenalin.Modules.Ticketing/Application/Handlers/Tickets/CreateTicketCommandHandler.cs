@@ -127,6 +127,8 @@ public sealed class CreateTicketCommandHandler
 
         ticket.SetTicketNumber(ticketNumber);
 
+        ticket.AssignGroup(Guid.Parse("466b8a16-7910-4e20-891f-59fbdb0ca009"), createdByUserId ?? Guid.Empty);
+
         // Enforce Workflow: Tickets must start unassigned so they land in the Lead/Manager queue.
         // Agents cannot see them until explicitly assigned.
         // request.AssigneeId is ignored intentionally.

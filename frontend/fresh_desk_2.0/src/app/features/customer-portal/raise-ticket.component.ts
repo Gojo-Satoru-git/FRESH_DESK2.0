@@ -28,7 +28,7 @@ export class RaiseTicketComponent implements OnInit {
  
   category = ['Bug','Enhancement','Feature Requests','Service Requests','Customization','Incident','Environment Issues','Change Request','New Features'];
   modules = ['Data Correction','Patch deployment','Configuration','Clarification','Server Outage','Ad hoc','Known issue'];
-  priorities = ['Low', 'Medium', 'High', 'Critical'];
+  priorities = ['Low', 'Medium', 'High', 'Urgent'];
   kbSuggestions = signal<any[]>([]);
   showCancelConfirm = signal<boolean>(false);
   toastMessage = signal<string | null>(null);
@@ -129,6 +129,7 @@ onFileSelect(event: Event) {
   }
 
   onSubmit(): void {
+    if (this.isSubmitting) return;
     this.submitted = true;
     if (this.ticketForm.invalid) {
       this.ticketForm.markAllAsTouched();
@@ -144,6 +145,7 @@ onFileSelect(event: Event) {
       priority: this.ticketForm.value.priority,
       type: this.ticketForm.value.category,
       moduleName: this.ticketForm.value.module,
+      groupId: '466b8a16-7910-4e20-891f-59fbdb0ca009',
       tags: []
     };
 

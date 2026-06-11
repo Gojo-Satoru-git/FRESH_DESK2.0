@@ -37,6 +37,21 @@ export class TicketService {
     return this.http.get<any>(`${environment.apiUrl}/api/rbac/users?pageSize=100`);
   }
 
+  /** GET /api/rbac/users/{id}/roles — returns UserWithRolesDto */
+  getUserWithRoles(userId: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/api/rbac/users/${userId}/roles`);
+  }
+
+  /** GET /api/rbac/groups/my — returns the groups the calling user belongs to (no admin required) */
+  getUserGroups(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/api/rbac/groups/my`);
+  }
+
+  /** GET /api/rbac/groups/{id}/my-members — returns members of a group the caller belongs to (no admin required) */
+  getGroupMembers(groupId: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/api/rbac/groups/${groupId}/my-members`);
+  }
+
   /** GET /api/tickets/dashboard — actorId injected from JWT server-side */
   getDashboard(companyId?: string): Observable<TicketDashboard> {
     let params = new HttpParams();

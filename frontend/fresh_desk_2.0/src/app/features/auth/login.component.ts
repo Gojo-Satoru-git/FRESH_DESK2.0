@@ -63,7 +63,7 @@ export class LoginComponent implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const email = this.loginForm.value.email!;
+    const email = this.loginForm.value.email!.trim().toLowerCase();;
     const password = this.loginForm.value.password!;
 
     this.authService.login({ email, password }).subscribe({
