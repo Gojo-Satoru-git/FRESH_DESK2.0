@@ -236,13 +236,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
-<<<<<<< Updated upstream
+
 app.UseCors("AllowAngularDevClient");
 app.UseAuthentication();
-=======
 
-
->>>>>>> Stashed changes
 app.UseAuthorization();
 
 // Static files for KB attachments

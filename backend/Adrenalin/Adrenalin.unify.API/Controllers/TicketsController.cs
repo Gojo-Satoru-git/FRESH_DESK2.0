@@ -97,7 +97,7 @@ public sealed class TicketsController : ControllerBase
     [Authorize(Policy = "ticket:assign")]
    
     public async Task<IActionResult> AssignTicket(
-        Guid id,
+        Guid ticketId,
         [FromBody] AssignTicketRequest request,
         CancellationToken ct)
     {
