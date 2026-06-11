@@ -13,8 +13,8 @@ public sealed class Ticket : SoftDeleteEntity
 {
     public string? TicketNumber { get; private set; }
     public Guid CompanyId { get; private set; }
-    public Guid? ContactId { get; private set; } 
-    public Guid? GroupId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public Guid? GroupId { get; private set; } 
     public Guid? AssignedAgentId { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
     public Guid? GraphId { get; private set; }

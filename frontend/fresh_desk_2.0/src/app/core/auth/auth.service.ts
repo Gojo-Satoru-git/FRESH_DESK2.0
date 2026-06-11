@@ -7,7 +7,7 @@ import { of, delay } from 'rxjs';
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'agent' | 'supervisor' | 'customer';
+  role: 'admin' | 'agent' | 'team_lead' | 'supervisor' | 'customer';
   firstName?: string;
   lastName?: string;
   fullName?: string;
@@ -89,15 +89,17 @@ export class AuthService {
       const roleClaim =
         payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload['role'];
 
-      let role: 'admin' | 'agent' | 'supervisor' | 'customer' = 'customer';
+      let role: 'admin' | 'agent' | 'team_lead' | 'supervisor' | 'customer' = 'customer';
       if (roleClaim) {
         const roles = Array.isArray(roleClaim) ? roleClaim : [roleClaim];
         const lowerRoles = roles.map((r) => r.toLowerCase());
         if (lowerRoles.includes('admin')) {
           role = 'admin';
+        } else if (lowerRoles.includes('team_lead')) {
+          role = 'team_lead';
         } else if (lowerRoles.some(r => r === 'agent' || r.endsWith('_agent'))) {
           role = 'agent';
-        } else if (lowerRoles.includes('supervisor') || lowerRoles.includes('team_lead')) {
+        } else if (lowerRoles.includes('supervisor')) {
           role = 'supervisor';
         } else if (lowerRoles.includes('customer')) {
           role = 'customer';

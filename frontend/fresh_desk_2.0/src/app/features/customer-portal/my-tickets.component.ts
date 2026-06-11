@@ -57,14 +57,6 @@ interface TicketDetail {
   comments: Comment[];
 }
 
-interface WorkflowStage {
-  name: string;
-  isCompleted: boolean;
-  isCurrent: boolean;
-  createdAt?: string;
-  reason?: string;
-}
-
 interface ConfirmDialog {
   show: boolean;
   type: 'info' | 'success' | 'alert' | 'critical';
@@ -80,50 +72,49 @@ interface ConfirmDialog {
   template: `
     <div class="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans flex flex-col">
       <header
-        class="bg-gray-200 border-b border-slate-200 sticky top-0 z-20 rounded-xl shadow-lg w-full px-2 py-2"
-      >
-        <div
-          class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4"
+  class="bg-gray-200 border-b border-slate-200 sticky top-0 z-20 rounded-xl shadow-lg w-full px-2 py-2"
+>
+  <div
+    class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4"
+  >
+    <div class="relative w-full md:w-80 flex-shrink-0">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
+      <input
+        type="text"
+        placeholder="Search by ID or Subject..."
+        class="w-full pl-9 pr-4 py-2 text-lg bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-700"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+
+    <nav
+      class="flex gap-1 bg-gray-200 p-1 rounded-xl border border-slate-200/50 flex-1 overflow-x-auto justify-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+    >
+      @for (tab of statusTabs; track tab) {
+        <button
+          (click)="selectedStatus.set(tab)"
+          class="px-6 md:px-8 py-2 rounded-xl text-xl font-bold transition-all duration-200 flex-shrink-0 whitespace-nowrap text-center"
+          [class.bg-white]="selectedStatus() === tab"
+          [class.text-[#0F172A]]="selectedStatus() === tab"
+          [class.shadow-sm]="selectedStatus() === tab"
+          [class.text-slate-500]="selectedStatus() !== tab"
+          [class.hover:text-slate-800]="selectedStatus() !== tab"
         >
-          <div class="relative w-full md:w-80 flex-shrink-0">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
-            <input
-              type="text"
-              placeholder="Search by ID or Subject..."
-              class="w-full pl-9 pr-4 py-2 text-lg bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-700"
-              [ngModel]="searchTerm()"
-              (ngModelChange)="searchTerm.set($event)"
-            />
-          </div>
+          {{ tab }}
+        </button>
+      }
+    </nav>
 
-          <nav
-            class="flex gap-1 bg-gray-200 p-1 ml-0 md:ml-6 lg:ml-20 rounded-xl border border-slate-200/50 w-full overflow-x-auto justify-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          >
-            @for (tab of statusTabs; track tab) {
-              <button
-                (click)="selectedStatus.set(tab)"
-                class="px-6 md:px-8 py-2 rounded-xl text-xl font-bold transition-all duration-200 flex-shrink-0 whitespace-nowrap text-center"
-                [class.bg-white]="selectedStatus() === tab"
-                [class.text-[#0F172A]]="selectedStatus() === tab"
-                [class.shadow-sm]="selectedStatus() === tab"
-                [class.text-slate-500]="selectedStatus() !== tab"
-                [class.hover:text-slate-800]="selectedStatus() !== tab"
-              >
-                {{ tab }}
-              </button>
-            }
-          </nav>
-
-          <!-- NEW TICKET BUTTON -->
-          <button
-            (click)="openRaiseTicket()"
-            class="flex-shrink-0 ml-0 md:ml-4 w-full md:w-auto justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
-          >
-            <span class="text-2xl leading-none font-normal">+</span>
-            New Ticket
-          </button>
-        </div>
-      </header>
+    <button
+      (click)="openRaiseTicket()"
+      class="flex-shrink-0 ml-0 md:ml-4 w-full md:w-auto justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+    >
+      <span class="text-2xl leading-none font-normal">+</span>
+      New Ticket
+    </button>
+  </div>
+</header>
 
       <main class="max-w-7xl mx-auto p-6 w-full flex-1">
         @if (isLoadingList()) {
@@ -203,7 +194,7 @@ interface ConfirmDialog {
         }
       </main>
 
-      <!-- ===================== TICKET DETAIL MODAL (LARGE, WHATSAPP CHAT) ===================== -->
+      <!-- ===================== TICKET DETAIL MODAL ===================== -->
       @if (showDetailModal()) {
         <div
           class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -217,7 +208,6 @@ interface ConfirmDialog {
             @if (isLoadingDetails()) {
               <!-- SKELETON OVERLAY -->
               <div class="absolute inset-0 bg-white z-20 flex flex-col p-6 animate-pulse">
-                <!-- Header skeleton -->
                 <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
                   <div class="flex gap-2">
                     <div class="h-8 w-24 bg-slate-200 rounded-lg"></div>
@@ -229,13 +219,11 @@ interface ConfirmDialog {
                     <div class="h-10 w-10 bg-slate-200 rounded-full"></div>
                   </div>
                 </div>
-                <!-- Body skeleton -->
                 <div class="flex-1 space-y-6 mt-4">
                   <div class="h-8 w-3/4 bg-slate-200 rounded-md mb-6"></div>
                   <div class="h-4 w-full bg-slate-200 rounded-md"></div>
                   <div class="h-4 w-5/6 bg-slate-200 rounded-md"></div>
                   <div class="h-4 w-4/6 bg-slate-200 rounded-md"></div>
-
                   <div class="mt-12 flex gap-4">
                     <div class="h-12 w-12 bg-slate-200 rounded-full flex-shrink-0"></div>
                     <div class="flex-1 space-y-4">
@@ -281,20 +269,36 @@ interface ConfirmDialog {
                     </button>
                   }
 
-                  @if (t.status === 'Resolved') {
-                    <button
-                      (click)="closeTicket(t.id)"
-                      class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-bold transition cursor-pointer"
-                    >
-                      Close Ticket
-                    </button>
-                    <button
-                      (click)="reopenTicket(t.id)"
-                      class="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 text-sm font-bold transition cursor-pointer"
-                    >
-                      Reopen Ticket
-                    </button>
-                  }
+                  <!-- BEFORE -->
+                @if (t.status === 'Resolved') {
+                  <!-- Close Ticket button -->
+                  <!-- Reopen Ticket button -->
+                }
+
+                <!-- AFTER -->
+                @if (t.status.toLowerCase() === 'resolved') {
+                  <button
+                    (click)="closeTicket(t.id)"
+                    class="px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Close Ticket
+                  </button>
+                }
+
+                @if (t.status?.toLowerCase() === 'resolved' || t.status?.toLowerCase() === 'closed') {
+                  <button
+                    (click)="reopenTicket(t.id)"
+                    class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Reopen Ticket
+                  </button>
+                }
 
                   <button
                     (click)="closeDetailModal()"
@@ -444,100 +448,57 @@ interface ConfirmDialog {
                       </div>
                     </div>
                   } @else {
-                    <div class="flex flex-col gap-6">
-                      <!-- Workflow Stepper -->
-                      <div class="px-2 py-4 border-b border-slate-100 overflow-x-auto">
-                        <div class="flex items-center min-w-max">
-                          @for (
-                            step of getWorkflowStages(t);
-                            track step.name;
-                            let isFirst = $first;
-                            let isLast = $last
-                          ) {
-                            <div class="flex items-center relative">
-                              <!-- Timeline Line (except for the first node) -->
-                              @if (!isFirst) {
-                                <div
-                                  class="w-16 sm:w-24 h-1 mx-2 rounded transition-colors"
-                                  [class]="
-                                    step.isCompleted || step.isCurrent
-                                      ? 'bg-blue-500'
-                                      : 'bg-slate-200'
-                                  "
-                                ></div>
-                              }
+  <div class="flex flex-col gap-6">
 
-                              <!-- Node -->
-                              <div class="flex flex-col items-center gap-2 group relative">
-                                <!-- Tooltip -->
-                                @if (step.createdAt) {
-                                  <div
-                                    class="absolute bottom-full mb-2 hidden group-hover:block w-max max-w-xs bg-slate-800 text-white text-xs rounded py-1 px-2 z-10 shadow-lg"
-                                  >
-                                    <p class="font-bold mb-1">{{ step.name }}</p>
-                                    <p class="text-[10px] text-slate-300">
-                                      {{ step.createdAt | date: 'medium' }}
-                                    </p>
-                                    @if (step.reason) {
-                                      <p class="text-[10px] text-slate-400 mt-1 italic break-words">
-                                        "{{ step.reason }}"
-                                      </p>
-                                    }
-                                  </div>
-                                }
+    <!-- Status Flow Stepper -->
+    <div class="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-4 shadow-sm overflow-x-auto">
+      <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Lifecycle Progress</h3>
+      <div class="flex items-center gap-0 min-w-max">
+        @for (step of statusFlow; track step; let i = $index; let last = $last) {
+          <div class="flex-1 flex items-center">
+            <div class="flex flex-col items-center flex-shrink-0">
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
+                [ngClass]="{
+                  'bg-blue-600 border-blue-600 text-white': isCompletedStep(t, step),
+                  'border-blue-600 text-blue-600 bg-blue-50 ring-2 ring-blue-100': isCurrentStep(t, step),
+                  'border-slate-300 text-slate-400 bg-white': !isCompletedStep(t, step) && !isCurrentStep(t, step)
+                }"
+              >
+                @if (isCompletedStep(t, step)) {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                  </svg>
+                } @else {
+                  {{ i + 1 }}
+                }
+              </div>
+              <span
+                class="text-[9px] font-medium mt-1.5 text-center w-14 leading-tight"
+                [ngClass]="{
+                  'text-blue-700 font-bold': isCurrentStep(t, step),
+                  'text-blue-500': isCompletedStep(t, step) && !isCurrentStep(t, step),
+                  'text-slate-400': !isCompletedStep(t, step) && !isCurrentStep(t, step)
+                }"
+              >
+                {{ step }}
+              </span>
+            </div>
+            @if (!last) {
+              <div
+                class="flex-1 h-0.5 mx-1 mb-4 min-w-[24px] rounded"
+                [ngClass]="isCompletedStep(t, step) ? 'bg-blue-500' : 'bg-slate-200'"
+              ></div>
+            }
+          </div>
+        }
+      </div>
+    </div>
 
-                                <div
-                                  class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-colors"
-                                  [ngClass]="{
-                                    'bg-blue-600 text-white border-2 border-blue-200 ring-4 ring-blue-50 cursor-help':
-                                      step.isCurrent,
-                                    'bg-blue-500 text-white cursor-help':
-                                      step.isCompleted && !step.isCurrent,
-                                    'bg-slate-100 text-slate-400 border-2 border-slate-200':
-                                      !step.isCompleted && !step.isCurrent,
-                                  }"
-                                >
-                                  @if (step.isCompleted && !step.isCurrent) {
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      class="h-4 w-4"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="3"
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  } @else if (step.isCurrent) {
-                                    <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
-                                  } @else {
-                                    {{ $index + 1 }}
-                                  }
-                                </div>
-                                <span
-                                  class="text-[10px] font-bold tracking-wider uppercase whitespace-nowrap"
-                                  [ngClass]="{
-                                    'text-blue-700': step.isCurrent,
-                                    'text-blue-600': step.isCompleted && !step.isCurrent,
-                                    'text-slate-400': !step.isCompleted && !step.isCurrent,
-                                  }"
-                                >
-                                  {{ step.name }}
-                                </span>
-                              </div>
-                            </div>
-                          }
-                        </div>
-                      </div>
-
-                      <!-- Top Grid: Metadata -->
-                      <div
-                        class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 border border-slate-200/60 rounded-xl p-4 shadow-sm"
-                      >
+    <!-- Top Grid: Metadata -->
+    <div
+      class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 border border-slate-200/60 rounded-xl p-4 shadow-sm"
+    >
                         <div class="flex flex-col gap-1">
                           <span
                             class="text-xs font-extrabold text-slate-500 uppercase tracking-widest"
@@ -700,7 +661,7 @@ interface ConfirmDialog {
                   </span>
                 </div>
 
-                <!-- Chat messages — grows to fill -->
+                <!-- Chat messages -->
                 <div class="px-6 pb-4 space-y-4">
                   @if (t.comments.length === 0) {
                     <div class="py-10 text-center text-slate-400 text-sm italic">
@@ -708,8 +669,8 @@ interface ConfirmDialog {
                     </div>
                   }
                   @for (comment of t.comments; track comment.id) {
-                    <!-- Customer message — right aligned -->
                     @if (comment.contactId) {
+                      <!-- Customer message — right aligned -->
                       <div class="flex flex-col items-end gap-1">
                         <span class="text-xs font-semibold text-slate-400 pr-1">
                           {{ comment.contactName || 'You' }}
@@ -725,9 +686,8 @@ interface ConfirmDialog {
                           </p>
                         </div>
                       </div>
-
-                      <!-- Agent message — left aligned -->
                     } @else {
+                      <!-- Agent message — left aligned -->
                       <div class="flex flex-col items-start gap-1">
                         <span class="text-xs font-semibold text-slate-500 pl-1">
                           {{ comment.authorName || 'Support Agent' }}
@@ -748,11 +708,10 @@ interface ConfirmDialog {
                 </div>
               </div>
 
-              <!-- Message input — sticky at bottom, outside scroll area -->
+              <!-- Message input — sticky at bottom -->
               <div
                 class="flex flex-col gap-2 px-4 py-3 bg-white border-t border-slate-200 flex-shrink-0"
               >
-                <!-- Selected files preview -->
                 @if (selectedFiles().length > 0) {
                   <div class="flex flex-wrap gap-2 px-1">
                     @for (file of selectedFiles(); track file.name) {
@@ -837,7 +796,6 @@ interface ConfirmDialog {
           >
             ✕
           </button>
-
           <div
             class="overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
@@ -910,13 +868,11 @@ interface ConfirmDialog {
                 }}
               </span>
             </div>
-
             <h3 class="text-xl font-bold text-center text-slate-800 mb-2">
               {{ confirmDialog().title }}
             </h3>
             <p class="text-slate-500 text-center text-sm">{{ confirmDialog().message }}</p>
           </div>
-
           <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
             <button
               (click)="closeConfirm()"
@@ -1032,6 +988,7 @@ export class MyTicketsComponent implements OnInit {
       .get<{ items: TicketListItem[] }>(`${environment.apiUrl}/api/tickets/my`, { params })
       .subscribe({
         next: (res) => {
+          console.log('LIST statuses:', res.items.map(i => i.status));
           this.tickets.set(res.items || []);
           this.isLoadingList.set(false);
         },
@@ -1044,11 +1001,15 @@ export class MyTicketsComponent implements OnInit {
   }
 
   openTicketDetails(id: string) {
-    this.selectedTicketId.set(id);
-    this.showDetailModal.set(true);
-    this.selectTicket(id);
-    this.setBodyScroll(true);
-  }
+  const listTicket = this.tickets().find(t => t.id === id);
+  const listStatus = listTicket?.status;
+  this.selectedTicketId.set(id);
+  this.showDetailModal.set(true);
+  this.selectTicket(id, listStatus);
+  this.setBodyScroll(true);
+}
+
+  
 
   closeDetailModal() {
     this.showDetailModal.set(false);
@@ -1061,6 +1022,46 @@ export class MyTicketsComponent implements OnInit {
     this.setBodyScroll(false);
     this.mediaViewer = { url: null, type: null };
   }
+
+  statusFlow = ['new', 'open', 'in_progress', 'pending_customer', 'pending_internal', 'on_hold', 'resolved', 'closed'];
+
+private statusLabels: Record<string, string> = {
+  new:              'New',
+  open:             'Open',
+  in_progress:      'In Progress',
+  inprogress:       'In Progress',
+  pending_customer: 'Pending Customer',
+  pendingcustomer:  'Pending Customer',
+  pending_internal: 'Pending Internal',
+  pendinginternal:  'Pending Internal',
+  on_hold:          'On Hold',
+  onhold:           'On Hold',
+  resolved:         'Resolved',
+  closed:           'Closed',
+};
+
+getStepLabel(step: string): string {
+  return this.statusLabels[step] ?? step;
+}
+
+private normalizeStatus(s: string): string {
+  // converts PascalCase → snake_case and lowercases
+  // e.g. "InProgress" → "in_progress", "on_hold" → "on_hold"
+  return s
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, '');
+}
+
+isCurrentStep(ticket: TicketDetail, step: string): boolean {
+  return this.normalizeStatus(ticket.status) === step;
+}
+
+isCompletedStep(ticket: TicketDetail, step: string): boolean {
+  const currentIdx = this.statusFlow.indexOf(this.normalizeStatus(ticket.status));
+  const stepIdx = this.statusFlow.indexOf(step);
+  return stepIdx < currentIdx;
+}
 
   viewMedia(url: string, type: 'image' | 'video') {
     this.mediaViewer = { url, type };
@@ -1080,22 +1081,26 @@ export class MyTicketsComponent implements OnInit {
     this.setBodyScroll(false);
   }
 
-  selectTicket(id: string) {
-    this.isLoadingDetails.set(true);
-    this.http.get<TicketDetail>(`${environment.apiUrl}/api/tickets/${id}`).subscribe({
-      next: (res) => {
-        this.ticketDetail.set(res);
-        this.isLoadingDetails.set(false);
-        if (this.isEditingTicket()) {
-          this.initEditForm(res);
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching ticket details', err);
-        this.isLoadingDetails.set(false);
-      },
-    });
-  }
+  selectTicket(id: string, overrideStatus?: string) {
+  this.isLoadingDetails.set(true);
+  this.http.get<TicketDetail>(`${environment.apiUrl}/api/tickets/${id}`).subscribe({
+    next: (res) => {
+      // Trust the list status if provided — detail endpoint may return stale/wrong status
+      if (overrideStatus) {
+        res.status = overrideStatus;
+      }
+      this.ticketDetail.set(res);
+      this.isLoadingDetails.set(false);
+      if (this.isEditingTicket()) {
+        this.initEditForm(res);
+      }
+    },
+    error: (err) => {
+      console.error('Error fetching ticket details', err);
+      this.isLoadingDetails.set(false);
+    },
+  });
+}
 
   initEditForm(ticket: TicketDetail) {
     this.editForm = {
@@ -1110,7 +1115,6 @@ export class MyTicketsComponent implements OnInit {
     this.isSavingUpdate.set(true);
     this.http.put(`${environment.apiUrl}/api/tickets/${ticketId}`, this.editForm).subscribe({
       next: () => {
-        // Now upload any new files added during edit
         const files = this.editSelectedFiles();
         if (files.length > 0) {
           let uploadedCount = 0;
@@ -1130,7 +1134,7 @@ export class MyTicketsComponent implements OnInit {
                 error: (err) => {
                   console.error('Error uploading edit file', file.name, err);
                   hasError = true;
-                  this.finishTicketUpdate(ticketId); // still finish and refresh
+                  this.finishTicketUpdate(ticketId);
                 },
               });
           });
@@ -1163,7 +1167,7 @@ export class MyTicketsComponent implements OnInit {
           .delete(`${environment.apiUrl}/api/tickets/${ticketId}/attachments/${attachmentId}`)
           .subscribe({
             next: () => {
-              this.selectTicket(ticketId); // refresh
+              this.selectTicket(ticketId);
             },
             error: (err) => console.error('Error deleting attachment', err),
           });
@@ -1190,7 +1194,7 @@ export class MyTicketsComponent implements OnInit {
       'Close Ticket',
       'Are you sure you want to close this ticket?',
       () => {
-        const currentUserId = '00000000-0000-0000-0000-000000000000'; // Or retrieve from auth state if possible, though backend doesn't strictly validate customer ID matches exact actor yet.
+        const currentUserId = '00000000-0000-0000-0000-000000000000';
         this.http
           .post(`${environment.apiUrl}/api/tickets/${ticketId}/close`, {
             closedBy: currentUserId,
@@ -1267,7 +1271,6 @@ export class MyTicketsComponent implements OnInit {
           },
         });
     } else {
-      // Just upload files without a comment
       this.uploadFiles(ticketId, null, finishPosting);
     }
   }
@@ -1307,58 +1310,6 @@ export class MyTicketsComponent implements OnInit {
     });
   }
 
-  getWorkflowStages(ticket: TicketDetail): WorkflowStage[] {
-    const standardStages = ['New', 'Open', 'InProgress', 'Resolved', 'Closed'];
-    const stages: WorkflowStage[] = [];
-    const history = ticket.statusHistory || [];
-
-    // 1. Add all history events as completed or current
-    history.forEach((h, index) => {
-      const isCurrent = index === history.length - 1;
-      stages.push({
-        name: h.toStatus,
-        isCompleted: !isCurrent,
-        isCurrent: isCurrent,
-        createdAt: h.createdAt,
-        reason: h.reason,
-      });
-    });
-
-    // Fallback if no history
-    if (stages.length === 0) {
-      stages.push({
-        name: ticket.status || 'New',
-        isCompleted: false,
-        isCurrent: true,
-      });
-    }
-
-    // 2. Append future standard stages
-    const currentStageName = stages[stages.length - 1].name;
-    const stdIndex = standardStages.findIndex(
-      (s) => s.toLowerCase() === currentStageName.toLowerCase(),
-    );
-
-    if (stdIndex !== -1) {
-      for (let i = stdIndex + 1; i < standardStages.length; i++) {
-        stages.push({
-          name: standardStages[i],
-          isCompleted: false,
-          isCurrent: false,
-        });
-      }
-    } else {
-      if (!stages.find((s) => s.name.toLowerCase() === 'resolved')) {
-        stages.push({ name: 'Resolved', isCompleted: false, isCurrent: false });
-      }
-      if (!stages.find((s) => s.name.toLowerCase() === 'closed')) {
-        stages.push({ name: 'Closed', isCompleted: false, isCurrent: false });
-      }
-    }
-
-    return stages;
-  }
-
   formatDate(dateStr: string): string {
     const diff = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
     if (diff < 60) return 'just now';
@@ -1383,13 +1334,13 @@ export class MyTicketsComponent implements OnInit {
   }
 
   getStatusClasses(status: string): string {
-    if (!status) return 'bg-gray-100 text-slate-600 border-slate-200';
-    const s = status.toLowerCase();
+    const s = this.normalizeStatus(status);
     if (s === 'new') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-    if (['open', 'assigned', 'inprogress', 'reopened'].includes(s))
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    if (s === 'pending') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    if (['open', 'in_progress', 'reopened'].includes(s)) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (['pending_customer', 'pending_internal'].includes(s)) return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    if (s === 'on_hold') return 'bg-slate-50 text-slate-700 border-slate-200';
     if (s === 'resolved') return 'bg-green-50 text-green-700 border-green-200';
+    if (s === 'closed') return 'bg-gray-100 text-slate-600 border-slate-200';
     return 'bg-gray-100 text-slate-600 border-slate-200';
   }
 

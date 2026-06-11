@@ -106,7 +106,16 @@ export interface TicketDetails {
   assignmentLogs: AssignmentLog[];
   activities?: TicketActivity[];
   reporterName?: string;
+  type?: string;
   assignedAgentName?: string;
+
+  attachments?: {
+    id: string;
+    fileName: string;
+    fileUrl: string;
+    mimeType: string;
+    fileSizeBytes: number;
+  }[];
 }
 
 // ─── Create / Update Requests ─────────────────────────────────────────────────

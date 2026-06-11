@@ -44,6 +44,52 @@ public sealed class GroupsController : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error });
     }
 
+    /// <summary>
+    /// Returns the groups the calling user belongs to (any authenticated user — no admin required).
+    /// </summary>
+    [HttpGet("my")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<GroupDto>), 200)]
+    public async Task<IActionResult> GetMyGroups(CancellationToken ct)
+    {
+        var callerId = GetActorId();
+        if (!callerId.HasValue) return Unauthorized();
+        var result = await _dispatcher.Send(new GetUserGroupsQuery(callerId.Value), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>
+    /// Returns members of a group the calling user belongs to.
+    /// Admins/managers can query any group; agents/team_leads can only query their own group.
+    /// </summary>
+    [HttpGet("{id:guid}/my-members")]
+    [Authorize]
+    [ProducesResponseType(typeof(GroupWithMembersDto), 200)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetMyGroupMembers(Guid id, CancellationToken ct)
+    {
+        var callerId = GetActorId();
+        if (!callerId.HasValue) return Unauthorized();
+
+        // Verify the caller is actually a member of this group (unless admin)
+        var callerRoles = User.FindAll(System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value.ToLower()).ToHashSet();
+        var isPrivileged = callerRoles.Contains("admin") || callerRoles.Contains("manager");
+
+        if (!isPrivileged)
+        {
+            // Check the caller belongs to this group
+            var membershipResult = await _dispatcher.Send(new GetUserGroupsQuery(callerId.Value), ct);
+            if (!membershipResult.IsSuccess) return Forbid();
+            var belongsToGroup = membershipResult.Value.Any(g => g.Id == id);
+            if (!belongsToGroup) return Forbid();
+        }
+
+        var result = await _dispatcher.Send(new GetGroupWithMembersQuery(id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error });
+    }
+
     [HttpPost]
     [Authorize(Policy = "user:manage")]
     [ProducesResponseType(typeof(object), 201)]
