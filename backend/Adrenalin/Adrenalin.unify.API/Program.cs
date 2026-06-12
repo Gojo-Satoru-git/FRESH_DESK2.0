@@ -9,7 +9,7 @@ using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.DependencyInjection;
 using Adrenalin.SharedKernel.Behaviors;
 using Adrenalin.SharedKernel.Interfaces;
-using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Mediator;  
 using Adrenalin.unify.API.Authorization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +26,13 @@ using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
 using Adrenalin.Infrastructure.Email;
 using Adrenalin.Persistence.Repositories.Auth;
+using Adrenalin.Modules.Company.Domain.Interfaces;
+using Adrenalin.EventBus;
+using Adrenalin.EventBus.Events;
+using Adrenalin.Modules.Company.Applications.EventHandlers;
+using Adrenalin.Modules.Company.Applications.Commands;
+using Adrenalin.Modules.Auth.Application.Notifications;
+using Adrenalin.Persistence.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,24 +49,34 @@ dataSourceBuilder.EnableUnmappedTypes();
 dataSourceBuilder.MapEnum<RevocationReason>(
     "auth.revocation_reason");
 var dataSource = dataSourceBuilder.Build();
+builder.Services.AddScoped<AuditStampInterceptor>();
+builder.Services.AddDbContext<AdrenalinDbContext>(
+    (sp, options) =>
+    {
+        options.UseNpgsql(
+            dataSource,
+            npgsql => npgsql
+                .MigrationsAssembly("Adrenalin.Persistence")
+                .MapEnum<TicketStatus>("ticket_status", "ticket")
+                .MapEnum<TicketPriority>("ticket_priority", "ticket")
+                .MapEnum<TicketSource>("ticket_source", "ticket")
+                .MapEnum<RevocationReason>("revocation_reason", "auth")
+        );
 
-builder.Services.AddDbContext<AdrenalinDbContext>(options =>
-    options.UseNpgsql(dataSource,
-        npgsql => npgsql
-            .MigrationsAssembly("Adrenalin.Persistence")
-            .MapEnum<TicketStatus>("ticket_status", "ticket")
-            .MapEnum<TicketPriority>("ticket_priority", "ticket")
-            .MapEnum<TicketSource>("ticket_source", "ticket")
-            .MapEnum<RevocationReason>("revocation_reason", "auth")
-        )
-        .UseSnakeCaseNamingConvention()
-    );
+        options.UseSnakeCaseNamingConvention();
+
+        options.AddInterceptors(
+            sp.GetRequiredService<AuditStampInterceptor>());
+    });
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(
     typeof(Adrenalin.Modules.Auth.Application.Commands.RegisterUserCommand).Assembly,
     typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
-    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
+    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly,
+    typeof(CreateContactForExternalUserCommand).Assembly,
+    typeof(ExternalUserCreatedNotificationHandler).Assembly);
+
 
 // ── 3. Pipeline behaviors (order matters — outermost registered first) ────────
 // Validation runs first, then UnitOfWork commits on success
@@ -131,6 +148,9 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IPasswordGenerator,
     PasswordGenerator>();
+    builder.Services.AddScoped<
+    IContactRepository,
+    ContactRepository>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 
@@ -172,6 +192,9 @@ builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationToke
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IEmailService,FakeEmailService>();
+builder.Services.AddScoped<
+    IIntegrationEventHandler<ExternalUserCreatedEvent>,
+    ExternalUserCreatedEventHandler>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(

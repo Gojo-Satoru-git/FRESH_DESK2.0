@@ -1,3 +1,4 @@
+using Adrenalin.SharedKernel.Entities;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +13,14 @@ namespace Adrenalin.Persistence.Context;
 /// </summary>
 public class AdrenalinDbContext : DbContext, IUnitOfWork
 {
+    
     private readonly IPublisher _publisher;
 
     public AdrenalinDbContext(DbContextOptions<AdrenalinDbContext> options, IPublisher publisher)
         : base(options)
     {
         _publisher = publisher;
+        
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────
@@ -143,11 +146,13 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
                 entry.Property(property.Name).CurrentValue = versionBytes;
             }
         }
+        
 
         var result = await base.SaveChangesAsync(cancellationToken);
         await DispatchDomainEventsAsync(cancellationToken);
         return result;
     }
+    
 
     private async Task DispatchDomainEventsAsync(CancellationToken ct)
     {

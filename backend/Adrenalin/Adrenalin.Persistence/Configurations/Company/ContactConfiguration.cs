@@ -33,9 +33,7 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         
-        builder.Property(e => e.ModifiedAt).HasColumnName("modified_at");
         
-        builder.Property(e => e.ModifiedBy).HasMaxLength(100).HasColumnName("modified_by");
         
         builder.Property(e => e.Name).HasMaxLength(200).HasColumnName("name");
         

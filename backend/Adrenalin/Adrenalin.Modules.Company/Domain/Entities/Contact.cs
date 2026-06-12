@@ -19,9 +19,7 @@ public sealed class Contact : SoftDeleteEntity
 
     public bool AutoCreated { get; private set; }
 
-    public DateTime? ModifiedAt { get; private set; }
-
-    public string? ModifiedBy { get; private set; }
+   
 
     public Company Company { get; private set; } = null!;
 

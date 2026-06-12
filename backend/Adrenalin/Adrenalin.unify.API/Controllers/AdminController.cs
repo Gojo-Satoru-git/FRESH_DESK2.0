@@ -43,5 +43,26 @@ namespace Adrenalin.unify.API.Controllers
             UserId = userId
         });
     }
+    [HttpPost("external-users")]
+public async Task<IActionResult> CreateExternalUser(
+    CreateExternalUserRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    var userId =
+        await _dispatcher.Send(
+            new CreateExternalUserCommand(
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                request.Phone,
+                request.CompanyId,
+                request.CustomerRoleId),
+            cancellationToken);
+
+    return Ok(new
+    {
+        UserId = userId
+    });
+}
     }
 }
