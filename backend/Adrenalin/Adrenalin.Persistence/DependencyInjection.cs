@@ -5,6 +5,7 @@ using Adrenalin.Persistence.Repositories;
 using Adrenalin.Persistence.Repositories.Auth;
 using Adrenalin.Persistence.Repositories.KnowledgeBase;
 using Adrenalin.SharedKernel.Interfaces;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Adrenalin.Persistence;
@@ -27,6 +28,11 @@ public static class PersistenceServiceCollectionExtensions
 
         // ── Ticketing ─────────────────────────────────────────────────────────
         services.AddScoped<ITicketRepository, TicketRepository>();
+
+        services.AddScoped<IAutomationRuleRepository, AutomationRuleRepository>();
+
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AdrenalinDbContext>());
+
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
         services.AddScoped<Adrenalin.Modules.Ticketing.Application.Queries.ITicketQueryService, TicketQueryService>();
 

@@ -1,66 +1,134 @@
-using Adrenalin.Modules.Ticketing.Domain.Exceptions;
-using Adrenalin.Modules.Ticketing.Application.Commands;
-using Adrenalin.Modules.Ticketing.Domain.Entities;
-using Adrenalin.Modules.Ticketing.Domain.Interfaces;
+using System.Text.Json;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
-using System.Linq;
+using Adrenalin.SharedKernel.Results;
+using Adrenalin.SharedKernel.Contracts;
+using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 
-namespace Adrenalin.Modules.Ticketing.Application.Handlers;
+namespace Adrenalin.Modules.Ticketing.Application.Handlers.Tickets;
 
-public sealed class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, Guid>
+public sealed class AssignTicketCommandHandler
+    : IRequestHandler<AssignTicketCommand, Result<AssignTicketResult>>
 {
-    private readonly ITicketRepository _ticketRepository;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly ITicketRepository _ticketRepo;
+    private readonly IAutomationRuleRepository _ruleRepo;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly AutomationConditionEvaluator _evaluator;
 
-    public AssignTicketCommandHandler(ITicketRepository ticketRepository, ICurrentUserService currentUserService)
+    public AssignTicketCommandHandler(
+        ITicketRepository ticketRepo,
+        IAutomationRuleRepository ruleRepo,
+        IUnitOfWork unitOfWork,
+        AutomationConditionEvaluator evaluator)
     {
-        _ticketRepository = ticketRepository;
-        _currentUserService = currentUserService;
+        _ticketRepo = ticketRepo;
+        _ruleRepo = ruleRepo;
+        _unitOfWork = unitOfWork;
+        _evaluator = evaluator;
     }
 
-    public async Task<Guid> Handle(AssignTicketCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AssignTicketResult>> Handle(
+        AssignTicketCommand command,
+        CancellationToken cancellationToken)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(request.TicketId, cancellationToken);
+        // 1. Load ticket
+        var ticket = await _ticketRepo
+            .GetByIdAsync(command.TicketId, cancellationToken);
 
         if (ticket is null)
-        {
-            throw new TicketDomainException($"Ticket '{request.TicketId}' was not found.");
-        }
+            return Result<AssignTicketResult>
+                .Failure("Ticket not found");
 
-        if (ticket.IsDeleted)
-        {
-            throw new TicketDomainException("Cannot assign agent to a deleted ticket.");
-        }
+        Guid? newAgentId = null;
+        Guid? newGroupId = null;
+        string ruleMatched = "None";
+        string actionApplied = "None";
 
-        var roles = _currentUserService.Roles.ToList();
-        if (roles.Contains("junior_agent", StringComparer.OrdinalIgnoreCase) || 
-            roles.Contains("senior_agent", StringComparer.OrdinalIgnoreCase))
+        if (!command.IsAutoAssignment)
         {
-            throw new TicketDomainException("Agents are not authorized to assign tickets.");
+            // Manual override
+            newAgentId = command.OverrideAgentId;
+            newGroupId = command.OverrideGroupId;
+            ruleMatched = "ManualAssignment";
+            actionApplied = "ManualOverride";
         }
-
-        var isAssignerInternal = roles.Any(r => new[] { "admin", "team_lead", "manager", "pmo" }.Contains(r, StringComparer.OrdinalIgnoreCase));
-        if (!isAssignerInternal)
+        else
         {
-            var assignerCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AssignedBy, cancellationToken);
-            if (assignerCompanyId != ticket.CompanyId)
+            // Auto — evaluate rules
+            var rules = await _ruleRepo
+                .GetActiveRulesForTriggerAsync(cancellationToken);
+
+            foreach (var rule in rules)
             {
-                throw new TicketDomainException("Assigner does not belong to the ticket's company.");
-            }
+                var conditions = JsonDocument
+                    .Parse(rule.Conditions)
+                    .RootElement;
 
-            // External assigners (like customer_admin) can only assign users within their own company
-            var agentCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.AgentId, cancellationToken);
-            if (agentCompanyId != ticket.CompanyId)
-            {
-                throw new TicketDomainException("Agent does not belong to the ticket's company.");
+                if (!_evaluator.Evaluate(conditions, ticket))
+                    continue;
+
+                var actions = JsonDocument
+                    .Parse(rule.Actions)
+                    .RootElement;
+
+                foreach (var action in actions.EnumerateArray())
+                {
+                    var actionType = action
+                        .GetProperty("action").GetString();
+                    var actionValue = action
+                        .GetProperty("value").GetString();
+
+                    switch (actionType)
+                    {
+                        case "assign_group":
+                            newGroupId = Guid.Parse(actionValue!);
+                            newAgentId = await _ticketRepo
+                                .GetLeastLoadedAgentInGroupAsync(
+                                    newGroupId.Value,
+                                    cancellationToken);
+                            break;
+
+                        case "assign_agent":
+                            newAgentId = Guid.Parse(actionValue!);
+                            break;
+
+                        case "assign_group_only":
+                            newGroupId = Guid.Parse(actionValue!);
+                            break;
+                    }
+                }
+
+                ruleMatched = rule.Name;
+                actionApplied = $"AutoAssigned via: {rule.Name}";
+
+                await _ruleRepo.LogExecutionAsync(
+                    rule.Id,
+                    ticket.Id,
+                    actionApplied,
+                    cancellationToken);
+
+                break; // first match wins
             }
         }
 
-        ticket.AssignAgent(request.AgentId, request.AssignedBy, request.Notes);
+        // 2. Update ticket via domain methods
+        await _ticketRepo.UpdateAssignmentAsync(
+            ticketId: ticket.Id,
+            agentId: newAgentId,
+            groupId: newGroupId,
+            triggeredBy: command.TriggeredBy,
+            cancellationToken);
 
-        _ticketRepository.Update(ticket);
+        // 3. Commit
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return ticket.Id;
+        return Result<AssignTicketResult>.Success(
+            new AssignTicketResult(
+                newAgentId,
+                newGroupId,
+                ruleMatched,
+                actionApplied));
     }
 }

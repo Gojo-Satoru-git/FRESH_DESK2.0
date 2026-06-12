@@ -1,3 +1,6 @@
+// ✅ CORRECT — usings before everything
+using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
@@ -8,18 +11,28 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Adrenalin.Modules.Ticketing.Application.Handlers;
+namespace Adrenalin.Modules.Ticketing.Application.Handlers.Tickets;
 
-public sealed class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, Guid>
+public sealed class CreateTicketCommandHandler
+    : IRequestHandler<CreateTicketCommand, Guid>
 {
     private readonly ITicketRepository _ticketRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IDispatcher _dispatcher;
 
-    public CreateTicketCommandHandler(ITicketRepository ticketRepository)
+    public CreateTicketCommandHandler(
+        ITicketRepository ticketRepository,
+        IUnitOfWork unitOfWork,
+        IDispatcher dispatcher)
     {
         _ticketRepository = ticketRepository;
+        _unitOfWork = unitOfWork;
+        _dispatcher = dispatcher;
     }
 
-    public async Task<Guid> Handle(CreateTicketCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(
+        CreateTicketCommand request,
+        CancellationToken cancellationToken)
     {
         var ticketNumber = await _ticketRepository.GenerateTicketNumberAsync(cancellationToken);
 
@@ -31,7 +44,9 @@ public sealed class CreateTicketCommandHandler : IRequestHandler<CreateTicketCom
         var priorityEnum = MapPriority(request.Priority);
 
         var (moduleId, moduleName, department) = await _ticketRepository.ResolveOrCreateModuleAsync(request.Type, cancellationToken);
-
+        Console.WriteLine($"createdByUserId: {createdByUserId}");
+        Console.WriteLine($"contactId: {contactId}");
+        Console.WriteLine($"actorId: {request.ActorId}");
         if (!string.IsNullOrWhiteSpace(request.SenderEmail))
         {
             var email = request.SenderEmail.Trim();
@@ -119,6 +134,16 @@ public sealed class CreateTicketCommandHandler : IRequestHandler<CreateTicketCom
         // request.AssigneeId is ignored intentionally.
 
         await _ticketRepository.AddAsync(ticket, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _dispatcher.Send(
+            new AssignTicketCommand(
+                TicketId: ticket.Id,
+               TriggeredBy: createdByUserId
+          ?? request.ActorId
+          ?? Guid.Empty,
+                IsAutoAssignment: true),
+            cancellationToken);
 
         return ticket.Id;
     }

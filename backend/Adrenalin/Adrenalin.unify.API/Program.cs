@@ -278,8 +278,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAngularDevClient");
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 // Static files for KB attachments

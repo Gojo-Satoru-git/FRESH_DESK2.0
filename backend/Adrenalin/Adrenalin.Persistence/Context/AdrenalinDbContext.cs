@@ -113,7 +113,14 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
             .HasPostgresExtension("pgcrypto")
             .HasPostgresExtension("unaccent");
 
+      
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AdrenalinDbContext).Assembly);
+
+        modelBuilder.Entity<Ticket>().Ignore(e => e.RowVersion);
+        modelBuilder.Entity<TicketAssignmentLog>().Ignore(e => e.RowVersion);
+        modelBuilder.Entity<TicketStatusHistory>().Ignore(e => e.RowVersion);
+        modelBuilder.Entity<AutomationRule>().Ignore(e => e.RowVersion);
+        modelBuilder.Entity<AutomationExecutionLog>().Ignore(e => e.RowVersion);
 
         modelBuilder.HasSequence("ticket_number_seq", "ticket");
     }
