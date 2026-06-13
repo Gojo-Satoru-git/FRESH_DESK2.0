@@ -64,7 +64,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             await _roles.GetByIdAsync(
                 request.RoleId,
                 cancellationToken);
-
+        Console.WriteLine($"ROLE ID RECEIVED: {request.RoleId}");
         if (role is null)
         {
             throw new Exception(
@@ -124,10 +124,22 @@ var adminId = _currentUser.UserId.Value;
          var resetLink =
             $"http://localhost:5088/api/auth/reset-password?token={rawToken}";
 
-        await _emailService.SendAsync(
-            user.Email,
-            "Set Your Password",
-            resetLink);
+       await _emailService.SendAsync(
+    user.Email,
+    "Set Your Password",
+    $@"
+    <h2>Welcome to Adrenalin</h2>
+
+    <p>Your account has been created.</p>
+
+    <p>
+        <a href='{resetLink}'>
+            Click here to set your password
+        </a>
+    </p>
+
+    <p>This link expires in 24 hours.</p>
+    ");
 
         return user.Id;
     }
