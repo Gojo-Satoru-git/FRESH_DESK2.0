@@ -13,6 +13,7 @@ public class TicketCommentConfiguration : IEntityTypeConfiguration<TicketComment
         builder.HasKey(e => e.Id).HasName("ticket_comments_pkey");
 
         builder.ToTable("ticket_comments", "ticket");
+        builder.HasQueryFilter(e => !e.IsDeleted && !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => e.AuthorId, "idx_ticket_comments_author").HasFilter("(is_deleted = false)");
 

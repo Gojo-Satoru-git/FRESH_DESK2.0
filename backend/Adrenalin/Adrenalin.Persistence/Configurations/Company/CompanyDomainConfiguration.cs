@@ -33,6 +33,8 @@ public class CompanyDomainConfiguration : IEntityTypeConfiguration<CompanyDomain
         builder.Property(e => e.IsPrimary).HasColumnName("is_primary");
         
         builder.Ignore(e => e.RowVersion);
+        builder.Ignore(e => e.IsVerified);
+        builder.Ignore(e => e.VerifiedAt);
         
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         
