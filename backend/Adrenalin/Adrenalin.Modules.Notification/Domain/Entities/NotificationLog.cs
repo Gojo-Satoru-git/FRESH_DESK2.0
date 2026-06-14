@@ -15,6 +15,8 @@ public sealed class NotificationLog : BaseEntity
 
     public bool IsFailedDelivery { get; set; }
 
+    public string? TicketNumber { get;  set; }
+
     public DateTime SentAt { get; set; }
 
     public NotificationTemplate Template { get; set; } = null!;

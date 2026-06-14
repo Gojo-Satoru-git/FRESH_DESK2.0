@@ -95,33 +95,31 @@ import { NavItem } from '../models/nav-item.interface';
                 </div>
               }
 
-              <ng-template #navContent let-active="active">
-                <div
-                  class="w-6 h-6 flex-shrink-0 flex items-center justify-center transition-colors"
-                  [class.text-secondary-green]="active"
-                  [innerHTML]="item.iconSvg | safeHtml"
-                ></div>
-                @if (isExpanded()) {
-                  <span class="ml-4 font-semibold text-sm whitespace-nowrap flex-1 truncate">{{
-                    item.label
-                  }}</span>
-                  @if (item.children) {
-                    <svg
-                      class="w-4 h-4 transition-transform duration-200"
-                      [class.rotate-180]="isSubmenuOpen(item.label)"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  }
-                }
+               <<ng-template #navContent let-active="active">
+                          <div
+                            class="w-6 h-6 flex-shrink-0 flex items-center justify-center transition-colors"
+                            [class.text-secondary-green]="active"
+                            [innerHTML]="item.iconSvg | safeHtml"
+                          ></div>
+
+                          @if (isExpanded()) {
+                            <span class="ml-4 font-semibold text-sm whitespace-nowrap flex-1 truncate">
+                              {{ item.label }}
+                            </span>
+
+                            @if (item.children) {
+                              <svg
+                                class="w-4 h-4 transition-transform duration-200"
+                                [class.rotate-180]="isSubmenuOpen(item.label)"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                              </svg>
+                            }
+                          } @else {
+                            }
               </ng-template>
 
               @if (!isExpanded() && hoveredItem() === item.label) {

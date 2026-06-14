@@ -32,6 +32,7 @@ using Adrenalin.EventBus.Events;
 using Adrenalin.Modules.Company.Applications.EventHandlers;
 using Adrenalin.Modules.Company.Applications.Commands;
 using Adrenalin.Modules.Auth.Application.Notifications;
+using Adrenalin.Modules.SLA.Application;
 using Adrenalin.Persistence.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,7 +76,9 @@ builder.Services.AddCustomDispatcher(
     typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
     typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly,
     typeof(CreateContactForExternalUserCommand).Assembly,
-    typeof(ExternalUserCreatedNotificationHandler).Assembly);
+    typeof(ExternalUserCreatedNotificationHandler).Assembly, 
+    typeof(Adrenalin.Modules.SLA.Application.Commands.CheckEscalationsCommand).Assembly,
+    typeof(Adrenalin.Modules.Notification.Application.Queries.GetUnreadNotificationsQuery).Assembly);
 
 
 // ── 3. Pipeline behaviors (order matters — outermost registered first) ────────
@@ -173,6 +176,8 @@ else
 // ── Email Polling & Receiving ────────────────────────────────────────────────
 builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
 builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EmailPollingJob>();
+builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EscalationJob>();
+
 
 // Integration Event Handlers
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCreatedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCreatedNotificationHandler>();
@@ -196,7 +201,8 @@ builder.Services.AddScoped<
     IIntegrationEventHandler<ExternalUserCreatedEvent>,
     ExternalUserCreatedEventHandler>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(
         new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
@@ -231,6 +237,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 
 });
+// SLA module
+builder.Services.AddSLAApplication();
 
 // ── 10. Auth/authz ───────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();

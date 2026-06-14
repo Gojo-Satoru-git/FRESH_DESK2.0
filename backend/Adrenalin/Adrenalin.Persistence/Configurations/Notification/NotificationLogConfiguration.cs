@@ -22,7 +22,9 @@ public class NotificationLogConfiguration : IEntityTypeConfiguration<Notificatio
         builder.HasIndex(e => new { e.TicketId, e.SentAt }, "idx_notification_logs_ticket").IsDescending(false, true).HasFilter("(ticket_id IS NOT NULL)");
 
         builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
-            
+
+        builder.Property(e => e.TicketNumber).HasColumnName("ticket_number").HasMaxLength(50);
+
         builder.Property(e => e.ErrorMessage).HasColumnName("error_message");
         
         builder.Property(e => e.IsFailedDelivery).HasColumnName("is_failed_delivery");

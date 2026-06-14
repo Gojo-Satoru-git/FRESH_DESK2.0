@@ -26,7 +26,10 @@ public class SlaTicketConfiguration : IEntityTypeConfiguration<SlaTicket>
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
             
         builder.Property(e => e.FirstResponseAt).HasColumnName("first_response_at");
+
         
+        builder.Ignore(e => e.RowVersion);
+
         builder.Property(e => e.FirstResponseBreached).HasColumnName("first_response_breached");
         
         builder.Property(e => e.FirstResponseDueAt).HasColumnName("first_response_due_at");
