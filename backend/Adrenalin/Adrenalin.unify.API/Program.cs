@@ -97,6 +97,9 @@ builder.Services.AddValidatorsFromAssembly(
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.Auth.Application.Validators.CreateRoleCommandValidator).Assembly);
 
+builder.Services.AddValidatorsFromAssembly(
+    typeof(CreateContactForExternalUserCommand).Assembly);
+
 var jwtSection =
     builder.Configuration.GetSection("Jwt");
 
@@ -163,6 +166,8 @@ builder.Services.AddKbModule();
 
 // ── RabbitMQ EventBus ──────────────────────────────────────────────────────────
 var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", true);
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
 if (rabbitMqEnabled)
 {
     builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
@@ -196,7 +201,9 @@ builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.Cur
 builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-builder.Services.AddScoped<IEmailService,FakeEmailService>();
+builder.Services.AddScoped<
+    IEmailService,
+    SmtpEmailService>();
 builder.Services.AddScoped<
     IIntegrationEventHandler<ExternalUserCreatedEvent>,
     ExternalUserCreatedEventHandler>();

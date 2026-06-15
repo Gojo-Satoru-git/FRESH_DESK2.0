@@ -10,6 +10,6 @@ namespace Adrenalin.Modules.Auth.Application.DTOs
     string FirstName,
     string LastName,
     string Phone,
-    Guid RoleId
+   string  RoleName
 );
 }

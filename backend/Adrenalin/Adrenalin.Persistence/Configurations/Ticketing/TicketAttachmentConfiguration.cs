@@ -12,6 +12,7 @@ public class TicketAttachmentConfiguration : IEntityTypeConfiguration<TicketAtta
         builder.HasKey(e => e.Id).HasName("ticket_attachments_pkey");
 
         builder.ToTable("ticket_attachments", "ticket");
+        builder.HasQueryFilter(e => !e.IsDeleted && !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => e.CommentId, "idx_ticket_attachments_comment").HasFilter("((comment_id IS NOT NULL) AND (is_deleted = false))");
 

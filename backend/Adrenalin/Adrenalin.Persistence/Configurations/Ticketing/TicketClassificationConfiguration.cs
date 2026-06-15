@@ -11,6 +11,8 @@ public class TicketClassificationConfiguration : IEntityTypeConfiguration<Ticket
         builder.HasKey(e => e.Id).HasName("ticket_classification_pkey");
 
         builder.ToTable("ticket_classification", "ai", tb => tb.HasComment("One row per ticket — full C-R-L (Classifier-Retrieval-LLM) pipeline audit. classifier_auto_routed=TRUE means phase 2+3 were skipped (confidence ≥ threshold). retrieval_discrepancy=TRUE triggered Phase 3 LLM. llm_invoked tracks LLM cost exposure. model_version enables A/B testing."));
+        
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => new { e.FinalLabel, e.ClassifiedAt }, "idx_ticket_classification_label").IsDescending(false, true);
 

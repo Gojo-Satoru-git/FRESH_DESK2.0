@@ -22,6 +22,20 @@ namespace Adrenalin.unify.API.Middlewares
         {
             await _next(context);
         }
+        catch (Adrenalin.SharedKernel.Exceptions.ValidationException ex)
+{
+    _logger.LogWarning(ex, "Validation error");
+
+    context.Response.StatusCode =
+        (int)HttpStatusCode.BadRequest;
+
+    await context.Response.WriteAsJsonAsync(
+        new
+        {
+            Error = ex.Message,
+            Errors = ex.Errors
+        });
+}
         catch (FluentValidation.ValidationException ex)
         {
             _logger.LogWarning(ex, "Validation error");

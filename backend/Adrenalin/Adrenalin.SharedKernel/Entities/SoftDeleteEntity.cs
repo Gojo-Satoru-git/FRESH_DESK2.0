@@ -8,4 +8,9 @@ public abstract class SoftDeleteEntity : AuditableEntity
     {
         IsDeleted = true;
     }
+
+    public void Restore()
+    {
+        IsDeleted = false;
+    }
 }

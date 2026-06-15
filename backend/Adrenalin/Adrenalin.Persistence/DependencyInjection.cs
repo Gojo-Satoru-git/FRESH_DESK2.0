@@ -1,4 +1,5 @@
 using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.Modules.Company.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.Repositories;
@@ -44,6 +45,11 @@ public static class PersistenceServiceCollectionExtensions
 
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
         services.AddScoped<Adrenalin.Modules.Ticketing.Application.Queries.ITicketQueryService, TicketQueryService>();
+
+        // ── Company ───────────────────────────────────────────────────────────
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<IContactRepository, ContactRepository>();
+        services.AddScoped<Adrenalin.Modules.Company.Application.Queries.ICompanyQueryService, CompanyQueryService>();
 
         // ── KnowledgeBase ─────────────────────────────────────────────────────
         services.AddScoped<Adrenalin.Modules.KB.Domain.Interfaces.IKbArticleRepository, KbArticleRepository>();

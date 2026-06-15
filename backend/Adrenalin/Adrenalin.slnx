@@ -17,3 +17,4 @@
   <Project Path="Adrenalin.unify.API/Adrenalin.unify.API.csproj" />
   <Project Path="Adrenalin.UnitTests/Adrenalin.UnitTests.csproj" />
 </Solution>
+

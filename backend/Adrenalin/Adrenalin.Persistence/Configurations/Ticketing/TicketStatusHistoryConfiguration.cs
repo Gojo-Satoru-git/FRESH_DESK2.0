@@ -12,6 +12,7 @@ public class TicketStatusHistoryConfiguration : IEntityTypeConfiguration<TicketS
         builder.HasKey(e => e.Id).HasName("ticket_status_history_pkey");
 
         builder.ToTable("ticket_status_history", "ticket", tb => tb.HasComment("Immutable audit log of every status transition. Never update or delete rows. Append-only; enables full status trail and SLA clock reconstruction."));
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => new { e.TicketId, e.ChangedAt }, "idx_tsh_ticket_time").IsDescending(false, true);
 
