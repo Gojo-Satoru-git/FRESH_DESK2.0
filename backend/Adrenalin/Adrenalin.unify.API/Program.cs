@@ -94,6 +94,9 @@ builder.Services.AddValidatorsFromAssembly(
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.Auth.Application.Validators.CreateRoleCommandValidator).Assembly);
 
+builder.Services.AddValidatorsFromAssembly(
+    typeof(CreateContactForExternalUserCommand).Assembly);
+
 var jwtSection =
     builder.Configuration.GetSection("Jwt");
 

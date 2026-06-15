@@ -20,7 +20,6 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
         : base(options)
     {
         _publisher = publisher;
-        
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────

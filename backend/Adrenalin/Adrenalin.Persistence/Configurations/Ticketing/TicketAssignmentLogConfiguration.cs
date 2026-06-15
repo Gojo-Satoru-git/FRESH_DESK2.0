@@ -12,6 +12,7 @@ public class TicketAssignmentLogConfiguration : IEntityTypeConfiguration<TicketA
         builder.HasKey(e => e.Id).HasName("ticket_assignment_log_pkey");
 
         builder.ToTable("ticket_assignment_log", "ticket");
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => new { e.ToAgentId, e.AssignedAt }, "idx_tal_agent").IsDescending(false, true);
 
