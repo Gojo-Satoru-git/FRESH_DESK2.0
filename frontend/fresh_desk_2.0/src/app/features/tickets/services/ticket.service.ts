@@ -160,6 +160,7 @@ export class TicketService {
     );
   }
 
+ 
   /**
    * POST /api/tickets/{id}/resolve
    * ResolvedBy injected from JWT server-side.

@@ -7,10 +7,10 @@ using Adrenalin.SharedKernel.Mediator;
 namespace Adrenalin.Modules.Company.Applications.Commands
 {
     public sealed record CreateContactForExternalUserCommand(
-    Guid UserId,
-    Guid CompanyId,
-    string Email,
-    string FullName,
-    Guid CreatedBy
-) : IRequest<Guid>;
+        Guid UserId,
+        Guid CompanyId,
+        string Email,
+        string FullName,
+        Guid CreatedBy
+    ) : IRequest<Guid>;
 }

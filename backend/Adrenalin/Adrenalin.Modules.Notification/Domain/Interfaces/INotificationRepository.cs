@@ -14,4 +14,5 @@ public interface INotificationRepository
     Task<System.Collections.Generic.List<string>> GetTeamLeadsEmailsAsync(CancellationToken cancellationToken = default);
     Task<string?> GetTicketReporterEmailAsync(Guid ticketId, CancellationToken cancellationToken = default);
     Task<string?> GetTicketAssigneeEmailAsync(Guid ticketId, CancellationToken cancellationToken = default);
+    Task<List<NotificationLog>> GetUnreadLogsAsync(string recipientEmail, CancellationToken cancellationToken);
 }

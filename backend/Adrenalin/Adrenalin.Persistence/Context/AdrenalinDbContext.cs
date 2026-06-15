@@ -20,7 +20,6 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
         : base(options)
     {
         _publisher = publisher;
-        
     }
 
     // ── Auth ──────────────────────────────────────────────────────────────────
@@ -121,6 +120,9 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<TicketStatusHistory>().Ignore(e => e.RowVersion);
         modelBuilder.Entity<AutomationRule>().Ignore(e => e.RowVersion);
         modelBuilder.Entity<AutomationExecutionLog>().Ignore(e => e.RowVersion);
+       
+        modelBuilder.Entity<SlaTicket>().Ignore(s => s.CreatedBy);
+        modelBuilder.Entity<SlaTicket>().Ignore(s => s.UpdatedBy);
 
         modelBuilder.HasSequence("ticket_number_seq", "ticket");
     }

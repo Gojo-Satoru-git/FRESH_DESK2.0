@@ -1,9 +1,11 @@
-import { Component, signal, ViewChild, ElementRef, AfterViewInit, OnInit, inject } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { TicketService } from '../tickets/services/ticket.service';
+import { Router } from '@angular/router';
+import { NotificationService } from '../agent-dashboard/services/notification.service';
+import { Subscription, forkJoin } from 'rxjs';
 
-// Register all Chart.js components
 Chart.register(...registerables);
 
 @Component({
@@ -241,17 +243,31 @@ Chart.register(...registerables);
         </div>
       </div>
     }
+
+    @if (toastMessage()) {
+      <div
+        (click)="navigateToTicket()"
+        class="fixed bottom-6 right-6 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl animate-fade-in z-50 flex items-center gap-3 cursor-pointer transition-all duration-200 border border-gray-700/50 select-none group"
+      >
+        <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+        {{ toastMessage() }}
+      </div>
+    }
   `,
 })
-export class AgentDashboardComponent implements OnInit, AfterViewInit {
+export class AgentDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('trendChart') trendChartRef!: ElementRef<HTMLCanvasElement>;
   private chartInstance: Chart | null = null;
   private ticketService = inject(TicketService);
+  private notificationService = inject(NotificationService);
+  private router = inject(Router);
 
-  // Initializing with ALL requested cards. Missing backend data defaults to '--'.
+  toastMessage = signal<string | null>(null);
+  activeToastTicketId = signal<string | null>(null);
+
   kpiMetrics = signal<any[]>([
     { label: 'Unresolved', value: 0, highlight: true, alert: false },
-    { label: 'Overdue', value: '--', highlight: false, alert: true }, 
+    { label: 'Overdue', value: '--', highlight: false, alert: true },
     { label: 'Due Today', value: '--', highlight: false, alert: false },
     { label: 'Open', value: '--', highlight: false, alert: false },
     { label: 'On Hold', value: '--', highlight: false, alert: false },
@@ -260,7 +276,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     { label: 'Pending Reply', value: 0, highlight: false, alert: true },
     { label: 'Resolved/Closed', value: 0, highlight: false, alert: false },
   ]);
-  
+
   performanceMetrics = signal<any[]>([
     { label: 'Resolved Tickets', value: '--' },
     { label: 'Received Tickets', value: '--' },
@@ -287,6 +303,9 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     { time: '08:00 PM', today: 0, yesterday: 0 },
   ]);
 
+  private dashboardSub = new Subscription();
+  private assignedTicketsSub = new Subscription(); // ⚡ ADDED: Separate reference to track ticket stream
+
   ngOnInit() {
     this.loadDashboardData();
   }
@@ -295,42 +314,81 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     this.renderChart();
   }
 
-  private loadDashboardData() {
-    // 1. Get stats from getDashboard API (Untouched backend logic)
-    this.ticketService.getDashboard().subscribe({
-      next: (dashboard) => {
-        // We inject the API data into the array, while preserving the missing '--' fields
+  ngOnDestroy() {
+    // ⚡ CLEAN SWEEP: Drop all network observers cleanly to preserve resource cycles
+    this.dashboardSub.unsubscribe();
+    this.assignedTicketsSub.unsubscribe();
+  }
+
+  loadDashboardData() {
+    if (this.dashboardSub) {
+      this.dashboardSub.unsubscribe();
+    }
+
+    this.dashboardSub = forkJoin({
+      dashboard: this.ticketService.getDashboard(),
+      notifications: this.notificationService.getUnreadNotifications()
+    }).subscribe({
+      next: ({ dashboard, notifications }) => {
+        const activeLogs = notifications || [];
+
+        const latestInAppLog = activeLogs.find(log => (log.recipientEmail || ''));
+
+        if (latestInAppLog) {
+          this.activeToastTicketId.set(latestInAppLog.ticketId);
+
+          const isSlaBreach = (latestInAppLog.recipientEmail || '').includes('teamlead') ||
+            (latestInAppLog.recipientEmail || '').includes('manager') ||
+            (latestInAppLog.recipientEmail || '').includes('agent');
+
+          const alertTitle = isSlaBreach ? '⚠️ SLA Violation Alert' : '🎫 Helpdesk Update';
+
+          const alertBody = isSlaBreach
+            ? `Active SLA breach tracked on Ticket #${latestInAppLog.ticketNumber || 'Unknown'}.`
+            : `New log activity recorded for recipient: ${latestInAppLog.recipientEmail}`;
+
+          this.toastMessage.set(`${alertTitle}: ${alertBody}`);
+
+          setTimeout(() => {
+            this.toastMessage.set(null);
+            this.activeToastTicketId.set(null);
+          }, 7000);
+        }
+
         this.kpiMetrics.set([
-          { label: 'Unresolved', value: dashboard.totalActive, highlight: true, alert: false },
-          { label: 'Overdue', value: '--', highlight: false, alert: true },
-          { label: 'Due Today', value: '--', highlight: false, alert: false },
-          { label: 'Open', value: '--', highlight: false, alert: false },
-          { label: 'On Hold', value: '--', highlight: false, alert: false },
-          { label: 'Unassigned', value: '--', highlight: false, alert: false },
-          { label: 'In Progress', value: dashboard.inProgress, highlight: false, alert: false },
-          { label: 'Pending Reply', value: dashboard.pendingReply, highlight: false, alert: true },
-          { label: 'Resolved/Closed', value: dashboard.resolvedClosed, highlight: false, alert: false },
+          { label: 'Unresolved', value: dashboard?.totalActive ?? 0, highlight: true, alert: false },
+          { label: 'Overdue', value: activeLogs.filter(log => (log.recipientEmail || '').includes('inapp_user_')).length, highlight: false, alert: true },
+          { label: 'Due Today', value: 0, highlight: false, alert: false },
+          { label: 'Open', value: dashboard?.totalActive ?? 0, highlight: false, alert: false },
+          { label: 'On Hold', value: 0, highlight: false, alert: false },
+          { label: 'Unassigned', value: 0, highlight: false, alert: false },
+          { label: 'In Progress', value: dashboard?.inProgress ?? 0, highlight: false, alert: false },
+          { label: 'Pending Reply', value: dashboard?.pendingReply ?? 0, highlight: false, alert: true },
+          { label: 'Resolved/Closed', value: dashboard?.resolvedClosed ?? 0, highlight: false, alert: false },
         ]);
-      }
+      },
+      error: (err) => console.error('Failed to resolve sync dashboard metrics', err)
     });
 
-    // 2. Fetch assigned tickets to build other details dynamically (Untouched backend logic)
-    this.ticketService.getAssignedTickets(1, 100).subscribe({
+    // ⚡ FIXED: Safely encapsulated within the method block and tracked via assignedTicketsSub
+    if (this.assignedTicketsSub) {
+      this.assignedTicketsSub.unsubscribe();
+    }
+
+    this.assignedTicketsSub = this.ticketService.getAssignedTickets(1, 100).subscribe({
       next: (result) => {
         const tickets = result.items || [];
-        
-        // Calculate performance metrics
+
         const totalCount = tickets.length;
         const resolvedCount = tickets.filter(t => ['resolved', 'closed'].includes(t.status.toLowerCase())).length;
         const resolvedPercent = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 100;
-        
+
         this.performanceMetrics.set([
           { label: 'Resolved Tickets', value: resolvedCount.toString() },
           { label: 'Received Tickets', value: totalCount.toString() },
           { label: 'Resolution Rate', value: `${resolvedPercent}%` },
         ]);
 
-        // Calculate ticket groups (by status or custom category)
         const groupsMap: { [key: string]: number } = {};
         tickets.forEach(t => {
           const status = t.status || 'Other';
@@ -342,9 +400,8 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
         }));
         this.ticketGroups.set(groupList.length > 0 ? groupList : [{ name: 'No Tickets', count: 0 }]);
 
-        // Generate todos from active high/critical tickets
-        const highPriorityTickets = tickets.filter(t => 
-          ['critical', 'high'].includes(t.priority.toLowerCase()) && 
+        const highPriorityTickets = tickets.filter(t =>
+          ['critical', 'high'].includes(t.priority.toLowerCase()) &&
           !['resolved', 'closed'].includes(t.status.toLowerCase())
         );
         const todoList = highPriorityTickets.slice(0, 5).map((t, idx) => ({
@@ -354,21 +411,19 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
         }));
         this.todos.set(todoList.length > 0 ? todoList : [{ id: 1, title: 'All clear! No pending high priority tickets.', due: 'None' }]);
 
-        // Generate dynamic report/chart data based on ticket creation hour
         const hourlyToday = new Array(7).fill(0);
         tickets.forEach(t => {
           const date = new Date(t.createdAt);
           const hour = date.getHours();
-          if (hour <= 9) hourlyToday[0]++;      // 8am
-          else if (hour <= 11) hourlyToday[1]++; // 10am
-          else if (hour <= 13) hourlyToday[2]++; // 12pm
-          else if (hour <= 15) hourlyToday[3]++; // 2pm
-          else if (hour <= 17) hourlyToday[4]++; // 4pm
-          else if (hour <= 19) hourlyToday[5]++; // 6pm
-          else hourlyToday[6]++;                 // 8pm
+          if (hour <= 9) hourlyToday[0]++;
+          else if (hour <= 11) hourlyToday[1]++;
+          else if (hour <= 13) hourlyToday[2]++;
+          else if (hour <= 15) hourlyToday[3]++;
+          else if (hour <= 17) hourlyToday[4]++;
+          else if (hour <= 19) hourlyToday[5]++;
+          else hourlyToday[6]++;
         });
 
-        // Set reportData
         const report = [
           { time: '08:00 AM', today: hourlyToday[0], yesterday: Math.max(0, hourlyToday[0] - 1) },
           { time: '10:00 AM', today: hourlyToday[1], yesterday: Math.max(0, hourlyToday[1] - 1) },
@@ -380,10 +435,19 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
         ];
         this.reportData.set(report);
 
-        // Re-render chart with new data
         this.renderChart();
-      }
+      },
+      error: (err) => console.error('Failed to resolve assigned tickets data', err)
     });
+  }
+
+  navigateToTicket(): void {
+    const ticketId = this.activeToastTicketId();
+    if (ticketId) {
+      this.toastMessage.set(null);
+      this.activeToastTicketId.set(null);
+      this.router.navigate(['/agent/tickets', ticketId]);
+    }
   }
 
   private renderChart() {
@@ -394,7 +458,6 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
       this.chartInstance.destroy();
     }
 
-    // UPDATED to use official Adrenalin Primary Blue (#2066D1)
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(32, 102, 209, 0.3)');
     gradient.addColorStop(1, 'rgba(32, 102, 209, 0.0)');
@@ -407,7 +470,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           {
             label: 'Today',
             data: this.reportData().map(r => r.today),
-            borderColor: '#2066D1', // Primary Blue
+            borderColor: '#2066D1',
             backgroundColor: gradient,
             borderWidth: 3,
             tension: 0.4,
@@ -421,7 +484,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           {
             label: 'Yesterday',
             data: this.reportData().map(r => r.yesterday),
-            borderColor: '#747480', // Text Light
+            borderColor: '#747480',
             borderWidth: 2,
             borderDash: [5, 5],
             tension: 0.4,
@@ -446,7 +509,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           tooltip: {
             mode: 'index',
             intersect: false,
-            backgroundColor: '#383850', // Text Dark
+            backgroundColor: '#383850',
             titleFont: { family: "'Montserrat', sans-serif" },
             bodyFont: { family: "'Open Sans', sans-serif" },
             padding: 12,

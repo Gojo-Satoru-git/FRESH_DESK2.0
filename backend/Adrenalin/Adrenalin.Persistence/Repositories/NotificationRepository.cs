@@ -118,4 +118,22 @@ public sealed class NotificationRepository : INotificationRepository
             .Select(u => u.Email)
             .FirstOrDefaultAsync(cancellationToken);
     }
+    // Add this method to the bottom of your NotificationRepository class:
+    public async Task<List<NotificationLog>> GetUnreadLogsAsync(string recipientEmail, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // 🎯 THE FIX: Filters the logs so agents only get records matched to their specific email account
+            return await _context.Set<NotificationLog>()
+                .AsNoTracking()
+                .Where(log => log.RecipientEmail.ToLower() == recipientEmail.ToLower())
+                .OrderByDescending(log => log.SentAt)
+                .ToListAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            System.Diagnostics.Debug.WriteLine("Warning: Notification query stream was canceled by client subscription.");
+            return new List<NotificationLog>();
+        }
+    }
 }

@@ -11,6 +11,7 @@ public class CsatSurveyConfiguration : IEntityTypeConfiguration<CsatSurvey>
         builder.HasKey(e => e.Id).HasName("csat_surveys_pkey");
 
         builder.ToTable("csat_surveys", "ticket");
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => e.ContactId, "idx_csat_surveys_contact");
 

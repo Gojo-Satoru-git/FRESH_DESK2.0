@@ -82,7 +82,7 @@ public sealed class GroupsController : ControllerBase
             // Check the caller belongs to this group
             var membershipResult = await _dispatcher.Send(new GetUserGroupsQuery(callerId.Value), ct);
             if (!membershipResult.IsSuccess) return Forbid();
-            var belongsToGroup = membershipResult.Value.Any(g => g.Id == id);
+            var belongsToGroup = membershipResult.Value?.Any(g => g.Id == id) ?? false;
             if (!belongsToGroup) return Forbid();
         }
 
