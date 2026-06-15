@@ -38,6 +38,10 @@ public class SlaRepository : ISlaRepository
         return await _db.SlaTickets
          .AsNoTracking()
         .Where(s =>
+
+               s.ResolvedAt == null
+
+            &&
             // First response overdue AND not yet marked breached
             (s.FirstResponseAt == null
                 && s.FirstResponseDueAt < now

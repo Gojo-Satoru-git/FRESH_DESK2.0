@@ -21,8 +21,7 @@ public class NotificationController : ControllerBase
     [HttpGet("unread")]
     public async Task<IActionResult> GetUnreadNotifications(CancellationToken ct)
     {
-        // ⚡ STEP 1: Safely read the user's validated email address from the incoming JWT identity claims
-        // This checks both standard WS-Security claim namespaces and lightweight custom OAuth keys
+     
         string currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value
                                   ?? User.FindFirst("email")?.Value
                                   ?? string.Empty;
