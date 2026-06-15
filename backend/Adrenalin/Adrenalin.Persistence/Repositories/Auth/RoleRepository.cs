@@ -9,7 +9,15 @@ public sealed class RoleRepository : IRoleRepository
 {
     private readonly AdrenalinDbContext _db;
     public RoleRepository(AdrenalinDbContext db) => _db = db;
-
+    public async Task<Role?> GetByNameAsync(
+    string roleName,
+    CancellationToken cancellationToken)
+{
+    return await _db.Roles
+        .FirstOrDefaultAsync(
+            r => r.Name.ToLower() == roleName.ToLower(),
+            cancellationToken);
+}
     public async Task<Role?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.Roles.IgnoreQueryFilters().FirstOrDefaultAsync(r => r.Id == id, ct);
 

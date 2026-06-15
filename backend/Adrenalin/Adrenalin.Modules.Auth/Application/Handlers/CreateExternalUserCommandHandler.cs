@@ -67,8 +67,8 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             throw new Exception(
                 "Email already exists");
          var role =
-            await _roles.GetByIdAsync(
-                request.CustomerRoleId,
+            await _roles.GetByNameAsync(
+                "Customer",
                 cancellationToken);
 
         if (role is null)

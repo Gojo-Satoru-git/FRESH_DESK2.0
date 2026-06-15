@@ -16,3 +16,4 @@
   <Project Path="Adrenalin.SharedKernel/Adrenalin.SharedKernel.csproj" />
   <Project Path="Adrenalin.UnitTests/Adrenalin.UnitTests.csproj" />
 </Solution>
+

@@ -17,6 +17,6 @@ namespace Adrenalin.Modules.Auth.Application.DTOs
 
     public Guid CompanyId { get; set; }
 
-    public Guid CustomerRoleId { get; set; }
+   
 }
 }
