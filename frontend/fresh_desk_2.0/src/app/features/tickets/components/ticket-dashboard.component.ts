@@ -28,9 +28,28 @@ import { TicketDashboard, TicketListItem } from '../models/ticket.model';
       </div>
 
       <!-- KPI Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-5">
+
         <div class="bg-surface rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-             (click)="navigateToList('active')">
+       (click)="navigateToList()">
+    <div class="flex items-center justify-between mb-3">
+      <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h3m-3-4l4 4-4 4M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/>
+        </svg>
+      </div>
+      <svg class="w-4 h-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
+    <div class="text-3xl font-bold text-text-main">
+      @if (loading()) { <span class="animate-pulse">—</span> } @else { {{ dashboard()?.totalTickets ?? 0 }} }
+    </div>
+    <div class="text-sm text-text-muted mt-1 font-medium">All Tickets</div>
+  </div>
+
+        <div class="bg-surface rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+             (click)="navigateToList('Active')">
           <div class="flex items-center justify-between mb-3">
             <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +67,7 @@ import { TicketDashboard, TicketListItem } from '../models/ticket.model';
         </div>
 
         <div class="bg-surface rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-             (click)="navigateToList('inprogress')">
+             (click)="navigateToList('in_progress')">
           <div class="flex items-center justify-between mb-3">
             <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
               <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +159,7 @@ import { TicketDashboard, TicketListItem } from '../models/ticket.model';
                 </div>
                 <div class="flex-shrink-0 flex items-center gap-3">
                   <span [class]="'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ' + getStatusBadge(ticket.status)">
-                    {{ ticket.status }}
+                    {{ getStatusLabel(ticket.status) }}
                   </span>
                   <span class="text-xs text-text-muted hidden sm:block">{{ formatDate(ticket.createdAt) }}</span>
                 </div>
@@ -239,6 +258,17 @@ export class TicketDashboardComponent implements OnInit {
       default: return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
   }
+
+  getStatusLabel(status: string): string {
+  switch (status?.toLowerCase()) {
+    case 'new':
+      return 'Open';
+    case 'open':
+      return 'Assigned';
+    default:
+      return status;
+  }
+}
 
   formatDate(dateStr: string): string {
     const d = new Date(dateStr);

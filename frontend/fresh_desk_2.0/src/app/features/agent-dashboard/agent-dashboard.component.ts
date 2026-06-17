@@ -250,16 +250,17 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
 
   // Initializing with ALL requested cards. Missing backend data defaults to '--'.
   kpiMetrics = signal<any[]>([
-    { label: 'Unresolved', value: 0, highlight: true, alert: false },
-    { label: 'Overdue', value: '--', highlight: false, alert: true }, 
-    { label: 'Due Today', value: '--', highlight: false, alert: false },
-    { label: 'Open', value: '--', highlight: false, alert: false },
-    { label: 'On Hold', value: '--', highlight: false, alert: false },
-    { label: 'Unassigned', value: '--', highlight: false, alert: false },
-    { label: 'In Progress', value: 0, highlight: false, alert: false },
-    { label: 'Pending Reply', value: 0, highlight: false, alert: true },
-    { label: 'Resolved/Closed', value: 0, highlight: false, alert: false },
-  ]);
+  { label: 'Total Tickets', value: 0, highlight: true, alert: false },
+  { label: 'Unresolved', value: 0, highlight: false, alert: false },
+  { label: 'Overdue', value: '--', highlight: false, alert: true }, 
+  { label: 'Due Today', value: '--', highlight: false, alert: false },
+  { label: 'Open', value: '--', highlight: false, alert: false },
+  { label: 'On Hold', value: '--', highlight: false, alert: false },
+  { label: 'Unassigned', value: '--', highlight: false, alert: false },
+  { label: 'In Progress', value: 0, highlight: false, alert: false },
+  { label: 'Pending Reply', value: 0, highlight: false, alert: true },
+  { label: 'Resolved/Closed', value: 0, highlight: false, alert: false },
+]);
   
   performanceMetrics = signal<any[]>([
     { label: 'Resolved Tickets', value: '--' },
@@ -298,21 +299,21 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   private loadDashboardData() {
     // 1. Get stats from getDashboard API (Untouched backend logic)
     this.ticketService.getDashboard().subscribe({
-      next: (dashboard) => {
-        // We inject the API data into the array, while preserving the missing '--' fields
-        this.kpiMetrics.set([
-          { label: 'Unresolved', value: dashboard.totalActive, highlight: true, alert: false },
-          { label: 'Overdue', value: '--', highlight: false, alert: true },
-          { label: 'Due Today', value: '--', highlight: false, alert: false },
-          { label: 'Open', value: '--', highlight: false, alert: false },
-          { label: 'On Hold', value: '--', highlight: false, alert: false },
-          { label: 'Unassigned', value: '--', highlight: false, alert: false },
-          { label: 'In Progress', value: dashboard.inProgress, highlight: false, alert: false },
-          { label: 'Pending Reply', value: dashboard.pendingReply, highlight: false, alert: true },
-          { label: 'Resolved/Closed', value: dashboard.resolvedClosed, highlight: false, alert: false },
-        ]);
-      }
-    });
+  next: (dashboard) => {
+    this.kpiMetrics.set([
+      { label: 'Total Tickets', value: dashboard.totalTickets, highlight: true, alert: false },
+      { label: 'Unresolved', value: dashboard.totalTickets - dashboard.resolvedClosed, highlight: false, alert: false },
+      { label: 'Overdue', value: '--', highlight: false, alert: true },
+      { label: 'Due Today', value: '--', highlight: false, alert: false },
+      { label: 'Open', value: '--', highlight: false, alert: false },
+      { label: 'On Hold', value: '--', highlight: false, alert: false },
+      { label: 'Unassigned', value: '--', highlight: false, alert: false },
+      { label: 'In Progress', value: dashboard.inProgress, highlight: false, alert: false },
+      { label: 'Pending Reply', value: dashboard.pendingReply, highlight: false, alert: true },
+      { label: 'Resolved/Closed', value: dashboard.resolvedClosed, highlight: false, alert: false },
+    ]);
+  }
+});
 
     // 2. Fetch assigned tickets to build other details dynamically (Untouched backend logic)
     this.ticketService.getAssignedTickets(1, 100).subscribe({
@@ -322,12 +323,12 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
         // Calculate performance metrics
         const totalCount = tickets.length;
         const resolvedCount = tickets.filter(t => ['resolved', 'closed'].includes(t.status.toLowerCase())).length;
-        const resolvedPercent = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 100;
+        const resolvedPercent = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : null;
         
         this.performanceMetrics.set([
           { label: 'Resolved Tickets', value: resolvedCount.toString() },
           { label: 'Received Tickets', value: totalCount.toString() },
-          { label: 'Resolution Rate', value: `${resolvedPercent}%` },
+          { label: 'Resolution Rate', value: resolvedPercent !== null ? `${resolvedPercent}%` : '--' },
         ]);
 
         // Calculate ticket groups (by status or custom category)

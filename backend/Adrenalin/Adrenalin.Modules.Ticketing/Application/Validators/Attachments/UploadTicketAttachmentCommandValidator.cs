@@ -12,7 +12,8 @@ public sealed class UploadTicketAttachmentCommandValidator : AbstractValidator<U
     private static readonly string[] AllowedExtensions =
     {
         ".pdf", ".doc", ".docx", ".xlsx",
-        ".csv", ".png", ".jpg", ".jpeg", ".txt", ".mp4"
+        ".csv", ".png", ".jpg", ".jpeg", ".txt", ".mp4",
+        ".eml", ".msg"
     };
 
     public UploadTicketAttachmentCommandValidator()

@@ -267,6 +267,7 @@ export class ReportsComponent implements OnInit {
       },
       error: () => {
         this.setDefaultInsights({
+          totalTickets:0,
           totalActive: 0,
           inProgress: 0,
           pendingReply: 0,

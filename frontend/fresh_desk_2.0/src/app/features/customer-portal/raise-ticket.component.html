@@ -70,13 +70,13 @@
         (dragleave)="isDragOver = false"
         (drop)="onFileDrop($event)"
       >
-        <input type="file" multiple hidden #fileInput (change)="onFileSelect($event)" />
+        <input type="file" multiple hidden #fileInput accept=".pdf,.png,.jpg,.jpeg,.docx,.doc,.xlsx,.csv,.txt,.mp4,.eml,.msg" (change)="onFileSelect($event)" />
         <img src="upload.png" class="h-10 w-10" />
         <p class="text-xl text-gray-600">
           Drag & drop files here or
           <span class="text-blue-600 font-bold underline" (click)="fileInput.click()">browse</span>
         </p>
-        <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX, mp4</p>
+        <p class="text-sm text-gray-400">Supported: PDF, PNG, JPG, DOCX, mp4 , EML , MSG</p>
       </div>
 
       <div *ngIf="attachedFiles.length > 0" class="mb-6">

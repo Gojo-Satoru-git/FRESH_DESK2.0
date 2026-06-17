@@ -23,6 +23,7 @@ export interface TicketListItem {
 
 // ─── Ticket Dashboard (from GET /api/tickets/dashboard) ───────────────────────
 export interface TicketDashboard {
+  totalTickets: number;
   totalActive: number;
   inProgress: number;
   pendingReply: number;

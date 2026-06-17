@@ -180,12 +180,13 @@ public sealed class TicketQueryService : ITicketQueryService
 
         var activeStatuses = new[] { TicketStatus.New, TicketStatus.Open, TicketStatus.InProgress, TicketStatus.Reopened };
 
+        var totalTickets = tickets.Count;
         var totalActive = tickets.Count(s => activeStatuses.Contains(s));
         var inProgress = tickets.Count(s => s == TicketStatus.InProgress);
         var pendingReply = tickets.Count(s => s == TicketStatus.PendingCustomer || s == TicketStatus.PendingInternal);
         var resolvedClosed = tickets.Count(s => s == TicketStatus.Resolved || s == TicketStatus.Closed);
 
-        return new TicketDashboardDto(totalActive, inProgress, pendingReply, resolvedClosed);
+        return new TicketDashboardDto(totalTickets, totalActive, inProgress, pendingReply, resolvedClosed);
     }
 
     public async Task<PagedResult<TicketListItemDto>> SearchTicketsAsync(SearchTicketsQuery request, CancellationToken cancellationToken)

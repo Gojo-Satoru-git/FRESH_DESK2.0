@@ -1,0 +1,8 @@
+From: support@example.com
+To: admin@example.com
+Subject: Server Error Notification
+Date: Tue, 16 Jun 2026 10:00:00 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Error 500
