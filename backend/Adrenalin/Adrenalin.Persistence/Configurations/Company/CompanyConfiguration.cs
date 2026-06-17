@@ -56,10 +56,8 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Adrenalin.Modules.C
         
         builder.Property(e => e.MigrationDate).HasColumnName("migration_date");
         
-        builder.Property(e => e.ModifiedAt).HasColumnName("modified_at");
-        
-        builder.Property(e => e.ModifiedBy).HasMaxLength(100).HasColumnName("modified_by");
-        
+        builder.Property(e => e.UpdatedAt).HasColumnName("modified_at");
+                
         builder.Property(e => e.Name).HasMaxLength(200).HasColumnName("name");
         
         builder.Property(e => e.Notes).HasColumnName("notes");

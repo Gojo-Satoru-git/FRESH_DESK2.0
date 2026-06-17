@@ -26,7 +26,9 @@ public class EscalationRuleConfiguration : IEntityTypeConfiguration<EscalationRu
         builder.Property(e => e.Name).HasMaxLength(100).HasColumnName("name");
             
         builder.Property(e => e.NoResponseMinutes).HasColumnName("no_response_minutes");
-        
+     
+        builder.Ignore(e => e.RowVersion);
+
         builder.Property(e => e.NotifyRole).HasMaxLength(60).HasColumnName("notify_role");
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("escalation_rules_created_by_fkey");

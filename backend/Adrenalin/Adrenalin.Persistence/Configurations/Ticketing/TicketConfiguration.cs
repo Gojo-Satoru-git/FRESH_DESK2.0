@@ -47,6 +47,8 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.HasIndex(e => e.Status, "idx_tickets_status");
 
+   
+
         builder.HasIndex(e => e.CompanyId, "idx_tickets_company_id");
 
         builder.HasIndex(e => e.AssignedAgentId, "idx_tickets_assigned_agent_id");
@@ -114,6 +116,8 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(e => e.SolutionTypeId).HasComment("FK to lookup.solution_types. Replaces the free-text solution_type varchar column. Both columns kept during migration; remove solution_type varchar after data backfill.").HasColumnName("solution_type_id");
         
         builder.Property(e => e.SubModuleId).HasColumnName("sub_module_id");
+        
+       // builder.Property(e => e.Subject).HasColumnName("title");
         
         builder.Property(e => e.TicketNumber).HasMaxLength(20).HasColumnName("ticket_number");
         

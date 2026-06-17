@@ -9,7 +9,7 @@ using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.DependencyInjection;
 using Adrenalin.SharedKernel.Behaviors;
 using Adrenalin.SharedKernel.Interfaces;
-using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Mediator;  
 using Adrenalin.unify.API.Authorization;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +26,14 @@ using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
 using Adrenalin.Infrastructure.Email;
 using Adrenalin.Persistence.Repositories.Auth;
+using Adrenalin.Modules.Company.Domain.Interfaces;
+using Adrenalin.EventBus;
+using Adrenalin.EventBus.Events;
+using Adrenalin.Modules.Company.Applications.EventHandlers;
+using Adrenalin.Modules.Company.Applications.Commands;
+using Adrenalin.Modules.Auth.Application.Notifications;
+using Adrenalin.Modules.SLA.Application;
+using Adrenalin.Persistence.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,24 +50,36 @@ dataSourceBuilder.EnableUnmappedTypes();
 dataSourceBuilder.MapEnum<RevocationReason>(
     "auth.revocation_reason");
 var dataSource = dataSourceBuilder.Build();
+builder.Services.AddScoped<AuditStampInterceptor>();
+builder.Services.AddDbContext<AdrenalinDbContext>(
+    (sp, options) =>
+    {
+        options.UseNpgsql(
+            dataSource,
+            npgsql => npgsql
+                .MigrationsAssembly("Adrenalin.Persistence")
+                .MapEnum<TicketStatus>("ticket_status", "ticket")
+                .MapEnum<TicketPriority>("ticket_priority", "ticket")
+                .MapEnum<TicketSource>("ticket_source", "ticket")
+                .MapEnum<RevocationReason>("revocation_reason", "auth")
+        );
 
-builder.Services.AddDbContext<AdrenalinDbContext>(options =>
-    options.UseNpgsql(dataSource,
-        npgsql => npgsql
-            .MigrationsAssembly("Adrenalin.Persistence")
-            .MapEnum<TicketStatus>("ticket_status", "ticket")
-            .MapEnum<TicketPriority>("ticket_priority", "ticket")
-            .MapEnum<TicketSource>("ticket_source", "ticket")
-            .MapEnum<RevocationReason>("revocation_reason", "auth")
-        )
-        .UseSnakeCaseNamingConvention()
-    );
+        options.UseSnakeCaseNamingConvention();
+
+        options.AddInterceptors(
+            sp.GetRequiredService<AuditStampInterceptor>());
+    });
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
 builder.Services.AddCustomDispatcher(
     typeof(Adrenalin.Modules.Auth.Application.Commands.RegisterUserCommand).Assembly,
     typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
-    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
+    typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly,
+    typeof(CreateContactForExternalUserCommand).Assembly,
+    typeof(ExternalUserCreatedNotificationHandler).Assembly, 
+    typeof(Adrenalin.Modules.SLA.Application.Commands.CheckEscalationsCommand).Assembly,
+    typeof(Adrenalin.Modules.Notification.Application.Queries.GetUnreadNotificationsQuery).Assembly);
+
 
 // ── 3. Pipeline behaviors (order matters — outermost registered first) ────────
 // Validation runs first, then UnitOfWork commits on success
@@ -76,6 +96,9 @@ builder.Services.AddValidatorsFromAssembly(
 
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.Auth.Application.Validators.CreateRoleCommandValidator).Assembly);
+
+builder.Services.AddValidatorsFromAssembly(
+    typeof(CreateContactForExternalUserCommand).Assembly);
 
 var jwtSection =
     builder.Configuration.GetSection("Jwt");
@@ -131,6 +154,9 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IPasswordGenerator,
     PasswordGenerator>();
+    builder.Services.AddScoped<
+    IContactRepository,
+    ContactRepository>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 
@@ -140,6 +166,8 @@ builder.Services.AddKbModule();
 
 // ── RabbitMQ EventBus ──────────────────────────────────────────────────────────
 var rabbitMqEnabled = builder.Configuration.GetValue<bool>("RabbitMQ:Enabled", true);
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
 if (rabbitMqEnabled)
 {
     builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
@@ -153,6 +181,8 @@ else
 // ── Email Polling & Receiving ────────────────────────────────────────────────
 builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
 builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EmailPollingJob>();
+builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EscalationJob>();
+
 
 // Integration Event Handlers
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCreatedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCreatedNotificationHandler>();
@@ -171,9 +201,15 @@ builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.Cur
 builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-builder.Services.AddScoped<IEmailService,FakeEmailService>();
+builder.Services.AddScoped<
+    IEmailService,
+    SmtpEmailService>();
+builder.Services.AddScoped<
+    IIntegrationEventHandler<ExternalUserCreatedEvent>,
+    ExternalUserCreatedEventHandler>();
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(
         new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
@@ -208,6 +244,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 
 });
+// SLA module
+builder.Services.AddSLAApplication();
 
 // ── 10. Auth/authz ───────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
@@ -255,8 +293,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAngularDevClient");
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 // Static files for KB attachments

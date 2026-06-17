@@ -1,5 +1,6 @@
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Persistence.Context;
+using Adrenalin.SharedKernel.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -47,4 +48,15 @@ public class AdrenalinDbContextFactory : IDesignTimeDbContextFactory<AdrenalinDb
             CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
+    private sealed class DesignTimeCurrentUserService : ICurrentUserService
+{
+    public Guid? UserId => null;
+
+    public string? Email => null;
+
+    public bool IsAuthenticated => false;
+
+    public IEnumerable<string> Roles =>
+        Enumerable.Empty<string>();
+}
 }

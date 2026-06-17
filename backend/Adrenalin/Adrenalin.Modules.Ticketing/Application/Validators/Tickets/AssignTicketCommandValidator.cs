@@ -1,18 +1,28 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
 using FluentValidation;
+using Adrenalin.Modules.Ticketing.Application.Commands;
 
 namespace Adrenalin.Modules.Ticketing.Application.Validators;
 
-public sealed class AssignTicketCommandValidator : AbstractValidator<AssignTicketCommand>
+public class AssignTicketCommandValidator
+    : AbstractValidator<AssignTicketCommand>
 {
     public AssignTicketCommandValidator()
     {
-        RuleFor(x => x.TicketId).NotEmpty();
-        
-        RuleFor(x => x.AgentId).NotEmpty();
-        
-        RuleFor(x => x.AssignedBy).NotEmpty();
+        RuleFor(x => x.TicketId)
+            .NotEmpty()
+            .WithMessage("TicketId is required");
 
-        RuleFor(x => x.Notes).MaximumLength(2000);
+        RuleFor(x => x.TriggeredBy)
+            .NotEmpty()
+            .WithMessage("TriggeredBy is required");
+
+        When(x => !x.IsAutoAssignment, () =>
+        {
+            RuleFor(x => x)
+                .Must(x => x.OverrideAgentId.HasValue
+                        || x.OverrideGroupId.HasValue)
+                .WithMessage(
+                    "Manual assignment needs AgentId or GroupId");
+        });
     }
 }

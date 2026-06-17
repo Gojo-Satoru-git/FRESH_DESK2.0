@@ -1,6 +1,7 @@
 using System.Net;
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Application.DTOs;
+using Adrenalin.Modules.Auth.Domain.Constants;
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.SharedKernel.Exceptions;
@@ -19,6 +20,7 @@ public sealed class LoginCommandHandler
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
 
     private readonly ITokenHasher _tokenHasher;
+    private readonly IUnitOfWork _unitOfWork;
 
     public LoginCommandHandler(
         IUserRepository users,
@@ -26,7 +28,8 @@ public sealed class LoginCommandHandler
         IJwtProvider jwtProvider,
         IRefreshTokenRepository refreshTokens,
         IRefreshTokenGenerator refreshTokenGenerator,
-        ITokenHasher tokenHasher
+        ITokenHasher tokenHasher,
+        IUnitOfWork unitOfWork
     )
     {
         _users = users;
@@ -35,6 +38,7 @@ public sealed class LoginCommandHandler
         _refreshTokens = refreshTokens;
         _refreshTokenGenerator = refreshTokenGenerator;
         _tokenHasher = tokenHasher;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LoginResponseDTO> Handle(
@@ -50,13 +54,27 @@ public sealed class LoginCommandHandler
             throw new Exception("Invalid email or password");
 
         Console.WriteLine($"DB HASH: {user.PasswordHash}");
-        
+       if (user.IsLockedOut())
+{
+  var remaining =
+        user.LockoutEnd!.Value - DateTimeOffset.UtcNow;
+
+    throw new ValidationException(
+        $"Account locked. Try again in {(int)Math.Ceiling(remaining.TotalMinutes)} minute(s).");
+}
         var isValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
 
-        if (!isValid)
-        {
-            throw new InvalidCredentialsException();
-        }
+       if (!isValid)
+{
+    user.RecordFailedLogin();
+      await _unitOfWork.SaveChangesAsync(
+        cancellationToken);
+    Console.WriteLine(
+    $"Attempts: {user.FailedLoginAttempts}");
+    throw new UnauthorizedAccessException(
+        "Invalid credentials");
+}
+user.RecordSuccessfulLogin();
 
         var roles =
        await _users.GetUserRolesAsync(

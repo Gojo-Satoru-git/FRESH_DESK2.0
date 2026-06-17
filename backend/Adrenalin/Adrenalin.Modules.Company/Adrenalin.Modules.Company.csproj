@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.EventBus\Adrenalin.EventBus.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -9,10 +10,8 @@
     <Folder Include="Application\DTOs\" />
     <Folder Include="Application\Handlers\" />
     <Folder Include="Application\Queries\" />
-    <Folder Include="Application\Validators\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\Enums\" />
-    <Folder Include="Domain\Events\" />
     <Folder Include="Domain\Interfaces\" />
     <Folder Include="Domain\ValueObjects\" />
   </ItemGroup>

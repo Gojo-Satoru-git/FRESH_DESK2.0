@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Adrenalin.Modules.Auth.Domain.Constants;
 using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities
@@ -37,6 +38,7 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
         public DateTimeOffset? LockoutEnd { get; private set; }
 
         public DateTimeOffset? LastLoginAt { get; private set; }
+        public DateTimeOffset? LastFailedLoginAt { get; private set; }
 
         public ICollection<UserRole> UserRoles { get; private set; } = [];
 
@@ -90,6 +92,37 @@ public void ChangePassword(
 {
     PasswordHash = passwordHash;
     PasswordChangedAt = DateTime.UtcNow;
+}
+public void RecordFailedLogin()
+{
+     if (LastFailedLoginAt.HasValue &&
+        DateTimeOffset.UtcNow - LastFailedLoginAt.Value >
+        TimeSpan.FromMinutes(AuthConstants.FailedAttemptWindowMinutes))
+    {
+        FailedLoginAttempts = 0;
+    }
+    FailedLoginAttempts++;
+     LastFailedLoginAt = DateTimeOffset.UtcNow;
+
+     if (FailedLoginAttempts >= AuthConstants.MaxFailedAttempts)
+    {
+        LockoutEnd =
+            DateTimeOffset.UtcNow.AddMinutes(
+                AuthConstants.LockoutMinutes);
+
+        FailedLoginAttempts = 0;
+    }
+}
+public void RecordSuccessfulLogin()
+{
+    FailedLoginAttempts = 0;
+    LockoutEnd = null;
+    LastLoginAt = DateTimeOffset.UtcNow;
+}
+public bool IsLockedOut()
+{
+    return LockoutEnd.HasValue &&
+           LockoutEnd > DateTimeOffset.UtcNow;
 }
     }
 

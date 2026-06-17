@@ -19,23 +19,62 @@ public sealed class Contact : SoftDeleteEntity
 
     public bool AutoCreated { get; private set; }
 
-    public DateTime? ModifiedAt { get; private set; }
-
-    public string? ModifiedBy { get; private set; }
-
     public Company Company { get; private set; } = null!;
+
+    private Contact() { }
+    private static string NormalizeEmail(string email)
+    {
+        return email.Trim().ToLowerInvariant();
+    }
 
     public static Contact Create(Guid companyId, string email, string name, bool autoCreated = true, bool isAuthorized = true, Guid? userId = null)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
         return new Contact
         {
             Id = Guid.NewGuid(),
             CompanyId = companyId,
-            Email = email,
-            Name = name,
+            Email = NormalizeEmail(email),
+            Name = name.Trim(),
             AutoCreated = autoCreated,
             IsAuthorized = isAuthorized,
             UserId = userId
         };
+    }
+
+    public void Update(string name, string email, string? phone)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        Name = name.Trim();
+        Email = NormalizeEmail(email);
+        Phone = phone?.Trim();
+    }
+
+    public void Authorize()
+    {
+        if (IsAuthorized) return;
+
+        IsAuthorized = true;
+    }
+
+    public void RevokeAuthorization()
+    {
+        if (!IsAuthorized) return;
+
+        IsAuthorized = false;
+    }
+
+    public void LinkUser(Guid userId)
+    {
+        UserId = userId;
+    }
+
+    public void UnlinkUser()
+    {
+        UserId = null;
     }
 }

@@ -11,6 +11,7 @@ public class TicketCustomFieldConfiguration : IEntityTypeConfiguration<TicketCus
         builder.HasKey(e => e.Id).HasName("ticket_custom_fields_pkey");
 
         builder.ToTable("ticket_custom_fields", "ticket");
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => new { e.FieldKey, e.FieldValue }, "idx_tcf_key");
 

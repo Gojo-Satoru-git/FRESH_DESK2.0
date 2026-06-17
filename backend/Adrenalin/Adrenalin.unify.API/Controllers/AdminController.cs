@@ -7,7 +7,7 @@ using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using Adrenalin.Modules.Auth.Domain.Enums;
 namespace Adrenalin.unify.API.Controllers
 {
     [Authorize(Policy = "user:create")]
@@ -35,7 +35,7 @@ namespace Adrenalin.unify.API.Controllers
                     request.FirstName,
                     request.LastName,
                     request.Phone,
-                    request.RoleId),
+                 request.RoleName),
                 cancellationToken);
 
         return Ok(new
@@ -43,5 +43,25 @@ namespace Adrenalin.unify.API.Controllers
             UserId = userId
         });
     }
+    [HttpPost("external-users")]
+public async Task<IActionResult> CreateExternalUser(
+    CreateExternalUserRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    var userId =
+        await _dispatcher.Send(
+            new CreateExternalUserCommand(
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                request.Phone,
+                request.CompanyId),
+            cancellationToken);
+
+    return Ok(new
+    {
+        UserId = userId
+    });
+}
     }
 }

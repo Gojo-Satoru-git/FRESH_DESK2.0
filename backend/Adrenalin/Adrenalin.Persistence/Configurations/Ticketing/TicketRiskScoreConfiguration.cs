@@ -12,6 +12,8 @@ public class TicketRiskScoreConfiguration : IEntityTypeConfiguration<TicketRiskS
 
         builder.ToTable("ticket_risk_scores", "ai", tb => tb.HasComment("Full audit of every priority score computation run. Multiple rows per ticket because the re-evaluation loop fires on every customer reply and SLA status change. trigger_event shows what caused the re-score. customer_reply_count_at enables auditing how many replies pushed priority up."));
 
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
+
         builder.HasIndex(e => new { e.ForceP1Triggered, e.ComputedAt }, "idx_risk_scores_force_p1").IsDescending(false, true).HasFilter("(force_p1_triggered = true)");
 
         builder.HasIndex(e => new { e.FinalScore, e.ComputedAt }, "idx_risk_scores_high_priority").IsDescending().HasFilter("(final_score >= 3.5)");

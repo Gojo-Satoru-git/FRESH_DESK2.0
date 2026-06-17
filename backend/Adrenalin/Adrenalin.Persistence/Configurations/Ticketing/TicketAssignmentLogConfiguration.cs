@@ -12,6 +12,7 @@ public class TicketAssignmentLogConfiguration : IEntityTypeConfiguration<TicketA
         builder.HasKey(e => e.Id).HasName("ticket_assignment_log_pkey");
 
         builder.ToTable("ticket_assignment_log", "ticket");
+        builder.HasQueryFilter(e => !e.Ticket.IsDeleted);
 
         builder.HasIndex(e => new { e.ToAgentId, e.AssignedAt }, "idx_tal_agent").IsDescending(false, true);
 
@@ -32,7 +33,7 @@ public class TicketAssignmentLogConfiguration : IEntityTypeConfiguration<TicketA
         builder.Property(e => e.TicketId).HasColumnName("ticket_id");
         
         builder.Property(e => e.ToAgentId).HasColumnName("to_agent_id");
-        
+
         builder.Ignore(e => e.RowVersion);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.ChangedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_assignment_log_changed_by_fkey");

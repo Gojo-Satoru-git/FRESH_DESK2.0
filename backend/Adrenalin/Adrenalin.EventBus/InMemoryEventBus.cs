@@ -27,7 +27,11 @@ public sealed class InMemoryEventBus : IEventBus
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var handlers = scope.ServiceProvider.GetServices<IIntegrationEventHandler<T>>();
+                var handlers = scope.ServiceProvider.GetServices<IIntegrationEventHandler<T>>().ToList();
+                 _logger.LogInformation(
+                "Found {Count} handlers for {EventName}",
+                handlers.Count,
+                typeof(T).Name);
                 
                 foreach (var handler in handlers)
                 {

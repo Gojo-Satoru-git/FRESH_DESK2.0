@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 using System.Linq;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Application.Commands;
@@ -8,7 +9,7 @@ using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
-
+using Adrenalin.SharedKernel.Exceptions;
 namespace Adrenalin.Modules.Auth.Application.Handlers
 {
     public class CreateInternalUserCommandHandler: IRequestHandler<CreateInternalUserCommand, Guid>
@@ -22,6 +23,13 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
     private readonly IEmailService _emailService;
     private readonly IPasswordGenerator _PasswordGenerator;
     private readonly ICurrentUserService _currentUser;
+    private static readonly string[] AllowedInternalRoles =
+{
+    "Admin",
+    "Manager",
+    "Agent",
+    "Supervisor"
+};
 
     public CreateInternalUserCommandHandler(
         IUserRepository users,
@@ -60,11 +68,19 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             throw new Exception(
                 "Email already exists");
         }
-        var role =
-            await _roles.GetByIdAsync(
-                request.RoleId,
-                cancellationToken);
+        if (!AllowedInternalRoles.Any(
+        r => r.Equals(
+            request.RoleName,
+            StringComparison.OrdinalIgnoreCase)))
+{
+    throw new ValidationException("Invalid internal role");
+}
 
+var role = await _roles.GetByNameAsync(
+    request.RoleName,
+    cancellationToken);
+        
+       Console.WriteLine($"ROLE RECEIVED: {request.RoleName}");
         if (role is null)
         {
             throw new Exception(
@@ -124,10 +140,22 @@ var adminId = _currentUser.UserId.Value;
          var resetLink =
             $"http://localhost:5088/api/auth/reset-password?token={rawToken}";
 
-        await _emailService.SendAsync(
-            user.Email,
-            "Set Your Password",
-            resetLink);
+       await _emailService.SendAsync(
+    user.Email,
+    "Set Your Password",
+    $@"
+    <h2>Welcome to Adrenalin</h2>
+
+    <p>Your account has been created.</p>
+
+    <p>
+        <a href='{resetLink}'>
+            Click here to set your password
+        </a>
+    </p>
+
+    <p>This link expires in 24 hours.</p>
+    ");
 
         return user.Id;
     }

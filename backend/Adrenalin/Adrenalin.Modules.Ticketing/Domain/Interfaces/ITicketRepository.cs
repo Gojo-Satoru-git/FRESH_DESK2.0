@@ -1,25 +1,48 @@
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 
 public interface ITicketRepository
 {
-    Task<Ticket?> GetByIdAsync(Guid ticketId, CancellationToken cancellationToken = default);
+    // ── existing ───────────────────────────────────────────────
+    Task<Ticket?> GetByIdAsync(
+        Guid id,
+        CancellationToken ct = default);
 
-    Task<bool> ExistsAsync(Guid ticketId, CancellationToken cancellationToken = default);
+    Task AddAsync(
+        Ticket ticket,
+        CancellationToken ct = default);
 
-    
+    Task UpdateAssignmentAsync(
+        Guid ticketId,
+        Guid? agentId,
+        Guid? groupId,
+        Guid triggeredBy,
+        CancellationToken ct = default);
 
-    
-    
-    Task<Guid?> GetUserCompanyIdAsync(Guid userId, CancellationToken cancellationToken = default);
-    
-    Task AddAsync(Ticket ticket, CancellationToken cancellationToken = default);
+    Task<Guid?> GetLeastLoadedAgentInGroupAsync(
+        Guid groupId,
+        CancellationToken ct = default);
+
+    // ── ADD THESE — restored missing methods ───────────────────
+    Task<Guid?> GetUserCompanyIdAsync(
+        Guid userId,
+        CancellationToken ct = default);
 
     Task<string> GenerateTicketNumberAsync(CancellationToken cancellationToken = default);
 
     void Update(Ticket ticket);
+    Task<IReadOnlyList<Ticket>> GetTicketsAsync(
+         string? ticketNumber,
+         TicketStatus? status,
+         Guid? assignedAgentId,
+         Guid? companyId,
+         int page,
+         int pageSize,
+         CancellationToken ct = default);
 
     void Remove(Ticket ticket);
 
@@ -42,4 +65,10 @@ public interface ITicketRepository
     Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default);
 
     Task<bool> IsUserAdminAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<int> CountTicketsAsync(
+        string? ticketNumber,
+        TicketStatus? status,
+        Guid? assignedAgentId,
+        Guid? companyId,
+        CancellationToken ct = default);
 }
