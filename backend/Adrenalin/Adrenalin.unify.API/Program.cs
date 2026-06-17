@@ -201,9 +201,12 @@ builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.Cur
 builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-builder.Services.AddScoped<
-    IEmailService,
-    SmtpEmailService>();
+
+// ── Email (Console / SMTP / Both) ───────────────────────────────────────────
+builder.Services.AddScoped<Adrenalin.Infrastructure.Email.SmtpEmailService>();
+builder.Services.AddScoped<Adrenalin.Infrastructure.Email.ConsoleEmailLogger>();
+builder.Services.AddScoped<IEmailService, Adrenalin.Infrastructure.Email.CompositeEmailService>();
+
 builder.Services.AddScoped<
     IIntegrationEventHandler<ExternalUserCreatedEvent>,
     ExternalUserCreatedEventHandler>();

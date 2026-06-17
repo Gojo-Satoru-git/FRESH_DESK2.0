@@ -1,65 +1,62 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using Adrenalin.SharedKernel.Interfaces;
 using Microsoft.Extensions.Configuration;
-
+using Adrenalin.SharedKernel.Interfaces;
+using Adrenalin.SharedKernel.Models;
 
 namespace Adrenalin.Infrastructure.Email
 {
-    public class SmtpEmailService: IEmailService
+    /// <summary>
+    /// Real SMTP sender, built on MailKit/MimeKit (free, open-source — no paid
+    /// provider needed). Works with Gmail SMTP, Mailtrap, or any standard SMTP host
+    /// configured under the "Email" section in appsettings.json.
+    /// </summary>
+    public sealed class SmtpEmailService : IEmailService
     {
         private readonly EmailSettings _settings;
-         public SmtpEmailService(
-        IConfiguration configuration)
-    {
-        _settings =
-            configuration
-                .GetSection("Email")
-                .Get<EmailSettings>()!;
-    }
-     public async Task SendAsync(
-        string to,
-        string subject,
-        string body)
-    {
-        var email = new MimeMessage();
 
-        email.From.Add(
-            new MailboxAddress(
-                _settings.DisplayName,
-                _settings.From));
+        public SmtpEmailService(IConfiguration configuration)
+        {
+            _settings = configuration.GetSection("Email").Get<EmailSettings>()
+                         ?? new EmailSettings();
+        }
 
-        email.To.Add(
-            MailboxAddress.Parse(to));
+        public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        {
+            var email = new MimeMessage();
 
-        email.Subject = subject;
-         email.Body =
-            new TextPart("html")
-            {
-                Text = body
-            };
+            email.From.Add(new MailboxAddress(_settings.DisplayName, _settings.From));
 
-        using var smtp = new SmtpClient();
-        Console.WriteLine($"USER: {_settings.Username}");
-Console.WriteLine($"PASS: {_settings.Password}");
-Console.WriteLine($"HOST: {_settings.Host}");
-Console.WriteLine($"PORT: {_settings.Port}");
-        await smtp.ConnectAsync(
-            _settings.Host,
-            _settings.Port,
-            SecureSocketOptions.StartTls);
+            foreach (var to in message.To)
+                email.To.Add(MailboxAddress.Parse(to));
 
-        await smtp.AuthenticateAsync(
-            _settings.Username,
-            _settings.Password);
+            foreach (var cc in message.Cc)
+                email.Cc.Add(MailboxAddress.Parse(cc));
 
-        await smtp.SendAsync(email);
-         await smtp.DisconnectAsync(true);
-    }
+            foreach (var bcc in message.Bcc)
+                email.Bcc.Add(MailboxAddress.Parse(bcc));
+
+            email.Subject = message.Subject;
+            email.Body = new TextPart("html") { Text = message.Body };
+
+            using var smtp = new SmtpClient();
+
+            await smtp.ConnectAsync(
+                _settings.Host,
+                _settings.Port,
+                SecureSocketOptions.StartTls,
+                cancellationToken);
+
+            await smtp.AuthenticateAsync(
+                _settings.Username,
+                _settings.Password,
+                cancellationToken);
+
+            await smtp.SendAsync(email, cancellationToken);
+            await smtp.DisconnectAsync(true, cancellationToken);
+        }
     }
 }
