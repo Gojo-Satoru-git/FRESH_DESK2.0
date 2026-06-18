@@ -126,6 +126,22 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'team-lead',
+    loadComponent: () =>
+      import('./layouts/team-lead-layout/team-lead-layout.component').then(
+        (m) => m.TeamLeadLayoutComponent,
+      ),
+    loadChildren: () => import('./features/team-lead/team-lead.routes').then((m) => m.teamLeadRoutes),
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./layouts/admin-layout/admin-layout.component').then(
+        (m) => m.AdminLayoutComponent,
+      ),
+    loadChildren: () => import('./features/admin-panel/admin-panel.routes').then((m) => m.adminRoutes),
+  },
+  {
     path: '**',
     redirectTo: 'login',
   },

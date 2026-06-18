@@ -1,3 +1,4 @@
+using Adrenalin.Infrastructure.Storage.Providers;
 using Adrenalin.SharedKernel.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
@@ -6,8 +7,10 @@ using System.Linq;
 
 namespace Adrenalin.Infrastructure.Storage;
 
-public sealed class LocalFileStorageService : IFileStorageService
+public sealed class LocalFileStorageProvider : IFileStorageProvider
 {
+    public string ProviderName => "Local";
+
     private readonly string _basePath;
 
     private static readonly string[] UnsafeExtensions = new[]
@@ -16,7 +19,7 @@ public sealed class LocalFileStorageService : IFileStorageService
         ".cshtml", ".vbhtml", ".js", ".vbs", ".msi", ".com", ".scr", ".pif", ".cpl", ".html", ".htm"
     };
 
-    public LocalFileStorageService(IConfiguration configuration)
+    public LocalFileStorageProvider(IConfiguration configuration)
     {
         _basePath = configuration["FileStorage:LocalPath"] ?? "uploads";
 
@@ -43,19 +46,33 @@ public sealed class LocalFileStorageService : IFileStorageService
             throw new InvalidOperationException("File extension is not allowed for security reasons.");
         }
 
-        var uniqueFileName = $"{Guid.NewGuid()}_{safeFileName}";
+        if (!stream.CanSeek)
+        {
+            var ms = new MemoryStream();
+            await stream.CopyToAsync(ms, cancellationToken);
+            ms.Position = 0;
+            stream = ms;
+        }
 
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        stream.Position = 0;
+        var hashBytes = await sha256.ComputeHashAsync(stream, cancellationToken);
+        var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+
+        stream.Position = 0;
+
+        var uniqueFileName = $"{hashString}{extension}";
         var fileurl = Path.Combine(folder, uniqueFileName).Replace("\\", "/");
-
         var fullPath = Path.Combine(_basePath, fileurl);
 
         ValidatePath(fullPath);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-
-        await using var fileStream = File.Create(fullPath);
-
-        await stream.CopyToAsync(fileStream, cancellationToken);
+        if (!File.Exists(fullPath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            await using var fileStream = File.Create(fullPath);
+            await stream.CopyToAsync(fileStream, cancellationToken);
+        }
 
         return fileurl;
     }
@@ -91,5 +108,18 @@ public sealed class LocalFileStorageService : IFileStorageService
         ValidatePath(fullPath);
 
         return Task.FromResult(File.Exists(fullPath));
+    }
+    public Task<IEnumerable<string>> EnumerateFilesAsync(string folder, CancellationToken cancellationToken = default)
+    {
+        var folderPath = Path.Combine(_basePath, folder);
+        ValidatePath(folderPath);
+
+        if (!Directory.Exists(folderPath))
+            return Task.FromResult(Enumerable.Empty<string>());
+
+        var files = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories);
+        var fileUrls = files.Select(f => Path.GetRelativePath(_basePath, f).Replace("\\", "/"));
+
+        return Task.FromResult(fileUrls);
     }
 } 

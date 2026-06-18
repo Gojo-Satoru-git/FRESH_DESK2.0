@@ -1,0 +1,126 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TeamLeadService, LeadDashboard } from '../services/team-lead.service';
+
+@Component({
+  selector: 'app-team-lead-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="max-w-7xl mx-auto space-y-6 animate-fade-in pb-12">
+      <!-- Header -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold font-heading text-text-dark dark:text-text-white">Lead Dashboard</h2>
+        <p class="text-sm font-sans text-text-light dark:text-text-muted mt-1">
+          Overview of ticket metrics across all your managed groups.
+        </p>
+      </div>
+      
+      @if (loading()) {
+        <div class="py-12 flex justify-center">
+          <div class="w-8 h-8 rounded-full border-4 border-primary-blue border-t-transparent animate-spin"></div>
+        </div>
+      } @else if (dashboard()) {
+        <!-- Global Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-card-white dark:bg-surface rounded-xl border border-table-dark-gray dark:border-gray-800 shadow-sm p-5">
+            <h3 class="text-xs font-semibold text-text-light dark:text-text-muted uppercase tracking-wider mb-1">Groups Managed</h3>
+            <p class="text-2xl font-bold text-text-dark dark:text-text-white">{{ dashboard()?.totalGroupsManaged }}</p>
+          </div>
+          <div class="bg-card-white dark:bg-surface rounded-xl border border-table-dark-gray dark:border-gray-800 shadow-sm p-5">
+            <h3 class="text-xs font-semibold text-text-light dark:text-text-muted uppercase tracking-wider mb-1">Total Active Tickets</h3>
+            <p class="text-2xl font-bold text-primary-blue">{{ getTotalActive() }}</p>
+          </div>
+          <div class="bg-card-white dark:bg-surface rounded-xl border border-table-dark-gray dark:border-gray-800 shadow-sm p-5">
+            <h3 class="text-xs font-semibold text-text-light dark:text-text-muted uppercase tracking-wider mb-1">Unassigned</h3>
+            <p class="text-2xl font-bold text-warning-yellow">{{ getTotalUnassigned() }}</p>
+          </div>
+          <div class="bg-card-white dark:bg-surface rounded-xl border border-table-dark-gray dark:border-gray-800 shadow-sm p-5">
+            <h3 class="text-xs font-semibold text-text-light dark:text-text-muted uppercase tracking-wider mb-1">SLA Breached</h3>
+            <p class="text-2xl font-bold text-error-red">{{ getTotalBreached() }}</p>
+          </div>
+        </div>
+
+        <h3 class="text-lg font-bold font-heading text-text-dark dark:text-text-white mb-4">Group Breakdown</h3>
+
+        <!-- Group Breakdown -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          @for (group of dashboard()?.groupDashboards; track group.groupId) {
+            <div class="bg-card-white dark:bg-surface rounded-xl border border-table-dark-gray dark:border-gray-800 shadow-sm p-6 flex flex-col hover:shadow-md transition-shadow">
+              <div class="flex justify-between items-start mb-4">
+                <h4 class="text-lg font-bold text-text-dark dark:text-text-white">{{ group.groupName }}</h4>
+                <div class="text-xs font-bold px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded">
+                  {{ group.totalTickets }} Total
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 flex-1">
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">Active</span>
+                  <span class="block text-xl font-bold text-primary-blue">{{ group.totalActive }}</span>
+                </div>
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">In Progress</span>
+                  <span class="block text-xl font-bold text-warning-yellow">{{ group.inProgress }}</span>
+                </div>
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">Unassigned</span>
+                  <span class="block text-xl font-bold text-error-red">{{ group.unassigned }}</span>
+                </div>
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">Pending Reply</span>
+                  <span class="block text-xl font-bold text-purple-600 dark:text-purple-400">{{ group.pendingReply }}</span>
+                </div>
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">Resolved</span>
+                  <span class="block text-xl font-bold text-success-green">{{ group.resolvedClosed }}</span>
+                </div>
+                <div class="bg-bg-light dark:bg-bg-dark rounded-lg p-3 text-center border border-table-dark-gray dark:border-gray-700">
+                  <span class="block text-xs font-medium text-text-light mb-1">Breached</span>
+                  <span class="block text-xl font-bold text-error-red">{{ group.slasBreached }}</span>
+                </div>
+              </div>
+            </div>
+          }
+          
+          @if (dashboard()?.groupDashboards?.length === 0) {
+            <div class="col-span-full py-8 text-center text-text-light bg-surface border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+              You do not manage any groups yet.
+            </div>
+          }
+        </div>
+      }
+    </div>
+  `
+})
+export class DashboardComponent implements OnInit {
+  private teamLeadService = inject(TeamLeadService);
+  
+  dashboard = signal<LeadDashboard | null>(null);
+  loading = signal(true);
+
+  ngOnInit() {
+    this.teamLeadService.getLeadDashboard().subscribe({
+      next: (res) => {
+        this.dashboard.set(res);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading lead dashboard', err);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  getTotalActive() {
+    return this.dashboard()?.groupDashboards.reduce((sum, g) => sum + g.totalActive, 0) || 0;
+  }
+
+  getTotalUnassigned() {
+    return this.dashboard()?.groupDashboards.reduce((sum, g) => sum + g.unassigned, 0) || 0;
+  }
+
+  getTotalBreached() {
+    return this.dashboard()?.groupDashboards.reduce((sum, g) => sum + g.slasBreached, 0) || 0;
+  }
+}

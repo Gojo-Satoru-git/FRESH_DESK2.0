@@ -32,6 +32,8 @@ public sealed class Company : ActiveSoftDeleteEntity
 
     public string? Notes { get; private set; }
 
+    public bool AllowAutoContactCreation { get; private set; } = false;
+
     public CompanyContactsLimit? CompanyContactsLimit { get; private set; }
 
     private readonly List<Contact> _contacts = [];
@@ -100,6 +102,13 @@ public sealed class Company : ActiveSoftDeleteEntity
         SetAudit(modifiedById);
 
         // RaiseDomainEvent(new CompanyDeactivatedDomainEvent(Id));
+    }
+
+    public void SetAutoContactCreation(bool allow, Guid modifiedById)
+    {
+        if (AllowAutoContactCreation == allow) return;
+        AllowAutoContactCreation = allow;
+        SetAudit(modifiedById);
     }
 
     public void AssignCam(Guid userId, Guid modifiedById)

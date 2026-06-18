@@ -1,8 +1,11 @@
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.Modules.Auth.Domain.Services;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
+using Adrenalin.EventBus;
+using Adrenalin.EventBus.Events;
 
 namespace Adrenalin.Modules.Auth.Application.Handlers;
 
@@ -21,6 +24,7 @@ public sealed class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand
                 return Result<Guid>.Failure($"A role named '{cmd.Name}' already exists.");
             var role = Role.Create(cmd.Name, cmd.Description, cmd.ActorId);
             _roles.Add(role);
+            await _roles.SaveChangesAsync(ct);
            
             return Result<Guid>.Success(role.Id);
         }
@@ -284,7 +288,16 @@ public sealed class CreateGroupCommandHandler : IRequestHandler<CreateGroupComma
         {
             if (await _groups.ExistsByNameAsync(cmd.Name, ct))
                 return Result<Guid>.Failure($"A group named '{cmd.Name}' already exists.");
-            var group = Group.Create(cmd.Name, cmd.RegionCode, cmd.TierCode, cmd.UnattendedAlertMinutes, cmd.ActorId);
+
+            if (cmd.FallbackGroupId.HasValue)
+            {
+                var fallbackService = new GroupFallbackValidationService(_groups);
+                // On create, sourceGroupId is new, so we use Guid.NewGuid() temporarily or just the target
+                var validationResult = await fallbackService.ValidateFallbackChainAsync(Guid.Empty, cmd.FallbackGroupId.Value, ct);
+                if (!validationResult.IsSuccess) return Result<Guid>.Failure(validationResult.Error ?? "Fallback validation failed.");
+            }
+
+            var group = Group.Create(cmd.Name, cmd.RegionCode, cmd.TierCode, cmd.UnattendedAlertMinutes, cmd.ActorId, cmd.AssignmentStrategy, cmd.FallbackGroupId);
             _groups.Add(group);
             await _groups.SaveChangesAsync(ct);
             return Result<Guid>.Success(group.Id);
@@ -307,7 +320,15 @@ public sealed class UpdateGroupCommandHandler : IRequestHandler<UpdateGroupComma
             if (!group.Name.Equals(cmd.Name, StringComparison.OrdinalIgnoreCase)
                 && await _groups.ExistsByNameAsync(cmd.Name, ct))
                 return Result.Failure($"A group named '{cmd.Name}' already exists.");
-            group.Update(cmd.Name, cmd.RegionCode, cmd.TierCode, cmd.UnattendedAlertMinutes, cmd.ActorId);
+
+            if (cmd.FallbackGroupId.HasValue)
+            {
+                var fallbackService = new GroupFallbackValidationService(_groups);
+                var validationResult = await fallbackService.ValidateFallbackChainAsync(cmd.GroupId, cmd.FallbackGroupId.Value, ct);
+                if (!validationResult.IsSuccess) return validationResult;
+            }
+
+            group.Update(cmd.Name, cmd.RegionCode, cmd.TierCode, cmd.UnattendedAlertMinutes, cmd.ActorId, cmd.AssignmentStrategy, cmd.FallbackGroupId);
             _groups.Update(group);
             await _groups.SaveChangesAsync(ct);
             return Result.Success();
@@ -372,7 +393,8 @@ public sealed class AddUserToGroupCommandHandler : IRequestHandler<AddUserToGrou
 public sealed class RemoveUserFromGroupCommandHandler : IRequestHandler<RemoveUserFromGroupCommand, Result>
 {
     private readonly IUserGroupRepository _ug;
-    public RemoveUserFromGroupCommandHandler(IUserGroupRepository ug) => _ug = ug;
+    private readonly IEventBus _eventBus;
+    public RemoveUserFromGroupCommandHandler(IUserGroupRepository ug, IEventBus eventBus) => (_ug, _eventBus) = (ug, eventBus);
 
     public async Task<Result> Handle(RemoveUserFromGroupCommand cmd, CancellationToken ct)
     {
@@ -392,7 +414,8 @@ public sealed class RemoveUserFromGroupCommandHandler : IRequestHandler<RemoveUs
 public sealed class SetGroupLeadCommandHandler : IRequestHandler<SetGroupLeadCommand, Result>
 {
     private readonly IUserGroupRepository _ug;
-    public SetGroupLeadCommandHandler(IUserGroupRepository ug) => _ug = ug;
+    private readonly IEventBus _eventBus;
+    public SetGroupLeadCommandHandler(IUserGroupRepository ug, IEventBus eventBus) => (_ug, _eventBus) = (ug, eventBus);
 
     public async Task<Result> Handle(SetGroupLeadCommand cmd, CancellationToken ct)
     {
@@ -400,6 +423,7 @@ public sealed class SetGroupLeadCommandHandler : IRequestHandler<SetGroupLeadCom
         {
             var ug = await _ug.GetAsync(cmd.UserId, cmd.GroupId, ct);
             if (ug is null) return Result.Failure("User is not a member of this group.");
+            
             ug.SetLead(cmd.IsLead, cmd.ActorId);
             _ug.Update(ug);
             await _ug.SaveChangesAsync(ct);

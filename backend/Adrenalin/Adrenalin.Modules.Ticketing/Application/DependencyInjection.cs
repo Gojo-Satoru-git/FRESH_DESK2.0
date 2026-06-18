@@ -29,6 +29,11 @@ public static class DependencyInjection
         // Assignment helper — not a handler so needs manual registration
         services.AddScoped<AutomationConditionEvaluator>();
 
+        // ── Routing Engine & Assignment Strategies ──────────────────────────
+        services.AddScoped<Adrenalin.Modules.Ticketing.Domain.Interfaces.ITicketRoutingEngine, Adrenalin.Modules.Ticketing.Application.Services.TicketRoutingEngine>();
+        services.AddScoped<Adrenalin.Modules.Ticketing.Domain.Interfaces.IAgentAssignmentStrategy, Adrenalin.Modules.Ticketing.Application.Services.LeastLoadedAssignmentStrategy>();
+        services.AddScoped<Adrenalin.Modules.Ticketing.Application.Services.AgentAssignmentStrategyFactory>();
+
         return services;
     }
 }

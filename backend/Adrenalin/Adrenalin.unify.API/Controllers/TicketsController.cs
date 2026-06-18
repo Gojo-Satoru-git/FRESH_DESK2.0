@@ -1,4 +1,5 @@
 using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 using Adrenalin.Modules.Ticketing.Application.DTOs;
 using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
@@ -21,10 +22,12 @@ namespace Adrenalin.unify.API.Controllers;
 public sealed class TicketsController : ControllerBase
 {
     private readonly IDispatcher _dispatcher;
+    private readonly IAuthorizationService _authService;
 
-    public TicketsController(IDispatcher dispatcher)
+    public TicketsController(IDispatcher dispatcher, IAuthorizationService authService)
     {
         _dispatcher = dispatcher;
+        _authService = authService;
     }
 
     [HttpPost]
@@ -32,7 +35,7 @@ public sealed class TicketsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateTicketCommand command)
     {
         var actorId = GetActorId();
-        var isCustomer = User.IsInRole("customer");
+        var isCustomer = !(await _authService.AuthorizeAsync(User, "ticket:manage")).Succeeded;
 
         var commandToExecute = command with
         {
@@ -118,10 +121,53 @@ public sealed class TicketsController : ControllerBase
             : BadRequest(new { error = result.Error });
     }
 
+    [HttpPost("{ticketId:guid}/claim")]
+    [Authorize(Policy = "ticket:assign")]
+    public async Task<IActionResult> ClaimTicket(Guid ticketId, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var command = new ClaimTicketCommand(ticketId, actorId.Value);
+
+        var result = await _dispatcher.Send(command, ct);
+
+        return result.IsSuccess
+            ? Ok(new { Message = "Ticket claimed successfully.", TicketId = result.Value })
+            : BadRequest(new { error = result.Error });
+    }
+
     public record AssignTicketRequest(
         Guid TriggeredBy,
         Guid? AgentId,
         Guid? GroupId, string? Notes = null);
+
+    [HttpPost("bulk-assign")]
+    [Authorize(Policy = "ticket:assign")]
+    public async Task<IActionResult> BulkAssignTickets([FromBody] BulkAssignTicketsRequest request, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var command = new BulkAssignTicketsCommand(
+            request.TicketIds,
+            request.AgentId,
+            request.GroupId,
+            actorId.Value
+        );
+
+        var result = await _dispatcher.Send(command, ct);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(new { error = result.Error });
+    }
+
+    public record BulkAssignTicketsRequest(
+        List<Guid> TicketIds,
+        Guid? AgentId,
+        Guid? GroupId
+    );
 
     [HttpPost("{ticketId:guid}/status")]
     [Authorize(Policy = "ticket:update")]
@@ -150,7 +196,7 @@ public sealed class TicketsController : ControllerBase
     public async Task<ActionResult<Guid>> AddComment(Guid ticketId, [FromBody] AddCommentRequest request)
     {
         var actorId = GetActorId();
-        var isCustomer = User.IsInRole("customer");
+        var isCustomer = !(await _authService.AuthorizeAsync(User, "ticket:manage")).Succeeded;
 
         var command = new AddCommentCommand(
             ticketId,
@@ -177,7 +223,8 @@ public sealed class TicketsController : ControllerBase
     [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetComments(Guid ticketId, [FromQuery] bool includeInternal = false, CancellationToken cancellationToken = default)
     {
-        if (User.IsInRole("customer"))
+        var isCustomer = !(await _authService.AuthorizeAsync(User, "ticket:manage")).Succeeded;
+        if (isCustomer)
         {
             includeInternal = false;
         }
@@ -227,7 +274,7 @@ public sealed class TicketsController : ControllerBase
         if (!actorId.HasValue) return Unauthorized();
 
         // Customers only see their own tickets; agents/admins/team_leads see all
-        var isCustomer = User.IsInRole("customer");
+        var isCustomer = !(await _authService.AuthorizeAsync(User, "ticket:manage")).Succeeded;
         var userIdFilter = isCustomer ? actorId : null;
 
         var query = new GetTicketDashboardQuery(companyId, userIdFilter);
@@ -239,7 +286,7 @@ public sealed class TicketsController : ControllerBase
     [Authorize(Policy = "ticket:read")]
     public async Task<IActionResult> GetById(Guid ticketId)
     {
-        var isCustomer = User.IsInRole("customer");
+        var isCustomer = !(await _authService.AuthorizeAsync(User, "ticket:manage")).Succeeded;
         var query = new GetTicketByIdQuery(ticketId, IncludeInternalComments: !isCustomer);
         var response = await _dispatcher.Send(query);
 

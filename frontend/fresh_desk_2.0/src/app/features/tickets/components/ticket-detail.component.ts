@@ -340,7 +340,15 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                         placeholder="Write a comment… Use @mention to notify someone"
                         class="w-full px-4 py-3 bg-background border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-text-main placeholder:text-text-muted/60 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
                       ></textarea>
-                      <div class="flex justify-end mt-2">
+                      <div class="flex justify-between items-center mt-2">
+                        <div>
+                          @if (!isCustomer()) {
+                            <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
+                              <input type="checkbox" [(ngModel)]="isInternalComment" class="rounded border-gray-300 text-primary focus:ring-primary">
+                              Internal Note
+                            </label>
+                          }
+                        </div>
                         <button
                           (click)="submitComment()"
                           [disabled]="!newComment.trim() || submittingComment()"
@@ -670,6 +678,7 @@ export class TicketDetailComponent implements OnInit {
   editTitle = '';
   isActionLoading = signal<boolean>(false);
   newComment = '';
+  isInternalComment = false;
 
   statusFlow = STATUS_FLOW;
   agents = signal<any[]>([]);
@@ -933,9 +942,10 @@ export class TicketDetailComponent implements OnInit {
     const t = this.ticket();
     if (!t || !this.newComment.trim()) return;
     this.submittingComment.set(true);
-    this.ticketService.addComment(t.id, { body: this.newComment, visibility: 'Public' }).subscribe({
+    this.ticketService.addComment(t.id, { body: this.newComment, isPrivate: this.isInternalComment }).subscribe({
       next: () => {
         this.newComment = '';
+        this.isInternalComment = false;
         this.submittingComment.set(false);
         this.loadComments(t.id);
         this.showToast('Comment added!');

@@ -23,6 +23,13 @@ public sealed record TicketAssignedDomainEvent(
     Guid AssignedBy
 ) : INotification;
 
+public sealed record TicketGroupAssignedDomainEvent(
+    Guid TicketId,
+    string? TicketNumber,
+    Guid GroupId,
+    Guid AssignedBy
+) : INotification;
+
 public sealed record TicketStatusChangedDomainEvent(
     Guid TicketId,
     TicketStatus OldStatus,

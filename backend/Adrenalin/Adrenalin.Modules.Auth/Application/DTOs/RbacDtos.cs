@@ -26,5 +26,11 @@ public sealed record GroupMemberDto(Guid UserId, string Email, string? FirstName
 
 public sealed record GroupWithMembersDto(GroupDto Group, IReadOnlyList<GroupMemberDto> Members);
 
+public sealed record EnterpriseGroupMemberDto(
+    Guid UserId, string Name, string Email, bool IsLead, IReadOnlyList<string> Roles);
+
+public sealed record EnterpriseGroupLeaderDto(
+    Guid UserId, string Name, string Email);
+
 public sealed record PagedResultDto<T>(IReadOnlyList<T> Items, int TotalCount,
     int PageNumber, int PageSize);

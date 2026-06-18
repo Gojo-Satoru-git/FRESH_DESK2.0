@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 
 export interface NotificationLog {
@@ -27,7 +27,12 @@ export class NotificationService {
    * Fetches all unread logs (including SLA breach alerts) out of the database repository pipeline
    */
   getUnreadNotifications(): Observable<NotificationLog[]> {
-    return this.http.get<NotificationLog[]>(`${this.apiUrl}/unread`);
+    return this.http.get<NotificationLog[]>(`${this.apiUrl}/unread`).pipe(
+      catchError(() => {
+        // Return an empty array if the notification center is not implemented or errors out
+        return of([]);
+      })
+    );
   }
 
   /**

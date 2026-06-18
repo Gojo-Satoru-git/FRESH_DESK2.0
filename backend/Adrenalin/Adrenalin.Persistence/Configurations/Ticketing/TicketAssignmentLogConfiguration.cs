@@ -40,7 +40,7 @@ public class TicketAssignmentLogConfiguration : IEntityTypeConfiguration<TicketA
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.FromAgentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_assignment_log_from_agent_id_fkey");
 
-        builder.HasOne<User>().WithMany().HasForeignKey(d => d.ToAgentId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("ticket_assignment_log_to_agent_id_fkey");
+        builder.HasOne<User>().WithMany().HasForeignKey(d => d.ToAgentId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_assignment_log_to_agent_id_fkey");
 
         builder.HasOne(d => d.Ticket).WithMany(p => p.TicketAssignmentLogs).HasForeignKey(d => d.TicketId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("ticket_assignment_log_ticket_id_fkey");
     }

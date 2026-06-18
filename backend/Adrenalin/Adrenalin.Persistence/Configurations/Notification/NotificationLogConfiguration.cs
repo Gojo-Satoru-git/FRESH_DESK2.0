@@ -21,7 +21,11 @@ public class NotificationLogConfiguration : IEntityTypeConfiguration<Notificatio
 
         builder.HasIndex(e => new { e.TicketId, e.SentAt }, "idx_notification_logs_ticket").IsDescending(false, true).HasFilter("(ticket_id IS NOT NULL)");
 
+        builder.HasIndex(e => e.RecipientEmail, "idx_notification_logs_recipient_email");
+
         builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
+
+        builder.Property(e => e.CompanyId).HasColumnName("company_id");
 
         builder.Property(e => e.TicketNumber).HasColumnName("ticket_number").HasMaxLength(50);
 

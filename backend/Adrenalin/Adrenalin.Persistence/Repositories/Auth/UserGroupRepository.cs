@@ -26,6 +26,18 @@ public sealed class UserGroupRepository : IUserGroupRepository
         => await _db.UserGroups.Include(ug => ug.User).IgnoreQueryFilters()
             .Where(ug => ug.GroupId == groupId && !ug.IsDeleted).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<UserGroup>> GetEnterpriseMembersAsync(Guid groupId, CancellationToken ct = default)
+        => await _db.UserGroups.IgnoreQueryFilters()
+            .Include(ug => ug.User)
+                .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+            .Where(ug => ug.GroupId == groupId && !ug.IsDeleted).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<UserGroup>> GetEnterpriseLeadersAsync(Guid groupId, CancellationToken ct = default)
+        => await _db.UserGroups.IgnoreQueryFilters()
+            .Include(ug => ug.User)
+            .Where(ug => ug.GroupId == groupId && ug.IsLead && !ug.IsDeleted).ToListAsync(ct);
+
     public void Add(UserGroup ug) => _db.UserGroups.Add(ug);
     public void Update(UserGroup ug) => _db.UserGroups.Update(ug);
 

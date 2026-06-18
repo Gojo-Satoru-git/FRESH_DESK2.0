@@ -11,7 +11,8 @@ public sealed class TicketComment : SoftDeleteEntity
     public Guid TicketId { get; private set; }
     public Guid? AuthorId { get; private set; }
     public Guid? ContactId { get; private set; }
-    public string Body { get; private set; } = null!;    
+    public string Body { get; private set; } = null!;
+    public string? HtmlBody { get; private set; }
     public bool IsPrivate { get; private set; }
     public Ticket Ticket { get; private set; } = null!;
     
@@ -32,17 +33,18 @@ public sealed class TicketComment : SoftDeleteEntity
         TicketId = destinationTicketId;
     }
 
-    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, bool isPrivate, List<string> mentionedUsers)
+    private TicketComment(Guid ticketId, Guid? authorId, Guid? contactId, string body, string? htmlBody, bool isPrivate, List<string> mentionedUsers)
     {
         TicketId = ticketId;
         AuthorId = authorId;
         ContactId = contactId;
         Body = body;
+        HtmlBody = htmlBody;
         IsPrivate = isPrivate;
         MentionedUsers = mentionedUsers;
     }
 
-    public static TicketComment Create(Guid ticketId, Guid? authorId, Guid? contactId, string body, bool isPrivate)
+    public static TicketComment Create(Guid ticketId, Guid? authorId, Guid? contactId, string body, string? htmlBody, bool isPrivate)
     {
         if (ticketId == Guid.Empty)
             throw new TicketDomainException("TicketId cannot be empty.");
@@ -84,6 +86,7 @@ public sealed class TicketComment : SoftDeleteEntity
             authorId,
             contactId,
             body.Trim(),
+            htmlBody,
             isPrivate,
             mentioned
         );

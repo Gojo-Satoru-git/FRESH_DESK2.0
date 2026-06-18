@@ -31,7 +31,9 @@ public class AdrenalinDbContextFactory : IDesignTimeDbContextFactory<AdrenalinDb
         var dataSource = dataSourceBuilder.Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<AdrenalinDbContext>();
-        optionsBuilder.UseNpgsql(dataSource, o => o.MapEnum<TicketStatus>("ticket_status", "ticket"));
+        optionsBuilder
+            .UseNpgsql(dataSource, o => o.MapEnum<TicketStatus>("ticket_status", "ticket"))
+            .UseSnakeCaseNamingConvention();
 
         return new AdrenalinDbContext(optionsBuilder.Options, new NoOpPublisher());
     }

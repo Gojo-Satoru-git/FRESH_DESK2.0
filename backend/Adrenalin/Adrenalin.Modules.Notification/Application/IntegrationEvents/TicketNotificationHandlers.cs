@@ -8,6 +8,8 @@ using Adrenalin.EventBus;
 using Adrenalin.EventBus.Events;
 using Adrenalin.Modules.Notification.Domain.Entities;
 using Adrenalin.Modules.Notification.Domain.Interfaces;
+using Adrenalin.SharedKernel.Interfaces;
+using System.Text.Json;
 
 namespace Adrenalin.Modules.Notification.Application.IntegrationEvents;
 
@@ -15,27 +17,38 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<TicketCreatedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
 
-    public TicketCreatedNotificationHandler(INotificationRepository repository, ILogger<TicketCreatedNotificationHandler> logger)
+    public TicketCreatedNotificationHandler(INotificationRepository repository, ILogger<TicketCreatedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
     }
 
     public async Task HandleAsync(TicketCreatedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken))
+        {
+            _logger.LogInformation("Event {EventId} has already been processed.", integrationEvent.EventId);
+            return;
+        }
         _logger.LogInformation("Processing TicketCreatedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
 
         // 1. Notify Reporter
         var template = await _repository.GetTemplateByCodeAsync("TICKET_CREATED_REQUESTER", cancellationToken);
+        string subject = string.Empty;
+        string body = string.Empty;
 
         if (template != null)
         {
-            var subject = template.Subject?
+            subject = template.Subject?
                 .Replace("{{ticket.id}}", integrationEvent.TicketNumber)
                 .Replace("{{ticket.subject}}", integrationEvent.Title) ?? string.Empty;
 
-            var body = template.BodyHtml?
+            body = template.BodyHtml?
                 .Replace("{{ticket.id}}", integrationEvent.TicketNumber)
                 .Replace("{{ticket.subject}}", integrationEvent.Title)
                 .Replace("{{ticket.description}}", integrationEvent.Title)
@@ -63,6 +76,7 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
             };
 
             await _repository.AddLogAsync(log, cancellationToken);
+            await _emailService.SendAsync(reporterEmail, subject, body);
         }
         else
         {
@@ -91,6 +105,7 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
 
                     var agentLog = new NotificationLog
                     {
+                        CompanyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken),
                         TicketId = integrationEvent.TicketId,
                         RecipientEmail = assigneeEmail,
                         ErrorMessage = null,
@@ -99,6 +114,7 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
                         TemplateId = agentTemplate.Id
                     };
                     await _repository.AddLogAsync(agentLog, cancellationToken);
+                    await _emailService.SendAsync(assigneeEmail, agentSubject, agentBody);
                 }
             }
         }
@@ -109,10 +125,13 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
         {
             if (template != null)
             {
+                var logs = new List<NotificationLog>();
+                var companyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken);
                 foreach (var tlEmail in teamLeads)
                 {
                     var tlLog = new NotificationLog
                     {
+                        CompanyId = companyId,
                         TicketId = integrationEvent.TicketId,
                         RecipientEmail = tlEmail,
                         ErrorMessage = null,
@@ -120,8 +139,10 @@ public sealed class TicketCreatedNotificationHandler : IIntegrationEventHandler<
                         SentAt = DateTime.UtcNow,
                         TemplateId = template.Id
                     };
-                    await _repository.AddLogAsync(tlLog, cancellationToken);
+                    logs.Add(tlLog);
+                    await _emailService.SendAsync(tlEmail, subject, body);
                 }
+                await _repository.AddLogsAsync(logs, cancellationToken);
             }
         }
 
@@ -135,15 +156,20 @@ public sealed class TicketAssignedNotificationHandler : IIntegrationEventHandler
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<TicketAssignedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
 
-    public TicketAssignedNotificationHandler(INotificationRepository repository, ILogger<TicketAssignedNotificationHandler> logger)
+    public TicketAssignedNotificationHandler(INotificationRepository repository, ILogger<TicketAssignedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
     }
 
     public async Task HandleAsync(TicketAssignedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken)) return;
         _logger.LogInformation("Processing TicketAssignedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
 
         var template = await _repository.GetTemplateByCodeAsync("TICKET_ASSIGNED_AGENT", cancellationToken);
@@ -169,6 +195,7 @@ public sealed class TicketAssignedNotificationHandler : IIntegrationEventHandler
 
         var log = new NotificationLog
         {
+            CompanyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken),
             TicketId = integrationEvent.TicketId,
             RecipientEmail = assigneeEmail,
             ErrorMessage = null,
@@ -178,9 +205,85 @@ public sealed class TicketAssignedNotificationHandler : IIntegrationEventHandler
         };
 
         await _repository.AddLogAsync(log, cancellationToken);
+        await _emailService.SendAsync(assigneeEmail, subject, body);
         await _repository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Logged Ticket Assigned notification successfully for Ticket {TicketNumber}", integrationEvent.TicketNumber);
+    }
+}
+
+public sealed class TicketGroupAssignedNotificationHandler : IIntegrationEventHandler<TicketGroupAssignedIntegrationEvent>
+{
+    private readonly INotificationRepository _repository;
+    private readonly ILogger<TicketGroupAssignedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
+
+    public TicketGroupAssignedNotificationHandler(INotificationRepository repository, ILogger<TicketGroupAssignedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
+    {
+        _repository = repository;
+        _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
+    }
+
+    public async Task HandleAsync(TicketGroupAssignedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
+    {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken)) return;
+        _logger.LogInformation("Processing TicketGroupAssignedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
+
+        var template = await _repository.GetTemplateByCodeAsync("TICKET_ASSIGNED_GROUP", cancellationToken);
+
+        if (template == null)
+        {
+            _logger.LogWarning("Email template TICKET_ASSIGNED_GROUP not found.");
+            return;
+        }
+
+        var teamLeads = await _repository.GetTeamLeadsEmailsAsync(cancellationToken);
+        if (teamLeads != null && teamLeads.Count > 0)
+        {
+            var subject = template.Subject?
+                .Replace("{{ticket.id}}", integrationEvent.TicketNumber)
+                .Replace("{{ticket.priority}}", "Medium")
+                .Replace("{{ticket.company.name}}", "Adrenalin HRMS") ?? string.Empty;
+
+            var body = template.BodyHtml?
+                .Replace("{{ticket.id}}", integrationEvent.TicketNumber)
+                .Replace("{{ticket.priority}}", "Medium")
+                .Replace("{{ticket.agent.name}}", "Team Lead")
+                .Replace("{{ticket.url}}", $"http://localhost:4200/agent/tickets") ?? string.Empty;
+
+            var logs = new List<NotificationLog>();
+            var companyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken);
+            foreach (var tlEmail in teamLeads)
+            {
+                var log = new NotificationLog
+                {
+                    CompanyId = companyId,
+                    TicketId = integrationEvent.TicketId,
+                    RecipientEmail = tlEmail,
+                    ErrorMessage = null,
+                    IsFailedDelivery = false,
+                    SentAt = DateTime.UtcNow,
+                    TemplateId = template.Id
+                };
+                logs.Add(log);
+                await _emailService.SendAsync(tlEmail, subject, body);
+            }
+            await _repository.AddLogsAsync(logs, cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
+        }
+
+        await _logRepo.MarkEventAsProcessedAsync(new Adrenalin.SharedKernel.Entities.IntegrationEventLog
+        {
+            EventId = integrationEvent.EventId,
+            EventType = nameof(TicketGroupAssignedIntegrationEvent),
+            ProcessedAt = DateTimeOffset.UtcNow
+        }, cancellationToken);
+        await _logRepo.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Logged Group Assigned notification successfully for Ticket {TicketNumber}", integrationEvent.TicketNumber);
     }
 }
 
@@ -188,15 +291,20 @@ public sealed class TicketResolvedNotificationHandler : IIntegrationEventHandler
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<TicketResolvedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
 
-    public TicketResolvedNotificationHandler(INotificationRepository repository, ILogger<TicketResolvedNotificationHandler> logger)
+    public TicketResolvedNotificationHandler(INotificationRepository repository, ILogger<TicketResolvedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
     }
 
     public async Task HandleAsync(TicketResolvedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken)) return;
         _logger.LogInformation("Processing TicketResolvedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
 
         var template = await _repository.GetTemplateByCodeAsync("TICKET_RESOLVED_REQUESTER", cancellationToken);
@@ -219,6 +327,7 @@ public sealed class TicketResolvedNotificationHandler : IIntegrationEventHandler
 
         var log = new NotificationLog
         {
+            CompanyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken),
             TicketId = integrationEvent.TicketId,
             RecipientEmail = reporterEmail,
             ErrorMessage = null,
@@ -228,6 +337,7 @@ public sealed class TicketResolvedNotificationHandler : IIntegrationEventHandler
         };
 
         await _repository.AddLogAsync(log, cancellationToken);
+        await _emailService.SendAsync(reporterEmail, subject, body);
         await _repository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Logged Ticket Resolved notification successfully for Ticket {TicketNumber}", integrationEvent.TicketNumber);
@@ -238,15 +348,20 @@ public sealed class TicketClosedNotificationHandler : IIntegrationEventHandler<T
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<TicketClosedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
 
-    public TicketClosedNotificationHandler(INotificationRepository repository, ILogger<TicketClosedNotificationHandler> logger)
+    public TicketClosedNotificationHandler(INotificationRepository repository, ILogger<TicketClosedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
     }
 
     public async Task HandleAsync(TicketClosedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken)) return;
         _logger.LogInformation("Processing TicketClosedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
 
         var template = await _repository.GetTemplateByCodeAsync("TICKET_CLOSED_REQUESTER", cancellationToken);
@@ -268,6 +383,7 @@ public sealed class TicketClosedNotificationHandler : IIntegrationEventHandler<T
 
         var log = new NotificationLog
         {
+            CompanyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken),
             TicketId = integrationEvent.TicketId,
             RecipientEmail = reporterEmail,
             ErrorMessage = null,
@@ -277,6 +393,7 @@ public sealed class TicketClosedNotificationHandler : IIntegrationEventHandler<T
         };
 
         await _repository.AddLogAsync(log, cancellationToken);
+        await _emailService.SendAsync(reporterEmail, subject, body);
         await _repository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Logged Ticket Closed notification successfully for Ticket {TicketNumber}", integrationEvent.TicketNumber);
@@ -287,15 +404,20 @@ public sealed class TicketCommentAddedNotificationHandler : IIntegrationEventHan
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<TicketCommentAddedNotificationHandler> _logger;
+    private readonly IIntegrationEventLogRepository _logRepo;
+    private readonly IEmailService _emailService;
 
-    public TicketCommentAddedNotificationHandler(INotificationRepository repository, ILogger<TicketCommentAddedNotificationHandler> logger)
+    public TicketCommentAddedNotificationHandler(INotificationRepository repository, ILogger<TicketCommentAddedNotificationHandler> logger, IIntegrationEventLogRepository logRepo, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _logRepo = logRepo;
+        _emailService = emailService;
     }
 
     public async Task HandleAsync(TicketCommentAddedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
     {
+        if (await _logRepo.HasEventBeenProcessedAsync(integrationEvent.EventId, cancellationToken)) return;
         _logger.LogInformation("Processing TicketCommentAddedNotificationHandler for Ticket {TicketId}", integrationEvent.TicketId);
 
         string templateCode = "AGENT_ADDED_COMMENT";
@@ -337,6 +459,7 @@ public sealed class TicketCommentAddedNotificationHandler : IIntegrationEventHan
 
         var log = new NotificationLog
         {
+            CompanyId = await _repository.GetCompanyIdByTicketIdAsync(integrationEvent.TicketId, cancellationToken),
             TicketId = integrationEvent.TicketId,
             RecipientEmail = recipientEmail,
             ErrorMessage = null,
@@ -346,6 +469,7 @@ public sealed class TicketCommentAddedNotificationHandler : IIntegrationEventHan
         };
 
         await _repository.AddLogAsync(log, cancellationToken);
+        await _emailService.SendAsync(recipientEmail, subject, body);
         await _repository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Logged Comment Added notification successfully for Ticket {TicketId}", integrationEvent.TicketId);

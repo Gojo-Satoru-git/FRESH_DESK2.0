@@ -1,4 +1,4 @@
-﻿using Adrenalin.SharedKernel.Contracts;
+using Adrenalin.EventBus.Events;
 using Microsoft.Extensions.Logging;
 
 namespace Adrenalin.unify.API.Middlewares;
@@ -15,7 +15,7 @@ public sealed class InAppNotificationMiddleware
     /// Evaluates if the incoming notification log payload meets our strict in-app delivery criteria.
     /// </summary>
     // 📍 Inside InAppNotificationMiddleware.cs
-    public bool ShouldProcess(SlaBreachNotificationContract notificationEvent)
+    public bool ShouldProcess(SlaBreachedIntegrationEvent notificationEvent)
     {
         if (notificationEvent == null) return false;
 

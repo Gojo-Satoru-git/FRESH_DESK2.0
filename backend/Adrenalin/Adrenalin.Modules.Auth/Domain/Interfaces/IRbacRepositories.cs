@@ -64,6 +64,8 @@ public interface IUserGroupRepository
     Task<UserGroup?> GetIncludingDeletedAsync(Guid userId, Guid groupId, CancellationToken ct = default);
     Task<IReadOnlyList<UserGroup>> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<IReadOnlyList<UserGroup>> GetByGroupAsync(Guid groupId, CancellationToken ct = default);
+    Task<IReadOnlyList<UserGroup>> GetEnterpriseMembersAsync(Guid groupId, CancellationToken ct = default);
+    Task<IReadOnlyList<UserGroup>> GetEnterpriseLeadersAsync(Guid groupId, CancellationToken ct = default);
     void Add(UserGroup ug);
     void Update(UserGroup ug);
     Task SoftDeleteByGroupAsync(Guid groupId, Guid actorId, CancellationToken ct = default);

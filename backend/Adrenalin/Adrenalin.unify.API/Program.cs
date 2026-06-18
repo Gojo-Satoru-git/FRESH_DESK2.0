@@ -29,6 +29,7 @@ using Adrenalin.Persistence.Repositories.Auth;
 using Adrenalin.Modules.Company.Domain.Interfaces;
 using Adrenalin.EventBus;
 using Adrenalin.EventBus.Events;
+using Adrenalin.Modules.AI;
 using Adrenalin.Modules.Company.Applications.EventHandlers;
 using Adrenalin.Modules.Company.Applications.Commands;
 using Adrenalin.Modules.Auth.Application.Notifications;
@@ -37,9 +38,13 @@ using Adrenalin.Persistence.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── 1. Database — single AdrenalinDbContext ───────────────────────────────────
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<Adrenalin.Persistence.Context.AdrenalinDbContext>("DatabaseHealthCheck")
+    .AddCheck<Adrenalin.unify.API.HealthChecks.RoutingHealthCheck>("RoutingHealthCheck");
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
 dataSourceBuilder.MapEnum<TicketPriority>("ticket.ticket_priority");
 dataSourceBuilder.MapEnum<TicketSource>("ticket.ticket_source");
@@ -51,6 +56,7 @@ dataSourceBuilder.MapEnum<RevocationReason>(
     "auth.revocation_reason");
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddScoped<AuditStampInterceptor>();
+builder.Services.AddScoped<LookupCacheInvalidationInterceptor>();
 builder.Services.AddDbContext<AdrenalinDbContext>(
     (sp, options) =>
     {
@@ -67,10 +73,19 @@ builder.Services.AddDbContext<AdrenalinDbContext>(
         options.UseSnakeCaseNamingConvention();
 
         options.AddInterceptors(
-            sp.GetRequiredService<AuditStampInterceptor>());
+            sp.GetRequiredService<AuditStampInterceptor>(),
+            sp.GetRequiredService<LookupCacheInvalidationInterceptor>());
     });
 
 // ── 2. Custom MediatR dispatcher — scan ALL module assemblies once ────────────
+builder.Services.AddScoped<
+    Adrenalin.Modules.Ticketing.Application.Services.IEmailThreadDetectionService,
+    Adrenalin.Modules.Ticketing.Application.Services.EmailThreadDetectionService>();
+
+builder.Services.AddScoped<
+    Adrenalin.Modules.Ticketing.Application.Services.IEmailWatcherExtractionService,
+    Adrenalin.Modules.Ticketing.Application.Services.EmailWatcherExtractionService>();
+
 builder.Services.AddCustomDispatcher(
     typeof(Adrenalin.Modules.Auth.Application.Commands.RegisterUserCommand).Assembly,
     typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
@@ -161,6 +176,8 @@ builder.Services.AddScoped<
 builder.Services.AddPersistence();
 
 // ── 6. Module application layer registrations ────────────────────────────────
+
+builder.Services.AddAiModule();
 builder.Services.AddTicketingApplication();
 builder.Services.AddKbModule();
 
@@ -170,8 +187,10 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("Email"));
 if (rabbitMqEnabled)
 {
-    builder.Services.AddSingleton<Adrenalin.EventBus.IEventBus, Adrenalin.EventBus.RabbitMQEventBus>();
+    builder.Services.AddSingleton<Adrenalin.EventBus.RabbitMQEventBus>();
+    builder.Services.AddScoped<Adrenalin.EventBus.IEventBus, Adrenalin.Persistence.Outbox.OutboxEventBus>();
     builder.Services.AddHostedService<Adrenalin.EventBus.RabbitMQConsumerService>();
+    builder.Services.AddHostedService<Adrenalin.Persistence.Outbox.OutboxProcessorBackgroundService>();
 }
 else
 {
@@ -179,34 +198,44 @@ else
 }
 
 // ── Email Polling & Receiving ────────────────────────────────────────────────
-builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.IEmailReceive, Adrenalin.Infrastructure.Email.ImapEmailReceiver>();
-builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EmailPollingJob>();
-builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EscalationJob>();
-
+builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.Inbound.IInboundEmailProvider, Adrenalin.Infrastructure.Email.Inbound.ImapInboundProvider>();
+builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.Inbound.IInboundEmailProvider, Adrenalin.Infrastructure.Email.Inbound.WebhookInboundProvider>();
+builder.Services.AddSingleton<Adrenalin.Infrastructure.Email.Inbound.IInboundEmailProvider, Adrenalin.Infrastructure.Email.Inbound.MicrosoftGraphInboundProvider>();
+builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.EmailIngestionBackgroundService>();
+builder.Services.AddHostedService<Adrenalin.unify.API.BackgroundJobs.NotificationTemplateValidatorService>();
 
 // Integration Event Handlers
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.EmailReceivedIntegrationEvent>, Adrenalin.Modules.Ticketing.Application.IntegrationEvents.ProcessInboundEmailIntegrationEventHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCreatedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCreatedNotificationHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketAssignedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketAssignedNotificationHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketResolvedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketResolvedNotificationHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketClosedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketClosedNotificationHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCommentAddedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCommentAddedNotificationHandler>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.SlaBreachedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.SlaNotificationHandler>();
 
 // ── 7. Auth infrastructure ───────────────────────────────────────────────────
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 // ── 8. Shared infrastructure ─────────────────────────────────────────────────
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetSection("Redis")["ConnectionString"];
+    options.InstanceName = "Adrenalin_";
+});
+builder.Services.AddSingleton<ICacheService, Adrenalin.Infrastructure.Cache.RedisCacheService>();
+
+builder.Services.AddSingleton<Adrenalin.Infrastructure.Storage.Providers.IFileStorageProvider, Adrenalin.Infrastructure.Storage.LocalFileStorageProvider>();
+builder.Services.AddSingleton<IFileStorageService, Adrenalin.Infrastructure.Storage.FileStorageResolver>();
+builder.Services.AddScoped<Adrenalin.SharedKernel.Interfaces.IAttachmentIntegrityService, Adrenalin.Persistence.Services.AttachmentIntegrityService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, Adrenalin.unify.API.Services.CurrentUserService>();
 builder.Services.AddScoped<IUserVerificationTokenRepository,UserVerificationTokenRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-
-// ── Email (Console / SMTP / Both) ───────────────────────────────────────────
-builder.Services.AddScoped<Adrenalin.Infrastructure.Email.SmtpEmailService>();
-builder.Services.AddScoped<Adrenalin.Infrastructure.Email.ConsoleEmailLogger>();
-builder.Services.AddScoped<IEmailService, Adrenalin.Infrastructure.Email.CompositeEmailService>();
-
+builder.Services.AddScoped<Adrenalin.SharedKernel.Interfaces.IIntegrationEventLogRepository, IntegrationEventLogRepository>();
+builder.Services.AddScoped<
+    IEmailService,
+    SmtpEmailService>();
 builder.Services.AddScoped<
     IIntegrationEventHandler<ExternalUserCreatedEvent>,
     ExternalUserCreatedEventHandler>();
@@ -338,3 +367,5 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.MapControllers();
 app.Run();
+
+public partial class Program { }
