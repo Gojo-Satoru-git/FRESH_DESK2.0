@@ -196,6 +196,78 @@ public sealed class GetUserGroupsQueryHandler
     }
 }
 
+public sealed class GetEnterpriseGroupMembersQueryHandler
+    : IRequestHandler<GetEnterpriseGroupMembersQuery, Result<IReadOnlyList<EnterpriseGroupMemberDto>>>
+{
+    private readonly IUserGroupRepository _userGroups;
+    private readonly IGroupRepository _groups;
+
+    public GetEnterpriseGroupMembersQueryHandler(IUserGroupRepository userGroups, IGroupRepository groups)
+    {
+        _userGroups = userGroups;
+        _groups = groups;
+    }
+
+    public async Task<Result<IReadOnlyList<EnterpriseGroupMemberDto>>> Handle(
+        GetEnterpriseGroupMembersQuery query, CancellationToken ct)
+    {
+        try
+        {
+            var groupExists = await _groups.GetByIdAsync(query.GroupId, ct);
+            if (groupExists is null)
+                return Result<IReadOnlyList<EnterpriseGroupMemberDto>>.Failure($"Group {query.GroupId} not found.");
+
+            var members = await _userGroups.GetEnterpriseMembersAsync(query.GroupId, ct);
+            
+            var dtos = members.Select(ug => new EnterpriseGroupMemberDto(
+                ug.UserId,
+                ug.User.FirstName ?? ug.User.Email,
+                ug.User.Email,
+                ug.IsLead,
+                ug.User.UserRoles.Where(ur => !ur.IsDeleted).Select(ur => ur.Role.Name).ToList()
+            )).ToList();
+
+            return Result<IReadOnlyList<EnterpriseGroupMemberDto>>.Success(dtos);
+        }
+        catch (Exception ex) { return Result<IReadOnlyList<EnterpriseGroupMemberDto>>.Failure(ex.Message); }
+    }
+}
+
+public sealed class GetEnterpriseGroupLeadersQueryHandler
+    : IRequestHandler<GetEnterpriseGroupLeadersQuery, Result<IReadOnlyList<EnterpriseGroupLeaderDto>>>
+{
+    private readonly IUserGroupRepository _userGroups;
+    private readonly IGroupRepository _groups;
+
+    public GetEnterpriseGroupLeadersQueryHandler(IUserGroupRepository userGroups, IGroupRepository groups)
+    {
+        _userGroups = userGroups;
+        _groups = groups;
+    }
+
+    public async Task<Result<IReadOnlyList<EnterpriseGroupLeaderDto>>> Handle(
+        GetEnterpriseGroupLeadersQuery query, CancellationToken ct)
+    {
+        try
+        {
+            var groupExists = await _groups.GetByIdAsync(query.GroupId, ct);
+            if (groupExists is null)
+                return Result<IReadOnlyList<EnterpriseGroupLeaderDto>>.Failure($"Group {query.GroupId} not found.");
+
+            var leaders = await _userGroups.GetEnterpriseLeadersAsync(query.GroupId, ct);
+            
+            var dtos = leaders.Select(ug => new EnterpriseGroupLeaderDto(
+                ug.UserId,
+                ug.User.FirstName ?? ug.User.Email,
+                ug.User.Email
+            )).ToList();
+
+            return Result<IReadOnlyList<EnterpriseGroupLeaderDto>>.Success(dtos);
+        }
+        catch (Exception ex) { return Result<IReadOnlyList<EnterpriseGroupLeaderDto>>.Failure(ex.Message); }
+    }
+}
+
 // ── Shared mapping helper ─────────────────────────────────────────────────────
 file static class GroupMapper
 {

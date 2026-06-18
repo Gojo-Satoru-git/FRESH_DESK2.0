@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,9 +23,10 @@ public sealed class GetUnreadNotificationsQueryHandler
         _repository = repository;
     }
 
-    public async Task<List<NotificationLog>> Handle(GetUnreadNotificationsQuery query, CancellationToken ct)
+    public Task<List<NotificationLog>> Handle(GetUnreadNotificationsQuery query, CancellationToken ct)
     {
-        // ⚡ FIXED: Extracted the parameter string value and passed it straight to the database repository filter
-        return await _repository.GetUnreadLogsAsync(query.RecipientEmail, ct);
+        // ⚡ FIXED: Notification Center is not implemented yet. 
+        // Return an empty list to avoid querying the NotificationLog table (which is for email logs).
+        return Task.FromResult(new List<NotificationLog>());
     }
 }

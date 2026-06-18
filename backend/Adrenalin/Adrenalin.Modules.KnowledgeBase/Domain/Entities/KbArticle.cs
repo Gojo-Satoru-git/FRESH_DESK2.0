@@ -40,8 +40,6 @@ public sealed class KbArticle : SoftDeleteEntity
     private readonly List<KbAttachment> _attachments = [];
     public IReadOnlyList<KbAttachment> Attachments => _attachments;
 
-    private readonly List<INotification> _domainEvents = [];
-    public IReadOnlyList<INotification> DomainEvents => _domainEvents.AsReadOnly();
 
     private KbArticle() { }
 
@@ -71,7 +69,7 @@ public sealed class KbArticle : SoftDeleteEntity
             TimesMatched = 0,
             TimesReopened = 0
         };
-        article._domainEvents.Add(
+        article.AddDomainEvent(
             new KbArticleCreatedDomainEvent(article.Id, article.Title, article.ArticleType));
         return article;
     }
@@ -113,7 +111,7 @@ public sealed class KbArticle : SoftDeleteEntity
         IsPublished = true;
         UpdatedBy = updatedBy;
         UpdatedAt = DateTimeOffset.UtcNow;
-        _domainEvents.Add(new KbArticlePublishedDomainEvent(Id, Title));
+        AddDomainEvent(new KbArticlePublishedDomainEvent(Id, Title));
     }
 
     public void Archive(Guid? updatedBy)
@@ -145,7 +143,7 @@ public sealed class KbArticle : SoftDeleteEntity
         AutoResolve = false;
         UpdatedBy = updatedBy;
         UpdatedAt = DateTimeOffset.UtcNow;
-        _domainEvents.Add(new KbArticleDeletedDomainEvent(Id));
+        AddDomainEvent(new KbArticleDeletedDomainEvent(Id));
     }
 
     public void EnableAutoResolve(string[] keywords, string resolutionText,
@@ -186,7 +184,7 @@ public sealed class KbArticle : SoftDeleteEntity
         TimesReopened++;
         ConfidenceThresholdValue = ConfidenceThreshold.Raise(thresholdRaiseDelta).Value;
         UpdatedAt = DateTimeOffset.UtcNow;
-        _domainEvents.Add(new KbArticleReopenRateUpdatedDomainEvent(
+        AddDomainEvent(new KbArticleReopenRateUpdatedDomainEvent(
             Id, TimesMatched, TimesReopened, ConfidenceThresholdValue));
     }
 
@@ -206,8 +204,6 @@ public sealed class KbArticle : SoftDeleteEntity
             ?? throw new InvalidOperationException($"Attachment {attachmentId} not found on this article.");
         attachment.SoftDelete();
     }
-
-    public void ClearDomainEvents() => _domainEvents.Clear();
 
     private void EnsureNotDeleted()
     {

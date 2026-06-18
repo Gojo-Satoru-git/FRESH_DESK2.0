@@ -22,23 +22,19 @@ public class CompanyDomainConfiguration : IEntityTypeConfiguration<CompanyDomain
         
         builder.Property(e => e.CompanyId).HasColumnName("company_id");
         
-        builder.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
-        
-        builder.Property(e => e.CreatedBy).HasMaxLength(100).HasDefaultValueSql("'system'::character varying").HasColumnName("created_by");
-        
         builder.Property(e => e.Domain).HasMaxLength(255).HasColumnName("domain");
         
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         
         builder.Property(e => e.IsPrimary).HasColumnName("is_primary");
-        
+        builder.Property(e => e.CreatedAt).HasDefaultValueSql("now()").HasColumnName("created_at");
+
         builder.Ignore(e => e.RowVersion);
-        builder.Ignore(e => e.IsVerified);
+        builder.Ignore(e => e.IsVerified);  
         builder.Ignore(e => e.VerifiedAt);
-        
-        builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-        
-        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        builder.Ignore(e => e.CreatedBy);
+        builder.Ignore(e => e.UpdatedAt);
+        builder.Ignore(e => e.UpdatedBy);
 
         builder.HasOne(d => d.Company).WithMany(p => p.CompanyDomains).HasForeignKey(d => d.CompanyId).HasConstraintName("company_domains_company_id_fkey");
     }

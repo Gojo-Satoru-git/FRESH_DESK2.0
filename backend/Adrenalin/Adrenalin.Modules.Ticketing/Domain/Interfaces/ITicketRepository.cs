@@ -7,9 +7,17 @@ namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 
 public interface ITicketRepository
 {
-    // ── existing ───────────────────────────────────────────────
+    // Existing 
     Task<Ticket?> GetByIdAsync(
         Guid id,
+        CancellationToken ct = default);
+
+    Task<Ticket?> GetByTicketNumberAsync(
+        string ticketNumber,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<Ticket>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
         CancellationToken ct = default);
 
     Task AddAsync(
@@ -21,13 +29,22 @@ public interface ITicketRepository
         Guid? agentId,
         Guid? groupId,
         Guid triggeredBy,
+        string? notes = null,
+        bool clearAgentIfNull = false,
+        CancellationToken ct = default);
+
+    Task AddAssignmentLogAsync(TicketAssignmentLog log, CancellationToken ct = default);
+
+    Task<bool> TryClaimTicketAsync(
+        Guid ticketId,
+        Guid agentId,
+        byte[] rowVersion,
         CancellationToken ct = default);
 
     Task<Guid?> GetLeastLoadedAgentInGroupAsync(
         Guid groupId,
         CancellationToken ct = default);
 
-    // ── ADD THESE — restored missing methods ───────────────────
     Task<Guid?> GetUserCompanyIdAsync(
         Guid userId,
         CancellationToken ct = default);
@@ -65,6 +82,7 @@ public interface ITicketRepository
     Task<string> GetCompanyRegionAsync(Guid companyId, CancellationToken cancellationToken = default);
 
     Task<bool> IsUserAdminAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> IsUserInternalAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<int> CountTicketsAsync(
         string? ticketNumber,
         TicketStatus? status,

@@ -22,6 +22,10 @@ export class AuthService {
 
   // Global Signal holding the logged-in user state
   currentUser = signal<User | null>(null);
+  permissions = signal<string[]>([]);
+  groups = signal<string[]>([]);
+  companyId = signal<string | null>(null);
+  contactId = signal<string | null>(null);
 
   // The key we use to store the token in the browser
   private readonly TOKEN_KEY = 'jwt_token';
@@ -32,10 +36,25 @@ export class AuthService {
       const user = this.getUserFromToken(token);
       if (user) {
         this.currentUser.set(user);
+        this.loadUserMetadata();
       } else {
         this.logout();
       }
     }
+  }
+
+  loadUserMetadata() {
+    this.http.get<{ permissions: string[], groups: string[], companyId: string, contactId: string }>(`${environment.apiUrl}/api/me`).subscribe({
+      next: (res) => {
+        this.permissions.set(res.permissions || []);
+        this.groups.set(res.groups || []);
+        this.companyId.set(res.companyId || null);
+        this.contactId.set(res.contactId || null);
+      },
+      error: (err) => {
+        console.error('Failed to load user metadata', err);
+      }
+    });
   }
 
   // --- LOGIN LOGIC ---
@@ -62,9 +81,14 @@ export class AuthService {
   handleLoginSuccess(token: string, user: User) {
     localStorage.setItem(this.TOKEN_KEY, token); // Save token securely
     this.currentUser.set(user); // Update the global signal
+    this.loadUserMetadata(); // Load permissions and groups
 
     // The Traffic Cop Logic
-    if (user.role === 'customer') {
+    if (user.role === 'admin') {
+      this.router.navigate(['/admin']);
+    } else if (user.role === 'team_lead') {
+      this.router.navigate(['/team-lead/dashboard']);
+    } else if (user.role === 'customer') {
       this.router.navigate(['/customer-portal']);
     } else {
       this.router.navigate(['/agent/dashboard']);
@@ -132,11 +156,19 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
+    this.permissions.set([]);
+    this.groups.set([]);
+    this.companyId.set(null);
+    this.contactId.set(null);
     this.router.navigate(['/login']);
   }
 
   // Helper check for Route Guards
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.permissions().includes(permission);
   }
 }

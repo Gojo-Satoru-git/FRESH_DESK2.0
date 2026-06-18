@@ -21,7 +21,7 @@ public sealed class CreateGroupCommandHandlerTests
         => _sut = new CreateGroupCommandHandler(_groupRepo.Object);
 
     private static CreateGroupCommand ValidCommand(string name = "Support Team") =>
-        new(name, "EU", "T1", 30, Guid.NewGuid());
+        new(name, "EU", "T1", 30, 0, null, Guid.NewGuid());
 
     [Fact]
     public async Task CreateGroupCommandHandler_Should_Create_Group_When_Valid()
@@ -99,7 +99,7 @@ public sealed class UpdateGroupCommandHandlerTests
         _groupRepo.Setup(r => r.ExistsByNameAsync("New Name", default)).ReturnsAsync(false);
 
         var result = await _sut.Handle(
-            new UpdateGroupCommand(group.Id, "New Name", "US", "T2", 60, Guid.NewGuid()), default);
+            new UpdateGroupCommand(group.Id, "New Name", "US", "T2", 60, 0, null, Guid.NewGuid()), default);
 
         result.IsSuccess.Should().BeTrue();
         group.Name.Should().Be("New Name");
@@ -113,7 +113,7 @@ public sealed class UpdateGroupCommandHandlerTests
         _groupRepo.Setup(r => r.ExistsByNameAsync(It.IsAny<string>(), default)).ReturnsAsync(false);
 
         await _sut.Handle(
-            new UpdateGroupCommand(group.Id, "Updated", null, null, 15, Guid.NewGuid()), default);
+            new UpdateGroupCommand(group.Id, "Updated", null, null, 15, 0, null, Guid.NewGuid()), default);
 
         _groupRepo.Verify(r => r.Update(It.IsAny<Group>()), Times.Once);
         _groupRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
@@ -125,7 +125,7 @@ public sealed class UpdateGroupCommandHandlerTests
         _groupRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Group?)null);
 
         var result = await _sut.Handle(
-            new UpdateGroupCommand(Guid.NewGuid(), "Name", null, null, 10, Guid.NewGuid()), default);
+            new UpdateGroupCommand(Guid.NewGuid(), "Name", null, null, 10, 0, null, Guid.NewGuid()), default);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Contain("not found");
@@ -139,7 +139,7 @@ public sealed class UpdateGroupCommandHandlerTests
         _groupRepo.Setup(r => r.ExistsByNameAsync("Taken", default)).ReturnsAsync(true);
 
         var result = await _sut.Handle(
-            new UpdateGroupCommand(group.Id, "Taken", null, null, 10, Guid.NewGuid()), default);
+            new UpdateGroupCommand(group.Id, "Taken", null, null, 10, 0, null, Guid.NewGuid()), default);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Contain("Taken");
@@ -153,7 +153,7 @@ public sealed class UpdateGroupCommandHandlerTests
         _groupRepo.Setup(r => r.ExistsByNameAsync(It.IsAny<string>(), default)).ReturnsAsync(true);
 
         var result = await _sut.Handle(
-            new UpdateGroupCommand(group.Id, "SUPPORT", null, null, 10, Guid.NewGuid()), default);
+            new UpdateGroupCommand(group.Id, "SUPPORT", null, null, 10, 0, null, Guid.NewGuid()), default);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -333,7 +333,7 @@ public sealed class RemoveUserFromGroupCommandHandlerTests
     private readonly RemoveUserFromGroupCommandHandler _sut;
 
     public RemoveUserFromGroupCommandHandlerTests()
-        => _sut = new RemoveUserFromGroupCommandHandler(_ugRepo.Object);
+        => _sut = new RemoveUserFromGroupCommandHandler(_ugRepo.Object, new Mock<Adrenalin.EventBus.IEventBus>().Object);
 
     [Fact]
     public async Task RemoveUserFromGroup_Should_SoftDelete_Membership()
@@ -388,7 +388,7 @@ public sealed class SetGroupLeadCommandHandlerTests
     private readonly SetGroupLeadCommandHandler _sut;
 
     public SetGroupLeadCommandHandlerTests()
-        => _sut = new SetGroupLeadCommandHandler(_ugRepo.Object);
+        => _sut = new SetGroupLeadCommandHandler(_ugRepo.Object, new Mock<Adrenalin.EventBus.IEventBus>().Object);
 
     [Fact]
     public async Task SetGroupLead_Should_Update_IsLead_Flag()

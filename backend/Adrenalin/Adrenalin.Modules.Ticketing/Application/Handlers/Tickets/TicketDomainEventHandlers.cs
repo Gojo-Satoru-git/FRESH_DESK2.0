@@ -20,6 +20,8 @@ public sealed class TicketCreatedDomainEventHandler : INotificationHandler<Ticke
     public async Task Handle(TicketCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketCreatedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.Title,
@@ -45,11 +47,36 @@ public sealed class TicketAssignedDomainEventHandler : INotificationHandler<Tick
     public async Task Handle(TicketAssignedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketAssignedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.AssigneeId,
             notification.AssignedBy,
             "Ticket Assigned"
+        ), cancellationToken);
+    }
+}
+
+public sealed class TicketGroupAssignedDomainEventHandler : INotificationHandler<TicketGroupAssignedDomainEvent>
+{
+    private readonly IEventBus _eventBus;
+
+    public TicketGroupAssignedDomainEventHandler(IEventBus eventBus)
+    {
+        _eventBus = eventBus;
+    }
+
+    public async Task Handle(TicketGroupAssignedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        await _eventBus.PublishAsync(new TicketGroupAssignedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
+            notification.TicketId,
+            notification.TicketNumber ?? string.Empty,
+            notification.GroupId,
+            notification.AssignedBy,
+            "Ticket Routed to Group"
         ), cancellationToken);
     }
 }
@@ -71,6 +98,8 @@ public sealed class TicketStatusChangedDomainEventHandler : INotificationHandler
         var ticketNumber = ticket?.TicketNumber ?? "";
 
         await _eventBus.PublishAsync(new TicketStatusChangedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             ticketNumber,
             notification.OldStatus.ToString(),
@@ -93,6 +122,8 @@ public sealed class TicketCommentAddedDomainEventHandler : INotificationHandler<
     public async Task Handle(TicketCommentAddedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketCommentAddedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.CommentId,
             notification.Body,
@@ -116,6 +147,8 @@ public sealed class TicketResolvedDomainEventHandler : INotificationHandler<Tick
     public async Task Handle(TicketResolvedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketResolvedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.ResolvedBy,
@@ -136,6 +169,8 @@ public sealed class TicketClosedDomainEventHandler : INotificationHandler<Ticket
     public async Task Handle(TicketClosedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketClosedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.ClosedBy,
@@ -156,6 +191,8 @@ public sealed class TicketReopenedDomainEventHandler : INotificationHandler<Tick
     public async Task Handle(TicketReopenedDomainEvent notification, CancellationToken cancellationToken)
     {
         await _eventBus.PublishAsync(new TicketReopenedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.ReopenedBy,
@@ -176,6 +213,8 @@ public sealed class TicketMergedDomainEventHandler : INotificationHandler<Ticket
     public Task Handle(TicketMergedDomainEvent notification, CancellationToken cancellationToken)
     {
         return _eventBus.PublishAsync(new TicketMergedIntegrationEvent(
+            Guid.NewGuid(),
+            System.DateTimeOffset.UtcNow,
             notification.TicketId,
             notification.TicketNumber ?? string.Empty,
             notification.MasterTicketNumber,

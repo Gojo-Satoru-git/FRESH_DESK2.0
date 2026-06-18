@@ -53,6 +53,8 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.HasIndex(e => e.AssignedAgentId, "idx_tickets_assigned_agent_id");
 
+        builder.HasIndex(e => e.GroupId, "idx_tickets_group_id");
+
         builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
         
         builder.Property(e => e.AssignedAgentId).HasColumnName("assigned_agent_id");
@@ -117,7 +119,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         
         builder.Property(e => e.SubModuleId).HasColumnName("sub_module_id");
         
-       // builder.Property(e => e.Subject).HasColumnName("title");
+        builder.Property(e => e.Title).HasColumnName("subject");
         
         builder.Property(e => e.TicketNumber).HasMaxLength(20).HasColumnName("ticket_number");
         

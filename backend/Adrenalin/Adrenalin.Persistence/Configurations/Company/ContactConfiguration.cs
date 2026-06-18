@@ -17,6 +17,8 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
 
         builder.HasIndex(e => e.CompanyId, "idx_contacts_company").HasFilter("(is_deleted = false)");
 
+        builder.HasIndex(e => e.Email, "idx_contacts_email").IsUnique().HasFilter("(is_deleted = false)");
+
         builder.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()").HasColumnName("id");
         
         builder.Property(e => e.AutoCreated).HasColumnName("auto_created");

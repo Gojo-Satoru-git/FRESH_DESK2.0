@@ -71,10 +71,9 @@ public sealed class Ticket : SoftDeleteEntity
     private readonly List<TicketStatusHistory> _ticketStatusHistories = new();
     public IReadOnlyCollection<TicketStatusHistory> TicketStatusHistories => _ticketStatusHistories;
 
-    private readonly List<INotification> _domainEvents = new();
-    public IReadOnlyList<INotification> DomainEvents => _domainEvents.AsReadOnly();
+    private readonly List<TicketWatcher> _ticketWatchers = new();
+    public IReadOnlyCollection<TicketWatcher> TicketWatchers => _ticketWatchers;
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
 
     private Ticket() { }
 
@@ -164,7 +163,7 @@ public sealed class Ticket : SoftDeleteEntity
 
         TicketNumber = ticketNumber;
 
-        _domainEvents.Add(new TicketCreatedDomainEvent(
+        AddDomainEvent(new TicketCreatedDomainEvent(
             Id,
             TicketNumber,
             Title,
@@ -202,7 +201,7 @@ public sealed class Ticket : SoftDeleteEntity
 
         _ticketStatusHistories.Add(TicketStatusHistory.Create(Id, oldStatus, newStatus, changedBy, reason));
         
-        _domainEvents.Add(new TicketStatusChangedDomainEvent(Id, oldStatus, newStatus, changedBy));
+        AddDomainEvent(new TicketStatusChangedDomainEvent(Id, oldStatus, newStatus, changedBy));
 
         Touch(changedBy);
     }
@@ -212,6 +211,26 @@ public sealed class Ticket : SoftDeleteEntity
         UpdatedAt = DateTimeOffset.UtcNow;
         UpdatedBy = userId;
     }
+
+    public void AddAssignmentLog(Guid assignedToUserId, Guid assignedByUserId, string? notes = null)
+    {
+        var log = TicketAssignmentLog.Create(Id, null, assignedToUserId, assignedByUserId, notes);
+        _ticketAssignmentLogs.Add(log);
+    }
+
+    public void AddWatcher(Guid userId)
+    {
+        if (userId == Guid.Empty) return;
+
+        if (_ticketWatchers.Any(w => w.UserId == userId))
+        {
+            return;
+        }
+
+        _ticketWatchers.Add(TicketWatcher.Create(Id, userId));
+    }
+
+
 
     public void AssignAgent(Guid agentId, Guid assignedBy, string? notes = null)
     {
@@ -240,9 +259,22 @@ public sealed class Ticket : SoftDeleteEntity
             ChangeStatus(TicketStatus.Open, assignedBy, "Assigned Agent");
         }
 
-        _domainEvents.Add(new TicketAssignedDomainEvent(Id, TicketNumber, agentId, assignedBy));
+        AddDomainEvent(new TicketAssignedDomainEvent(Id, TicketNumber, agentId, assignedBy));
 
         Touch(assignedBy);
+    }
+
+    public void UnassignAgent(Guid modifiedBy, string? notes = null)
+    {
+        if (!AssignedAgentId.HasValue)
+            return;
+
+        var previousAgent = AssignedAgentId;
+        AssignedAgentId = null;
+
+        _ticketAssignmentLogs.Add(TicketAssignmentLog.Create(Id, previousAgent, null, modifiedBy, notes ?? "Unassigned ticket"));
+
+        Touch(modifiedBy);
     }
 
     public void AssignGroup(Guid groupId, Guid modifiedBy)
@@ -251,6 +283,7 @@ public sealed class Ticket : SoftDeleteEntity
             throw new TicketDomainException("Group ID cannot be empty.");
 
         GroupId = groupId;
+        AddDomainEvent(new TicketGroupAssignedDomainEvent(Id, TicketNumber, groupId, modifiedBy));
         Touch(modifiedBy);
     }
 
@@ -269,7 +302,7 @@ public sealed class Ticket : SoftDeleteEntity
 
         _ticketComments.Add(comment);
 
-        _domainEvents.Add(new TicketCommentAddedDomainEvent(
+        AddDomainEvent(new TicketCommentAddedDomainEvent(
             Id,
             comment.Id,
             comment.Body,
@@ -285,7 +318,7 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         ChangeStatus(TicketStatus.Resolved, resolvedBy, resolutionSummary);
-        _domainEvents.Add(new TicketResolvedDomainEvent(Id, TicketNumber, resolvedBy));
+        AddDomainEvent(new TicketResolvedDomainEvent(Id, TicketNumber, resolvedBy));
     }
 
     public void ProvideRootCauseAnalysis(string rca, Guid modifiedBy)
@@ -305,7 +338,7 @@ public sealed class Ticket : SoftDeleteEntity
         }
 
         ChangeStatus(TicketStatus.Reopened, reopenedBy, reason);
-        _domainEvents.Add(new TicketReopenedDomainEvent(Id, TicketNumber, reopenedBy));
+        AddDomainEvent(new TicketReopenedDomainEvent(Id, TicketNumber, reopenedBy));
     }
 
     public void Close(Guid closedBy, string notes)
@@ -314,7 +347,7 @@ public sealed class Ticket : SoftDeleteEntity
             throw new TicketDomainException("Only resolved tickets can be closed.");
 
         ChangeStatus(TicketStatus.Closed, closedBy, notes);
-        _domainEvents.Add(new TicketClosedDomainEvent(Id, TicketNumber, closedBy));
+        AddDomainEvent(new TicketClosedDomainEvent(Id, TicketNumber, closedBy));
     }
 
     public void AddAttachment(TicketAttachment attachment)

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.SharedKernel\Adrenalin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Adrenalin.EventBus\Adrenalin.EventBus.csproj" />
 	  
   </ItemGroup>
 

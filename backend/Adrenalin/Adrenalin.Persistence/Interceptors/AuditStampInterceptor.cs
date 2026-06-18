@@ -43,22 +43,27 @@ public sealed class AuditStampInterceptor : SaveChangesInterceptor
             switch (entry.State)
             {
                 case EntityState.Added:
-                    if (entry.Entity.CreatedAt == default)
+                    if (entry.Entity.CreatedAt == default && entry.Metadata.FindProperty(nameof(AuditableEntity.CreatedAt)) != null)
                         entry.Property(nameof(AuditableEntity.CreatedAt)).CurrentValue = now;
 
-                    if (entry.Entity.CreatedBy is null && userId.HasValue)
+                    if (entry.Entity.CreatedBy is null && userId.HasValue && entry.Metadata.FindProperty(nameof(AuditableEntity.CreatedBy)) != null)
                         entry.Property(nameof(AuditableEntity.CreatedBy)).CurrentValue = userId;
 
-                    entry.Property(nameof(AuditableEntity.UpdatedAt)).CurrentValue = now;
+                    if (entry.Metadata.FindProperty(nameof(AuditableEntity.UpdatedAt)) != null)
+                        entry.Property(nameof(AuditableEntity.UpdatedAt)).CurrentValue = now;
                     break;
 
                 case EntityState.Modified:
-                    entry.Property(nameof(AuditableEntity.CreatedAt)).IsModified = false;
-                    entry.Property(nameof(AuditableEntity.CreatedBy)).IsModified = false;
+                    if (entry.Metadata.FindProperty(nameof(AuditableEntity.CreatedAt)) != null)
+                        entry.Property(nameof(AuditableEntity.CreatedAt)).IsModified = false;
+                    
+                    if (entry.Metadata.FindProperty(nameof(AuditableEntity.CreatedBy)) != null)
+                        entry.Property(nameof(AuditableEntity.CreatedBy)).IsModified = false;
 
-                    entry.Property(nameof(AuditableEntity.UpdatedAt)).CurrentValue = now;
+                    if (entry.Metadata.FindProperty(nameof(AuditableEntity.UpdatedAt)) != null)
+                        entry.Property(nameof(AuditableEntity.UpdatedAt)).CurrentValue = now;
 
-                    if (userId.HasValue)
+                    if (userId.HasValue && entry.Metadata.FindProperty(nameof(AuditableEntity.UpdatedBy)) != null)
                         entry.Property(nameof(AuditableEntity.UpdatedBy)).CurrentValue = userId;
                     break;
             }

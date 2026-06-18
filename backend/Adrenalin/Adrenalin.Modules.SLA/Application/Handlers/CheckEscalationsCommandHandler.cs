@@ -1,9 +1,10 @@
-﻿using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Results;
 using Adrenalin.Modules.SLA.Application.Commands;
 using Adrenalin.Modules.SLA.Domain.Interfaces;
-using Adrenalin.SharedKernel.Contracts;
+using Adrenalin.EventBus;
+using Adrenalin.EventBus.Events;
 
 namespace Adrenalin.Modules.SLA.Application.Handlers;
 
@@ -12,16 +13,16 @@ public sealed class CheckEscalationsCommandHandler
 {
     private readonly ISlaRepository _slaRepo;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPublisher _publisher; // ⚡ Inject IPublisher instead of IDispatcher
+    private readonly IEventBus _eventBus; 
 
     public CheckEscalationsCommandHandler(
         ISlaRepository slaRepo,
         IUnitOfWork unitOfWork,
-        IPublisher publisher) // Updated constructor
+        IEventBus eventBus)
     {
         _slaRepo = slaRepo;
         _unitOfWork = unitOfWork;
-        _publisher = publisher;
+        _eventBus = eventBus;
     }
 
     public async Task<Result<int>> Handle(CheckEscalationsCommand command, CancellationToken ct)
@@ -52,7 +53,7 @@ public sealed class CheckEscalationsCommandHandler
 
                         // ⚡ Fire event using your custom IPublisher
                         // (Verify if the method name inside IPublisher is Publish or PublishAsync)
-                        await _publisher.Publish(new SlaBreachNotificationContract(
+                        await _eventBus.PublishAsync(new SlaBreachedIntegrationEvent(
                             slaTicket.TicketId,
                            ticketNumber,
                             "First Response Breach",
@@ -81,7 +82,7 @@ public sealed class CheckEscalationsCommandHandler
                         escalatedCount++;
 
                         // ⚡ Fire event using your custom IPublisher
-                        await _publisher.Publish(new SlaBreachNotificationContract(
+                        await _eventBus.PublishAsync(new SlaBreachedIntegrationEvent(
                             slaTicket.TicketId,
                            ticketNumber,
                             "Resolution Breach",
@@ -107,7 +108,7 @@ public sealed class CheckEscalationsCommandHandler
                     var teamLeads = await _slaRepo.GetUserIdsByRoleInGroupAsync(groupId.Value, "team_lead", ct);
                     var ticketNumber = await _slaRepo.GetTicketNumberAsync(slaTicket.TicketId, ct);
                     // ⚡ Fire event using your custom IPublisher
-                    await _publisher.Publish(new SlaBreachNotificationContract(
+                    await _eventBus.PublishAsync(new SlaBreachedIntegrationEvent(
                         slaTicket.TicketId,
                         ticketNumber,
                         "Follow Up Breach",

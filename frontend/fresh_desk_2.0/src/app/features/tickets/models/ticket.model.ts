@@ -28,6 +28,42 @@ export interface TicketDashboard {
   inProgress: number;
   pendingReply: number;
   resolvedClosed: number;
+  counts?: {
+    total: number;
+    unassigned: number;
+    open: number;
+    pending: number;
+  };
+  performance?: {
+    receivedToday: number;
+    resolvedToday: number;
+    resolutionRate: number | null;
+  };
+  trends?: {
+    timeLabel: string;
+    todayCount: number;
+    yesterdayCount: number;
+  }[];
+  todos?: {
+    id: string;
+    title: string;
+    due: string;
+  }[];
+  groupMetrics?: {
+    groupId: string;
+    groupName: string;
+    ticketCount: number;
+  }[];
+  agentWorkloads?: {
+    agentId: string;
+    agentName: string;
+    openTickets: number;
+    overdueTickets: number;
+  }[];
+  slaMetrics?: {
+    breachedCount: number;
+    atRiskCount: number;
+  };
 }
 
 // ─── Comment Attachment (nested in CommentDto) ────────────────────────────────
@@ -144,5 +180,5 @@ export interface UpdateTicketRequest {
 /** Matches AddCommentRequest — AuthorId/ContactId resolved from JWT server-side */
 export interface AddCommentRequest {
   body: string;
-  visibility: 'Public' | 'Internal';
+  isPrivate: boolean;
 }

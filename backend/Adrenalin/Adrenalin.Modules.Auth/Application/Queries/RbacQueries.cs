@@ -24,3 +24,9 @@ public sealed record GetAllGroupsQuery() : IRequest<Result<IReadOnlyList<GroupDt
 public sealed record GetGroupByIdQuery(Guid GroupId) : IRequest<Result<GroupDto>>;
 public sealed record GetGroupWithMembersQuery(Guid GroupId) : IRequest<Result<GroupWithMembersDto>>;
 public sealed record GetUserGroupsQuery(Guid UserId) : IRequest<Result<IReadOnlyList<GroupDto>>>;
+
+public sealed record GetEnterpriseGroupMembersQuery(Guid GroupId)
+    : IRequest<Result<IReadOnlyList<EnterpriseGroupMemberDto>>>;
+
+public sealed record GetEnterpriseGroupLeadersQuery(Guid GroupId)
+    : IRequest<Result<IReadOnlyList<EnterpriseGroupLeaderDto>>>;

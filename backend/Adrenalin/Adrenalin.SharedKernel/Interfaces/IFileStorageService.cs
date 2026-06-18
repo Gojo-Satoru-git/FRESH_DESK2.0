@@ -19,4 +19,8 @@ public interface IFileStorageService
     Task<bool> ExistsAsync(
         string fileurl,
         CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<string>> EnumerateFilesAsync(
+        string folder,
+        CancellationToken cancellationToken = default);
 }

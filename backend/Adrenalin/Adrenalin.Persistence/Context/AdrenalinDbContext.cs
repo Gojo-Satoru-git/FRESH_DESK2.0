@@ -1,6 +1,7 @@
 using Adrenalin.SharedKernel.Entities;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
+using Adrenalin.Modules.Ticketing.Domain.Entities.Email;
 using Microsoft.EntityFrameworkCore;
 
 namespace Adrenalin.Persistence.Context;
@@ -38,6 +39,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<Company> Companies { get; set; }
     public virtual DbSet<CompanyContactsLimit> CompanyContactsLimits { get; set; }
     public virtual DbSet<CompanyDomain> CompanyDomains { get; set; }
+    public virtual DbSet<CompanyGroup> CompanyGroups { get; set; }
+    public virtual DbSet<CompanyRoutingRule> CompanyRoutingRules { get; set; }
     public virtual DbSet<Contact> Contacts { get; set; }
     public virtual DbSet<CsatSurvey> CsatSurveys { get; set; }
     public virtual DbSet<CustomerStatusMap> CustomerStatusMaps { get; set; }
@@ -56,6 +59,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     // ── Other modules ─────────────────────────────────────────────────────────
     public virtual DbSet<LeaderboardSnapshot> LeaderboardSnapshots { get; set; }
     public virtual DbSet<Module> Modules { get; set; }
+    public virtual DbSet<OutboxMessage> OutboxMessages { get; set; }
+    public virtual DbSet<IntegrationEventLog> IntegrationEventLogs { get; set; }
     public virtual DbSet<NotificationLog> NotificationLogs { get; set; }
     public virtual DbSet<NotificationTemplate> NotificationTemplates { get; set; }
     public virtual DbSet<Permission> Permissions { get; set; }
@@ -72,10 +77,17 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<Ticket> Tickets { get; set; }
     public virtual DbSet<TicketAssignmentLog> TicketAssignmentLogs { get; set; }
     public virtual DbSet<TicketAttachment> TicketAttachments { get; set; }
+    public virtual DbSet<TicketWatcher> TicketWatchers { get; set; }
     public virtual DbSet<TicketClassification> TicketClassifications { get; set; }
     public virtual DbSet<TicketComment> TicketComments { get; set; }
     public virtual DbSet<TicketCustomField> TicketCustomFields { get; set; }
-    
+    public virtual DbSet<GroupAssignmentHistory> GroupAssignmentHistories { get; set; }
+
+    // ── Email ─────────────────────────────────────────────────────────────────
+    public virtual DbSet<EmailMessage> EmailMessages { get; set; }
+    public virtual DbSet<EmailAttachment> EmailAttachments { get; set; }
+    public virtual DbSet<ProcessedEmailLog> ProcessedEmailLogs { get; set; }
+    public virtual DbSet<EmailAliasRouting> EmailAliasRoutes { get; set; }
     
     public virtual DbSet<TicketRiskScore> TicketRiskScores { get; set; }
     public virtual DbSet<TicketStatusGraph> TicketStatusGraphs { get; set; }
@@ -111,6 +123,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
             .HasPostgresExtension("pg_trgm")
             .HasPostgresExtension("pgcrypto")
             .HasPostgresExtension("unaccent");
+
+        modelBuilder.HasPostgresEnum<EmailProcessingState>("email", "email_processing_state");
 
       
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AdrenalinDbContext).Assembly);
@@ -157,26 +171,39 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
         }
         
 
-        var result = await base.SaveChangesAsync(cancellationToken);
+        // Dispatch domain events BEFORE calling base.SaveChangesAsync()
+        // This ensures any modifications or OutboxMessages added by event handlers
+        // are included in the same transaction.
         await DispatchDomainEventsAsync(cancellationToken);
+
+        var result = await base.SaveChangesAsync(cancellationToken);
         return result;
     }
     
 
     private async Task DispatchDomainEventsAsync(CancellationToken ct)
     {
-        var articleEvents = ChangeTracker.Entries<KbArticle>()
-            .SelectMany(e => e.Entity.DomainEvents).ToList();
-        var folderEvents = ChangeTracker.Entries<KbFolder>()
-            .SelectMany(e => e.Entity.DomainEvents).ToList();
-        var ticketEvents = ChangeTracker.Entries<Ticket>()
-            .SelectMany(e => e.Entity.DomainEvents).ToList();
+        while (true)
+        {
+            var domainEntities = ChangeTracker.Entries<Adrenalin.SharedKernel.Entities.BaseEntity>()
+                .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Any())
+                .ToList();
 
-        ChangeTracker.Entries<KbArticle>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
-        ChangeTracker.Entries<KbFolder>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
-        ChangeTracker.Entries<Ticket>().ToList().ForEach(e => e.Entity.ClearDomainEvents());
+            if (!domainEntities.Any())
+            {
+                break;
+            }
 
-        foreach (var evt in articleEvents.Concat(folderEvents).Concat(ticketEvents))
-            await _publisher.Publish(evt, ct);
+            var domainEvents = domainEntities
+                .SelectMany(x => x.Entity.DomainEvents)
+                .ToList();
+
+            domainEntities.ForEach(entity => entity.Entity.ClearDomainEvents());
+
+            foreach (var domainEvent in domainEvents)
+            {
+                await _publisher.Publish(domainEvent, ct);
+            }
+        }
     }
 }

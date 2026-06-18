@@ -305,7 +305,6 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   ]);
 
   private dashboardSub = new Subscription();
-  private assignedTicketsSub = new Subscription(); // ⚡ ADDED: Separate reference to track ticket stream
 
   ngOnInit() {
     this.loadDashboardData();
@@ -318,7 +317,6 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   ngOnDestroy() {
     // ⚡ CLEAN SWEEP: Drop all network observers cleanly to preserve resource cycles
     this.dashboardSub.unsubscribe();
-    this.assignedTicketsSub.unsubscribe();
   }
 
   loadDashboardData() {
@@ -359,87 +357,47 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.kpiMetrics.set([
           { label: 'Total Tickets', value: dashboard.totalTickets, highlight: true, alert: false },
           { label: 'Unresolved', value: dashboard?.totalActive ?? 0, highlight: true, alert: false },
-          { label: 'Overdue', value: activeLogs.filter(log => (log.recipientEmail || '').includes('inapp_user_')).length, highlight: false, alert: true },
+          { label: 'Overdue', value: activeLogs.filter((log: any) => (log.recipientEmail || '').includes('inapp_user_')).length, highlight: false, alert: true },
           { label: 'Due Today', value: 0, highlight: false, alert: false },
           { label: 'Open', value: dashboard?.totalActive ?? 0, highlight: false, alert: false },
           { label: 'On Hold', value: 0, highlight: false, alert: false },
-          { label: 'Unassigned', value: 0, highlight: false, alert: false },
+          { label: 'Unassigned', value: dashboard?.counts?.unassigned ?? 0, highlight: false, alert: false },
           { label: 'In Progress', value: dashboard?.inProgress ?? 0, highlight: false, alert: false },
           { label: 'Pending Reply', value: dashboard?.pendingReply ?? 0, highlight: false, alert: true },
           { label: 'Resolved/Closed', value: dashboard?.resolvedClosed ?? 0, highlight: false, alert: false },
         ]);
-      },
-      error: (err) => console.error('Failed to resolve sync dashboard metrics', err)
-    });
 
-    // ⚡ FIXED: Safely encapsulated within the method block and tracked via assignedTicketsSub
-    if (this.assignedTicketsSub) {
-      this.assignedTicketsSub.unsubscribe();
-    }
+        if (dashboard.performance) {
+          this.performanceMetrics.set([
+            { label: 'Resolved Tickets', value: dashboard.performance.resolvedToday?.toString() || '0' },
+            { label: 'Received Tickets', value: dashboard.performance.receivedToday?.toString() || '0' },
+            { label: 'Resolution Rate', value: dashboard.performance.resolutionRate !== null ? `${dashboard.performance.resolutionRate}%` : '--' },
+          ]);
+        }
 
-    this.assignedTicketsSub = this.ticketService.getAssignedTickets(1, 100).subscribe({
-      next: (result) => {
-        const tickets = result.items || [];
+        if (dashboard.groupMetrics && dashboard.groupMetrics.length > 0) {
+          this.ticketGroups.set(dashboard.groupMetrics.map((g: any) => ({ name: g.groupName, count: g.ticketCount })));
+        } else {
+          this.ticketGroups.set([{ name: 'No Tickets', count: 0 }]);
+        }
 
-        const totalCount = tickets.length;
-        const resolvedCount = tickets.filter(t => ['resolved', 'closed'].includes(t.status.toLowerCase())).length;
-        const resolvedPercent = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : null;
-        
-        this.performanceMetrics.set([
-          { label: 'Resolved Tickets', value: resolvedCount.toString() },
-          { label: 'Received Tickets', value: totalCount.toString() },
-          { label: 'Resolution Rate', value: resolvedPercent !== null ? `${resolvedPercent}%` : '--' },
-        ]);
+        if (dashboard.todos && dashboard.todos.length > 0) {
+          this.todos.set(dashboard.todos);
+        } else {
+          this.todos.set([{ id: '1', title: 'All clear! No pending high priority tickets.', due: 'None' }]);
+        }
 
-        const groupsMap: { [key: string]: number } = {};
-        tickets.forEach(t => {
-          const status = t.status || 'Other';
-          groupsMap[status] = (groupsMap[status] || 0) + 1;
-        });
-        const groupList = Object.keys(groupsMap).map(key => ({
-          name: key,
-          count: groupsMap[key]
-        }));
-        this.ticketGroups.set(groupList.length > 0 ? groupList : [{ name: 'No Tickets', count: 0 }]);
-
-        const highPriorityTickets = tickets.filter(t =>
-          ['critical', 'high'].includes(t.priority.toLowerCase()) &&
-          !['resolved', 'closed'].includes(t.status.toLowerCase())
-        );
-        const todoList = highPriorityTickets.slice(0, 5).map((t, idx) => ({
-          id: idx + 1,
-          title: `Followup on ticket: ${t.title}`,
-          due: t.priority
-        }));
-        this.todos.set(todoList.length > 0 ? todoList : [{ id: 1, title: 'All clear! No pending high priority tickets.', due: 'None' }]);
-
-        const hourlyToday = new Array(7).fill(0);
-        tickets.forEach(t => {
-          const date = new Date(t.createdAt);
-          const hour = date.getHours();
-          if (hour <= 9) hourlyToday[0]++;
-          else if (hour <= 11) hourlyToday[1]++;
-          else if (hour <= 13) hourlyToday[2]++;
-          else if (hour <= 15) hourlyToday[3]++;
-          else if (hour <= 17) hourlyToday[4]++;
-          else if (hour <= 19) hourlyToday[5]++;
-          else hourlyToday[6]++;
-        });
-
-        const report = [
-          { time: '08:00 AM', today: hourlyToday[0], yesterday: Math.max(0, hourlyToday[0] - 1) },
-          { time: '10:00 AM', today: hourlyToday[1], yesterday: Math.max(0, hourlyToday[1] - 1) },
-          { time: '12:00 PM', today: hourlyToday[2], yesterday: Math.max(0, hourlyToday[2] - 1) },
-          { time: '02:00 PM', today: hourlyToday[3], yesterday: Math.max(0, hourlyToday[3] - 1) },
-          { time: '04:00 PM', today: hourlyToday[4], yesterday: Math.max(0, hourlyToday[4] - 1) },
-          { time: '06:00 PM', today: hourlyToday[5], yesterday: Math.max(0, hourlyToday[5] - 1) },
-          { time: '08:00 PM', today: hourlyToday[6], yesterday: Math.max(0, hourlyToday[6] - 1) },
-        ];
-        this.reportData.set(report);
+        if (dashboard.trends && dashboard.trends.length > 0) {
+          this.reportData.set(dashboard.trends.map((t: any) => ({
+            time: t.timeLabel,
+            today: t.todayCount,
+            yesterday: t.yesterdayCount
+          })));
+        }
 
         this.renderChart();
       },
-      error: (err) => console.error('Failed to resolve assigned tickets data', err)
+      error: (err) => console.error('Failed to resolve sync dashboard metrics', err)
     });
   }
 
