@@ -23,8 +23,8 @@ const STATUS_FLOW = ['New', 'Open', 'InProgress', 'PendingCustomer', 'PendingInt
 
 /** Human-readable labels for TicketStatus enum values */
 const STATUS_LABELS: Record<string, string> = {
-  New:             'New',
-  Open:            'Open',
+  New:             'Open',
+  Open:            'Assigned',
   InProgress:      'In Progress',
   PendingCustomer: 'Pending Customer',
   PendingInternal: 'Pending Internal',
@@ -249,16 +249,25 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                               <span class="text-white text-xl ml-0.5">▶</span>
                             </div>
                           </div>
-                        } @else {
-                          <a
-                            [href]="getFileUrl(file.fileUrl)"
-                            target="_blank"
-                            class="flex flex-col items-center justify-center h-full w-full text-text-muted hover:text-primary transition-colors"
-                          >
-                            <span class="text-4xl mb-2">📎</span>
-                            <span class="text-xs font-semibold uppercase tracking-wider">Document</span>
-                          </a>
-                        }
+                        } @else if (file.mimeType === 'message/rfc822' || file.mimeType === 'application/vnd.ms-outlook') {
+                            <a
+                              [href]="getFileUrl(file.fileUrl)"
+                              target="_blank"
+                              class="flex flex-col items-center justify-center h-full w-full text-text-muted hover:text-primary transition-colors"
+                            >
+                              <span class="text-4xl mb-2">✉️</span>
+                              <span class="text-xs font-semibold uppercase tracking-wider">Email</span>
+                            </a>
+                          } @else {
+                            <a
+                              [href]="getFileUrl(file.fileUrl)"
+                              target="_blank"
+                              class="flex flex-col items-center justify-center h-full w-full text-text-muted hover:text-primary transition-colors"
+                            >
+                              <span class="text-4xl mb-2">📎</span>
+                              <span class="text-xs font-semibold uppercase tracking-wider">Document</span>
+                            </a>
+                          }
                       </div>
 
                       <!-- File Details -->
@@ -331,7 +340,15 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
                         placeholder="Write a comment… Use @mention to notify someone"
                         class="w-full px-4 py-3 bg-background border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-text-main placeholder:text-text-muted/60 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
                       ></textarea>
-                      <div class="flex justify-end mt-2">
+                      <div class="flex justify-between items-center mt-2">
+                        <div>
+                          @if (!isCustomer()) {
+                            <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
+                              <input type="checkbox" [(ngModel)]="isInternalComment" class="rounded border-gray-300 text-primary focus:ring-primary">
+                              Internal Note
+                            </label>
+                          }
+                        </div>
                         <button
                           (click)="submitComment()"
                           [disabled]="!newComment.trim() || submittingComment()"
@@ -661,6 +678,7 @@ export class TicketDetailComponent implements OnInit {
   editTitle = '';
   isActionLoading = signal<boolean>(false);
   newComment = '';
+  isInternalComment = false;
 
   statusFlow = STATUS_FLOW;
   agents = signal<any[]>([]);
@@ -924,9 +942,10 @@ export class TicketDetailComponent implements OnInit {
     const t = this.ticket();
     if (!t || !this.newComment.trim()) return;
     this.submittingComment.set(true);
-    this.ticketService.addComment(t.id, { body: this.newComment, visibility: 'Public' }).subscribe({
+    this.ticketService.addComment(t.id, { body: this.newComment, isPrivate: this.isInternalComment }).subscribe({
       next: () => {
         this.newComment = '';
+        this.isInternalComment = false;
         this.submittingComment.set(false);
         this.loadComments(t.id);
         this.showToast('Comment added!');
@@ -1175,17 +1194,26 @@ export class TicketDetailComponent implements OnInit {
     return (VALID_TRANSITIONS[current] ?? []).some((s) => s.toLowerCase() === status.toLowerCase());
   }
 
-  isCurrentStep(step: string): boolean {
-    return this.ticket()?.status?.toLowerCase() === step.toLowerCase();
-  }
+  /** Map special statuses to their visual equivalent in STATUS_FLOW */
+private effectiveStatus(status: string): string {
+  const s = status?.toLowerCase();
+  if (s === 'reopened') return 'Open';
+  return status;
+}
 
-  isCompletedStep(step: string): boolean {
-    const t = this.ticket();
-    if (!t) return false;
-    const currentIdx = STATUS_FLOW.findIndex((s) => s.toLowerCase() === t.status.toLowerCase());
-    const stepIdx = STATUS_FLOW.findIndex((s) => s.toLowerCase() === step.toLowerCase());
-    return stepIdx < currentIdx;
-  }
+isCurrentStep(step: string): boolean {
+  const effective = this.effectiveStatus(this.ticket()?.status ?? '');
+  return effective?.toLowerCase() === step.toLowerCase();
+}
+
+isCompletedStep(step: string): boolean {
+  const t = this.ticket();
+  if (!t) return false;
+  const effective = this.effectiveStatus(t.status);
+  const currentIdx = STATUS_FLOW.findIndex((s) => s.toLowerCase() === effective.toLowerCase());
+  const stepIdx = STATUS_FLOW.findIndex((s) => s.toLowerCase() === step.toLowerCase());
+  return stepIdx < currentIdx;
+}
 
   getStepClass(step: string): string {
     if (this.isCompletedStep(step)) return 'bg-primary border-primary text-white';

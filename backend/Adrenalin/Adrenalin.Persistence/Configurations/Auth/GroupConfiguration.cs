@@ -52,6 +52,14 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .HasComment("Minutes after which an unassigned ticket in this group triggers the GROUP_UNATTENDED notification to group leads. Default 30 minutes. Automation rule reads this value.")
             .HasColumnName("unattended_alert_minutes");
 
+        builder.Property(e => e.AssignmentStrategy)
+            .HasDefaultValue(0)
+            .HasComment("Auto-assignment strategy: 0=LeastLoaded, 1=RoundRobin, 2=SkillBased, 3=Manual. Extensible via IAgentAssignmentStrategy.")
+            .HasColumnName("assignment_strategy");
+
+        builder.Property(e => e.FallbackGroupId)
+            .HasColumnName("fallback_group_id");
+
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 
@@ -72,5 +80,11 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
             .HasForeignKey(d => d.UpdatedBy)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("groups_updated_by_fkey");
+
+        // Self-referencing FK for escalation fallback
+        builder.HasOne<Group>().WithMany()
+            .HasForeignKey(d => d.FallbackGroupId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("groups_fallback_group_id_fkey");
     }
 }

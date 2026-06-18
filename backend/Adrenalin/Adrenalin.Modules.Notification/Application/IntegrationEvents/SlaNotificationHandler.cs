@@ -1,4 +1,5 @@
-﻿using System;
+using Adrenalin.SharedKernel.Interfaces;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,21 +9,25 @@ using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Contracts;
 using Adrenalin.Modules.Notification.Domain.Entities;
 using Adrenalin.Modules.Notification.Domain.Interfaces;
+using Adrenalin.EventBus;
+using Adrenalin.EventBus.Events;
 
 namespace Adrenalin.Modules.Notification.Application.IntegrationEvents;
 
-public sealed class SlaNotificationHandler : INotificationHandler<SlaBreachNotificationContract>
+public sealed class SlaNotificationHandler : IIntegrationEventHandler<SlaBreachedIntegrationEvent>
 {
     private readonly INotificationRepository _repository;
     private readonly ILogger<SlaNotificationHandler> _logger;
+    private readonly IEmailService _emailService;
 
-    public SlaNotificationHandler(INotificationRepository repository, ILogger<SlaNotificationHandler> logger)
+    public SlaNotificationHandler(INotificationRepository repository, ILogger<SlaNotificationHandler> logger, IEmailService emailService)
     {
         _repository = repository;
         _logger = logger;
+        _emailService = emailService;
     }
 
-    public async Task Handle(SlaBreachNotificationContract notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(SlaBreachedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Processing SlaNotificationHandler for Ticket {TicketId}. Breach Type: {BreachType}",
             notification.TicketId, notification.BreachType);
@@ -52,18 +57,21 @@ public sealed class SlaNotificationHandler : INotificationHandler<SlaBreachNotif
             return;
         }
 
+        var companyId = await _repository.GetCompanyIdByTicketIdAsync(notification.TicketId, cancellationToken);
+        var resolvedEmails = await _repository.ResolveEmailsAsync(notification.TargetUserIds, cancellationToken);
+
         // 🎯 REVERTED: Restored the database user email address lookup routine
+        var logs = new List<NotificationLog>();
         foreach (var userId in notification.TargetUserIds)
         {
-            var userEmail = await _repository.ResolveEmailAsync(userId, cancellationToken);
-
-            if (string.IsNullOrEmpty(userEmail))
+            if (!resolvedEmails.TryGetValue(userId, out var userEmail))
             {
                 userEmail = $"inapp_user_{userId:N}@adrenalin.internal";
             }
 
             var log = new NotificationLog
             {
+                CompanyId = companyId,
                 TicketId = notification.TicketId,
                 TicketNumber = notification.TicketNumber,
                 RecipientEmail = userEmail, // Saves real emails (e.g., agent2@adrenalin.org)
@@ -73,8 +81,10 @@ public sealed class SlaNotificationHandler : INotificationHandler<SlaBreachNotif
                 TemplateId = template.Id
             };
 
-            await _repository.AddLogAsync(log, cancellationToken);
+            logs.Add(log);
+            await _emailService.SendAsync(userEmail, subject, body);
         }
+        await _repository.AddLogsAsync(logs, cancellationToken);
 
         await _repository.SaveChangesAsync(cancellationToken);
 

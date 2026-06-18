@@ -20,8 +20,6 @@ public sealed class KbFolder : SoftDeleteEntity
     public int DisplayOrder { get; private set; }
     public KbFolder? Parent { get; private set; }
 
-    private readonly List<INotification> _domainEvents = [];
-    public IReadOnlyList<INotification> DomainEvents => _domainEvents.AsReadOnly();
 
     private KbFolder() { }
 
@@ -41,7 +39,7 @@ public sealed class KbFolder : SoftDeleteEntity
             CreatedBy = createdBy,
             CreatedAt = DateTimeOffset.UtcNow
         };
-        folder._domainEvents.Add(new KbFolderCreatedDomainEvent(folder.Id, folder.ParentId, folder.Name));
+        folder.AddDomainEvent(new KbFolderCreatedDomainEvent(folder.Id, folder.ParentId, folder.Name));
         return folder;
     }
 
@@ -66,8 +64,8 @@ public sealed class KbFolder : SoftDeleteEntity
         IsDeleted = true;
         UpdatedBy = updatedBy;
         UpdatedAt = DateTimeOffset.UtcNow;
-        _domainEvents.Add(new KbFolderDeletedDomainEvent(Id));
+        AddDomainEvent(new KbFolderDeletedDomainEvent(Id));
     }
 
-    public void ClearDomainEvents() => _domainEvents.Clear();
+
 }

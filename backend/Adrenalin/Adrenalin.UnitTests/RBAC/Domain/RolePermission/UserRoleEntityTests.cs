@@ -1,4 +1,4 @@
-﻿
+
 using FluentAssertions;
 
 namespace Adrenalin.UnitTests.RBAC.Domain.UserRole;

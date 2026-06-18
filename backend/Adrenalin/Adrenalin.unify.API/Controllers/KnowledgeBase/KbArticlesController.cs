@@ -65,7 +65,7 @@ public sealed class KbArticlesController : ControllerBase
 
     /// <summary>Returns all published articles eligible for auto-resolution (engine warm-up).</summary>
     [HttpGet("auto-resolve-candidates")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(typeof(IReadOnlyList<KbArticleDto>), 200)]
     public async Task<IActionResult> GetAutoResolveCandidates(CancellationToken ct)
     {
@@ -76,7 +76,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles ─────────────────────────────────────────────────
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(typeof(object), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(
@@ -93,7 +93,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── PUT /api/kb/articles/{id} ─────────────────────────────────────────────
 
     [HttpPut("{id:guid}")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Update(
@@ -108,7 +108,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── PUT /api/kb/articles/{id}/move ────────────────────────────────────────
 
     [HttpPut("{id:guid}/move")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Move(
@@ -123,7 +123,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/publish ───────────────────────────────────
 
     [HttpPost("{id:guid}/publish")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
@@ -135,7 +135,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/archive ───────────────────────────────────
 
     [HttpPost("{id:guid}/archive")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Archive(Guid id, CancellationToken ct)
@@ -147,7 +147,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/restore-to-draft ───────────────────────────
 
     [HttpPost("{id:guid}/restore-to-draft")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> RestoreToDraft(Guid id, CancellationToken ct)
@@ -159,7 +159,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── DELETE /api/kb/articles/{id} ─────────────────────────────────────────
 
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
@@ -171,7 +171,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/auto-resolve/enable ───────────────────────
 
     [HttpPost("{id:guid}/auto-resolve/enable")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> EnableAutoResolve(
@@ -188,7 +188,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/auto-resolve/disable ──────────────────────
 
     [HttpPost("{id:guid}/auto-resolve/disable")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     public async Task<IActionResult> DisableAutoResolve(Guid id, CancellationToken ct)
     {
@@ -199,7 +199,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── POST /api/kb/articles/{id}/guardrail-exclude ─────────────────────────
 
     [HttpPost("{id:guid}/guardrail-exclude")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> GuardrailExclude(Guid id, CancellationToken ct)
@@ -216,7 +216,7 @@ public sealed class KbArticlesController : ControllerBase
     // stores the resulting server-relative URL in the database.
 
     [HttpPost("{id:guid}/attachments")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(object), 201)]
     [ProducesResponseType(400)]
@@ -246,7 +246,7 @@ public sealed class KbArticlesController : ControllerBase
     // ── DELETE /api/kb/articles/{id}/attachments/{attachmentId} ──────────────
 
     [HttpDelete("{id:guid}/attachments/{attachmentId:guid}")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> RemoveAttachment(

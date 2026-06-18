@@ -32,10 +32,17 @@ public class UserGroupConfiguration : IEntityTypeConfiguration<UserGroup>
         builder.Property(e => e.GroupId).HasColumnName("group_id");
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         builder.Property(e => e.IsLead).HasColumnName("is_lead");
+
         builder.Ignore(e => e.RowVersion);
-        builder.Ignore(e => e.UpdatedAt);
-        builder.Ignore(e => e.UpdatedBy);
         builder.Property(e => e.UserId).HasColumnName("user_id");
+
+        builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+        builder.HasOne<User>().WithMany()
+            .HasForeignKey(d => d.UpdatedBy)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("user_groups_updated_by_fkey");
 
         builder.HasOne<User>().WithMany()
             .HasForeignKey(d => d.CreatedBy)

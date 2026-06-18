@@ -54,4 +54,39 @@ public sealed class RabbitMQEventBus : IEventBus
             body: body,
             cancellationToken: cancellationToken);
     }
+    public async Task PublishRawAsync(string eventName, string jsonPayload, CancellationToken cancellationToken = default)
+    {
+        var factory = new ConnectionFactory
+        {
+            HostName = _configuration["RabbitMQ:HostName"] ?? "localhost",
+            UserName = _configuration["RabbitMQ:UserName"] ?? "guest",
+            Password = _configuration["RabbitMQ:Password"] ?? "guest"
+        };
+
+        using var connection = await factory.CreateConnectionAsync(cancellationToken);
+        using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+
+        var exchangeName = "adrenalin.events";
+        await channel.ExchangeDeclareAsync(
+            exchange: exchangeName,
+            type: ExchangeType.Fanout,
+            durable: true,
+            cancellationToken: cancellationToken);
+
+        var body = Encoding.UTF8.GetBytes(jsonPayload);
+
+        var properties = new BasicProperties
+        {
+            Persistent = true,
+            ContentType = "application/json"
+        };
+
+        await channel.BasicPublishAsync(
+            exchange: exchangeName,
+            routingKey: eventName,
+            mandatory: false,
+            basicProperties: properties,
+            body: body,
+            cancellationToken: cancellationToken);
+    }
 }

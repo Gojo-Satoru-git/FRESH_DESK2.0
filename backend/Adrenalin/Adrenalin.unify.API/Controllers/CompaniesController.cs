@@ -1,6 +1,8 @@
 using Adrenalin.Modules.Company.Application.Commands;
 using Adrenalin.Modules.Company.Application.DTOs;
 using Adrenalin.Modules.Company.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.Queries;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Pagination;
 using Microsoft.AspNetCore.Authorization;
@@ -348,6 +350,92 @@ public sealed class CompaniesController : ControllerBase
             : BadRequest(new { error = result.Error });
     }
 
+    // ───────────────────────────────────────────── Groups (Company ↔ Group Mapping) ──────────────────────
+
+    /// <summary>Lists all groups assigned to a company.</summary>
+    [HttpGet("{id:guid}/groups")]
+    [Authorize(Policy = "company:read")]
+    [ProducesResponseType(typeof(IReadOnlyList<CompanyGroupDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetGroups(Guid id, CancellationToken ct)
+    {
+        var result = await _dispatcher.Send(new GetCompanyGroupsQuery(id), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>Assigns a company to a support group.</summary>
+    [HttpPost("{id:guid}/groups")]
+    [Authorize(Policy = "company:update")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AssignGroup(Guid id, [FromBody] AssignCompanyGroupRequest request, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var result = await _dispatcher.Send(
+            new AssignCompanyToGroupCommand(id, request.GroupId, request.IsDefault, request.Priority, actorId.Value), ct);
+
+        return result.IsSuccess
+            ? Ok(new { Message = "Company assigned to group successfully." })
+            : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>Removes a company from a support group.</summary>
+    [HttpDelete("{id:guid}/groups/{groupId:guid}")]
+    [Authorize(Policy = "company:update")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveGroup(Guid id, Guid groupId, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var result = await _dispatcher.Send(new RemoveCompanyFromGroupCommand(id, groupId, actorId.Value), ct);
+        return result.IsSuccess
+            ? Ok(new { Message = "Company removed from group successfully." })
+            : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>Sets a group as the default support group for a company.</summary>
+    [HttpPost("{id:guid}/groups/{groupId:guid}/default")]
+    [Authorize(Policy = "company:update")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetDefaultGroup(Guid id, Guid groupId, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+
+        var result = await _dispatcher.Send(new SetDefaultCompanyGroupCommand(id, groupId, actorId.Value), ct);
+        return result.IsSuccess
+            ? Ok(new { Message = "Group set as default successfully." })
+            : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>Gets ticket metrics for a company.</summary>
+    [HttpGet("{id:guid}/ticket-metrics")]
+    [Authorize(Policy = "company:read")]
+    [ProducesResponseType(typeof(CompanyTicketMetricsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTicketMetrics(Guid id, CancellationToken ct)
+    {
+        var actorId = GetActorId();
+        if (!actorId.HasValue) return Unauthorized();
+        var result = await _dispatcher.Send(new Adrenalin.Modules.Ticketing.Application.Queries.GetCompanyTicketMetricsQuery(id, actorId.Value), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
+    }
+
+    /// <summary>Gets routing preview for a company.</summary>
+    [HttpGet("{id:guid}/routing-preview")]
+    [Authorize(Policy = "company:read")]
+    [ProducesResponseType(typeof(CompanyRoutingPreviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRoutingPreview(Guid id, CancellationToken ct)
+    {
+        var result = await _dispatcher.Send(new GetCompanyRoutingPreviewQuery(id), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
+    }
+
     // ───────────────────────────────────────────── Contacts (under company) ─────
 
     /// <summary>Gets contacts for a company with filtering and pagination.</summary>
@@ -412,3 +500,4 @@ public sealed record UpdateTierRequest(string SupportTier);
 public sealed record UpdateContactLimitRequest(int MaxContacts);
 public sealed record AddDomainRequest(string Domain, bool IsPrimary = false);
 public sealed record CreateContactRequest(string Name, string Email, string? Phone = null, bool IsAuthorized = true);
+public sealed record AssignCompanyGroupRequest(Guid GroupId, bool IsDefault = false, int Priority = 0);

@@ -55,6 +55,7 @@ public sealed class AddCommentCommandHandler : IRequestHandler<AddCommentCommand
             request.AuthorId,
             contactId,
             request.Body,
+            null,
             request.IsPrivate
         );
 

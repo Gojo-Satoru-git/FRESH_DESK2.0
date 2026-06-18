@@ -9,15 +9,16 @@ import { CreateTicketModalComponent } from './create-ticket-modal.component';
 const STATUS_OPTIONS = [
   'All',
   'New',
+  'Active',
   'Open',
   'Assigned',
-  'InProgress',
+  'In_Progress',
   'Pending',
   'Resolved',
   'Closed',
   'Reopened',
 ];
-const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
+const PRIORITY_OPTIONS = ['All', 'Urgent', 'High', 'Medium', 'Low'];
 
 @Component({
   selector: 'app-ticket-list',
@@ -68,7 +69,7 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
 
         <!-- Right: Actions -->
         <div class="flex items-center gap-3">
-          <button
+          <!-- <button
             (click)="showCreateModal.set(true)"
             class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-primary/30 transition-all"
           >
@@ -81,7 +82,7 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
               />
             </svg>
             New Ticket
-          </button>
+          </button> -->
 
           <span class="text-sm text-text-muted">{{ rangeText() }}</span>
 
@@ -120,29 +121,29 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
 
       <!-- Search Bar -->
       <div class="mb-4">
-        <div class="relative">
-          <svg
-            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            (input)="applyFilters()"
-            placeholder="Search tickets by title or ID…"
-            class="w-full pl-10 pr-4 py-2.5 bg-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-text-main placeholder:text-text-muted focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-          />
-        </div>
-      </div>
+  <div class="relative">
+    <svg
+      class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
+    </svg>
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="searchTerm.set($event)"
+      placeholder="Search tickets by title or ID…"
+      class="w-full pl-10 pr-4 py-2.5 bg-surface border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-text-main placeholder:text-text-muted focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+    />
+  </div>
+</div>
 
       <!-- Main Body -->
       <div class="flex flex-1 overflow-hidden gap-5 pb-6">
@@ -235,7 +236,7 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
                       getStatusBadge(ticket.status)
                     "
                   >
-                    {{ ticket.status }}
+                    {{ getStatusLabel(ticket.status) }}
                   </span>
                   <span class="text-[10px] text-text-muted">{{
                     formatDate(ticket.createdAt)
@@ -267,7 +268,7 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
               <label class="text-xs font-semibold text-text-main">Status</label>
               <select
                 [(ngModel)]="filterStatus"
-                (change)="applyFilters()"
+                (ngModelChange)="filterStatus.set($event)"
                 class="w-full bg-background border border-gray-300 dark:border-gray-700 text-text-main text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 @for (opt of statusOptions; track opt) {
@@ -280,7 +281,7 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
               <label class="text-xs font-semibold text-text-main">Priority</label>
               <select
                 [(ngModel)]="filterPriority"
-                (change)="applyFilters()"
+                (ngModelChange)="filterPriority.set($event)"
                 class="w-full bg-background border border-gray-300 dark:border-gray-700 text-text-main text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 @for (opt of priorityOptions; track opt) {
@@ -355,7 +356,7 @@ export class TicketListComponent implements OnInit {
   /** Client-side filtered subset for display */
   filteredTickets = computed(() => {
     let list = this.allTickets();
-    const term = this.searchTerm.trim().toLowerCase();
+    const term = this.searchTerm().trim().toLowerCase();
     if (term) {
       list = list.filter(
         (t) =>
@@ -364,11 +365,16 @@ export class TicketListComponent implements OnInit {
           (t.descriptionPreview ?? '').toLowerCase().includes(term),
       );
     }
-    if (this.filterStatus && this.filterStatus !== 'All') {
-      list = list.filter((t) => t.status.toLowerCase() === this.filterStatus.toLowerCase());
+    const status = this.filterStatus();
+    if (status === 'Active') {
+      const activeStatuses = ['new', 'open', 'inprogress', 'reopened'];
+      list = list.filter((t) => activeStatuses.includes(t.status.toLowerCase().replace(/_/g, '')));
+    } else if (status && status !== 'All') {
+      list = list.filter((t) => t.status.toLowerCase() === status.toLowerCase());
     }
-    if (this.filterPriority && this.filterPriority !== 'All') {
-      list = list.filter((t) => t.priority.toLowerCase() === this.filterPriority.toLowerCase());
+    const priority = this.filterPriority();
+    if (priority && priority !== 'All') {
+      list = list.filter((t) => t.priority.toLowerCase() === priority.toLowerCase());
     }
     return list;
   });
@@ -392,9 +398,9 @@ export class TicketListComponent implements OnInit {
     this.showToast('Ticket created successfully!');
   }
 
-  searchTerm = '';
-  filterStatus = 'All';
-  filterPriority = 'All';
+  searchTerm = signal('');
+  filterStatus = signal('All');
+  filterPriority = signal('All');
 
   statusOptions = STATUS_OPTIONS;
   priorityOptions = PRIORITY_OPTIONS;
@@ -419,7 +425,7 @@ export class TicketListComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       if (params['status']) {
-        this.filterStatus = params['status'];
+        this.filterStatus.set(params['status']);
       }
       this.loadTickets();
     });
@@ -459,15 +465,11 @@ export class TicketListComponent implements OnInit {
     });
   }
 
-  applyFilters() {
-    // Filters are applied reactively by the computed() above — nothing to call
-  }
 
   resetFilters() {
-    this.filterStatus = 'All';
-    this.filterPriority = 'All';
-    this.searchTerm = '';
-    // computed() will re-run automatically
+    this.filterStatus.set('All');
+    this.filterPriority.set('All');
+    this.searchTerm.set('');
   }
 
   prevPage() {
@@ -510,7 +512,6 @@ export class TicketListComponent implements OnInit {
 
   getPriorityBadge(priority: string): string {
     switch (priority?.toLowerCase()) {
-      case 'critical':
       case 'urgent':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'high':
@@ -544,6 +545,17 @@ export class TicketListComponent implements OnInit {
         return 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400';
       default:
         return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'new':
+        return 'Open';
+      case 'open':
+        return 'Assigned';
+      default:
+        return status;
     }
   }
 

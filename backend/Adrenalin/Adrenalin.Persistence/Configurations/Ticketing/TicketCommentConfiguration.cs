@@ -43,6 +43,7 @@ public class TicketCommentConfiguration : IEntityTypeConfiguration<TicketComment
         
         builder.Ignore(e => e.RowVersion);
         builder.Ignore(e => e.MentionedUsers);
+        builder.Ignore(e => e.HtmlBody);
 
         builder.HasOne<User>().WithMany().HasForeignKey(d => d.AuthorId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("ticket_comments_author_id_fkey");
 

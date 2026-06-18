@@ -168,6 +168,26 @@ public sealed class RabbitMQConsumerService : BackgroundService
                 }
                 break;
 
+            case nameof(EmailReceivedIntegrationEvent):
+                var emailEvent = JsonSerializer.Deserialize<EmailReceivedIntegrationEvent>(message);
+                if (emailEvent != null)
+                {
+                    var handlers = serviceProvider.GetServices<IIntegrationEventHandler<EmailReceivedIntegrationEvent>>();
+                    foreach (var handler in handlers)
+                        await handler.HandleAsync(emailEvent, ct);
+                }
+                break;
+
+            case nameof(SlaBreachedIntegrationEvent):
+                var slaEvent = JsonSerializer.Deserialize<SlaBreachedIntegrationEvent>(message);
+                if (slaEvent != null)
+                {
+                    var handlers = serviceProvider.GetServices<IIntegrationEventHandler<SlaBreachedIntegrationEvent>>();
+                    foreach (var handler in handlers)
+                        await handler.HandleAsync(slaEvent, ct);
+                }
+                break;
+
             default:
                 _logger.LogWarning("Unknown integration event name received on EventBus: {EventName}", eventName);
                 break;

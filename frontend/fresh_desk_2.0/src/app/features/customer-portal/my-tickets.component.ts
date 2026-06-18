@@ -165,7 +165,7 @@ interface ConfirmDialog {
                         class="px-2.5 py-0.5 rounded-full text-sm font-extrabold uppercase tracking-wider border"
                         [class]="getStatusClasses(ticket.status)"
                       >
-                        {{ ticket.status }}
+                        {{ getCustomerStatusLabel(ticket.status) }}
                       </span>
                     </div>
                   </div>
@@ -256,7 +256,7 @@ interface ConfirmDialog {
                     class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider border"
                     [class]="getStatusClasses(t.status)"
                   >
-                    {{ t.status }}
+                    {{ getCustomerStatusLabel(t.status) }}
                   </span>
                 </div>
                 <div class="flex items-center gap-3">
@@ -288,7 +288,7 @@ interface ConfirmDialog {
                   </button>
                 }
 
-                @if (t.status?.toLowerCase() === 'resolved' || t.status?.toLowerCase() === 'closed') {
+                @if (t.status.toLowerCase() === 'resolved' || t.status.toLowerCase() === 'closed') {
                   <button
                     (click)="reopenTicket(t.id)"
                     class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
@@ -597,18 +597,27 @@ interface ConfirmDialog {
                                   <span class="text-white text-xl ml-1">▶</span>
                                 </div>
                               </div>
-                            } @else {
-                              <a
-                                [href]="getFileUrl(file.fileUrl)"
-                                target="_blank"
-                                class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
-                              >
-                                <span class="text-4xl mb-2">📎</span>
-                                <span class="text-xs font-semibold uppercase tracking-wider"
-                                  >Document</span
-                                >
-                              </a>
-                            }
+                            } @else if (file.mimeType === 'message/rfc822' || file.mimeType === 'application/vnd.ms-outlook') {
+  
+                            <a [href]="getFileUrl(file.fileUrl)"
+                            target="_blank"
+                            class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
+                          >
+                            <span class="text-4xl mb-2">✉️</span>
+                            <span class="text-xs font-semibold uppercase tracking-wider">Email</span>
+                          </a>
+                        } @else {
+                          
+                           <a [href]="getFileUrl(file.fileUrl)"
+                            target="_blank"
+                            class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
+                          >
+                            <span class="text-4xl mb-2">📎</span>
+                            <span class="text-xs font-semibold uppercase tracking-wider"
+                              >Document</span
+                            >
+                          </a>
+                        }
                           </div>
 
                           <!-- File Details Area -->
@@ -1023,25 +1032,44 @@ export class MyTicketsComponent implements OnInit {
     this.mediaViewer = { url: null, type: null };
   }
 
-  statusFlow = ['new', 'open', 'in_progress', 'pending_customer', 'pending_internal', 'on_hold', 'resolved', 'closed'];
+statusFlow = ['open', 'assigned', 'pending', 'resolved', 'closed'];
+
+private customerStatusMap: Record<string, string> = {
+  new:              'open',
+  open:             'assigned',
+  in_progress:      'assigned',
+  inprogress:       'assigned',
+  pending_customer: 'pending',
+  pendingcustomer:  'pending',
+  pending_internal: 'pending',
+  pendinginternal:  'pending',
+  on_hold:          'pending',
+  onhold:           'pending',
+  resolved:         'resolved',
+  closed:           'closed',
+  reopened:         'open',
+};
 
 private statusLabels: Record<string, string> = {
-  new:              'New',
-  open:             'Open',
-  in_progress:      'In Progress',
-  inprogress:       'In Progress',
-  pending_customer: 'Pending Customer',
-  pendingcustomer:  'Pending Customer',
-  pending_internal: 'Pending Internal',
-  pendinginternal:  'Pending Internal',
-  on_hold:          'On Hold',
-  onhold:           'On Hold',
-  resolved:         'Resolved',
-  closed:           'Closed',
+  open:     'Open',
+  assigned: 'Assigned',
+  pending:  'Pending',
+  resolved: 'Resolved',
+  closed:   'Closed',
 };
 
 getStepLabel(step: string): string {
   return this.statusLabels[step] ?? step;
+}
+
+getCustomerStatusLabel(status: string): string {
+  const s = this.normalizeStatus(status);
+  if (['new'].includes(s)) return 'Open';
+  if (['open' , 'in_progress', 'inprogress'].includes(s)) return 'Assigned';
+  if (['pending_customer', 'pendingcustomer', 'pending_internal', 'pendinginternal', 'on_hold', 'onhold'].includes(s)) return 'Pending';
+  if (s === 'resolved') return 'Resolved';
+  if (s === 'closed')   return 'Closed';
+  return 'Open';
 }
 
 private normalizeStatus(s: string): string {
@@ -1054,11 +1082,13 @@ private normalizeStatus(s: string): string {
 }
 
 isCurrentStep(ticket: TicketDetail, step: string): boolean {
-  return this.normalizeStatus(ticket.status) === step;
+  const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
+  return mapped === step;
 }
 
 isCompletedStep(ticket: TicketDetail, step: string): boolean {
-  const currentIdx = this.statusFlow.indexOf(this.normalizeStatus(ticket.status));
+  const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
+  const currentIdx = this.statusFlow.indexOf(mapped);
   const stepIdx = this.statusFlow.indexOf(step);
   return stepIdx < currentIdx;
 }
@@ -1334,13 +1364,11 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
   }
 
   getStatusClasses(status: string): string {
-    const s = this.normalizeStatus(status);
-    if (s === 'new') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-    if (['open', 'in_progress', 'reopened'].includes(s)) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    if (['pending_customer', 'pending_internal'].includes(s)) return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-    if (s === 'on_hold') return 'bg-slate-50 text-slate-700 border-slate-200';
-    if (s === 'resolved') return 'bg-green-50 text-green-700 border-green-200';
-    if (s === 'closed') return 'bg-gray-100 text-slate-600 border-slate-200';
+    const label = this.getCustomerStatusLabel(status);
+    if (label === 'Open')     return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (label === 'Assigned') return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (label === 'Pending')  return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    if (label === 'Resolved') return 'bg-green-50 text-green-700 border-green-200';
     return 'bg-gray-100 text-slate-600 border-slate-200';
   }
 

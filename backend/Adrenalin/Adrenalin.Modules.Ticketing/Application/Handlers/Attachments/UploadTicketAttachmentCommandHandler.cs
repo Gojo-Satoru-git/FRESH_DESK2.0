@@ -43,7 +43,7 @@ public sealed class UploadTicketAttachmentCommandHandler : IRequestHandler<Uploa
         if (!string.IsNullOrEmpty(request.FileName))
         {
             var extension = Path.GetExtension(request.FileName);
-            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xlsx", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".zip", ".mp4" };
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xlsx", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".zip", ".mp4" , ".msg" , ".eml" };
             if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
                 throw new TicketDomainException($"File extension '{extension}' is not allowed.");

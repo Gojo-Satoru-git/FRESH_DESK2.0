@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="NSubstitute" Version="5.*" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -32,6 +33,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adrenalin.Modules.KnowledgeBase\Adrenalin.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
+    <ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
   </ItemGroup>
 
   <ItemGroup>

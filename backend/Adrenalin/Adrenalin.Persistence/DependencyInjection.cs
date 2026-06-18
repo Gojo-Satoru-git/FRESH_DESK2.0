@@ -38,18 +38,32 @@ public static class PersistenceServiceCollectionExtensions
 
         // ── Ticketing ─────────────────────────────────────────────────────────
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ITicketDashboardRepository, TicketDashboardRepository>();
+        services.AddScoped<ITicketRoutingContextRepository, TicketRoutingContextRepository>();
+
+        // ── Ticketing Email Repositories ──────────────────────────────────────
+        services.AddScoped<IEmailMessageRepository, EmailMessageRepository>();
+        services.AddScoped<IProcessedEmailLogRepository, ProcessedEmailLogRepository>();
+        services.AddScoped<IEmailAliasRoutingRepository, EmailAliasRoutingRepository>();
 
         services.AddScoped<IAutomationRuleRepository, AutomationRuleRepository>();
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AdrenalinDbContext>());
 
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
+        services.AddScoped<ITicketVisibilityService, TicketVisibilityService>();
         services.AddScoped<Adrenalin.Modules.Ticketing.Application.Queries.ITicketQueryService, TicketQueryService>();
+        services.AddScoped<Adrenalin.Modules.Lookup.Application.Queries.ILookupQueryService, LookupQueryService>();
 
         // ── Company ───────────────────────────────────────────────────────────
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<Adrenalin.Modules.Company.Application.Queries.ICompanyQueryService, CompanyQueryService>();
+        services.AddScoped<Adrenalin.Modules.Company.Domain.Interfaces.ICompanyGroupRepository, CompanyGroupRepository>();
+
+        // ── Routing / Group Management ────────────────────────────────────────
+        services.AddScoped<IRoutingRuleRepository, RoutingRuleRepository>();
+        services.AddScoped<IGroupAssignmentHistoryRepository, GroupAssignmentHistoryRepository>();
 
         // ── KnowledgeBase ─────────────────────────────────────────────────────
         services.AddScoped<Adrenalin.Modules.KB.Domain.Interfaces.IKbArticleRepository, KbArticleRepository>();
@@ -58,7 +72,6 @@ public static class PersistenceServiceCollectionExtensions
 
         // ── Notification ──────────────────────────────────────────────────────
         services.AddScoped<Adrenalin.Modules.Notification.Domain.Interfaces.INotificationRepository, NotificationRepository>();
-        services.AddTransient<INotificationHandler<SlaBreachNotificationContract>, SlaNotificationHandler>();
 
 
         // ── Workflow ──────────────────────────────────────────────────────────

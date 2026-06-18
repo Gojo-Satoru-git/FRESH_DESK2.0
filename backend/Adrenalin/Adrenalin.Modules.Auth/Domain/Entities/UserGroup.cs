@@ -8,6 +8,7 @@ public sealed class UserGroup : SoftDeleteEntity
     public Guid GroupId { get; private set; }
     public bool IsLead { get; private set; }
 
+
     public User User { get; private set; } = null!;
     public Group Group { get; private set; } = null!;
 
@@ -23,6 +24,7 @@ public sealed class UserGroup : SoftDeleteEntity
             UserId = userId,
             GroupId = groupId,
             IsLead = isLead,
+
             IsDeleted = false,
             CreatedBy = addedBy,
             CreatedAt = DateTimeOffset.UtcNow
@@ -33,6 +35,7 @@ public sealed class UserGroup : SoftDeleteEntity
     {
         IsDeleted = false;
         IsLead = isLead;
+
         UpdatedBy = updatedBy;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -41,6 +44,7 @@ public sealed class UserGroup : SoftDeleteEntity
     {
         if (IsDeleted) throw new InvalidOperationException("Cannot modify removed membership.");
         IsLead = isLead;
+
         UpdatedBy = updatedBy;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

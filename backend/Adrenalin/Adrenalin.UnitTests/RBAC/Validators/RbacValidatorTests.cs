@@ -383,7 +383,7 @@ public sealed class CreateGroupCommandValidatorTests
     private readonly CreateGroupCommandValidator _sut = new();
 
     private static CreateGroupCommand ValidCommand() =>
-        new("Support Team", "EU", "T1", 30, Guid.NewGuid());
+        new("Support Team", "EU", "T1", 30, 0, null, Guid.NewGuid());
 
     [Fact]
     public void CreateGroupCommandValidator_Should_Not_Have_Error_When_Request_IsValid()

@@ -59,7 +59,7 @@ public sealed class KbFoldersController : ControllerBase
     // ── POST /api/kb/folders ──────────────────────────────────────────────────
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(typeof(object), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Create(
@@ -78,7 +78,7 @@ public sealed class KbFoldersController : ControllerBase
     // ── PUT /api/kb/folders/{id}/rename ───────────────────────────────────────
 
     [HttpPut("{id:guid}/rename")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Rename(
@@ -96,7 +96,7 @@ public sealed class KbFoldersController : ControllerBase
     // ── PUT /api/kb/folders/{id}/reorder ──────────────────────────────────────
 
     [HttpPut("{id:guid}/reorder")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Reorder(
@@ -114,7 +114,7 @@ public sealed class KbFoldersController : ControllerBase
     // ── DELETE /api/kb/folders/{id} ───────────────────────────────────────────
 
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Policy = "kb:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

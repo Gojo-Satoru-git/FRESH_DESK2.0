@@ -32,4 +32,19 @@ public sealed class SlaTicket : AuditableEntity
     public bool FollowUpBreached { get; private set; }
 
     public SlaPolicy Policy { get; private set; } = null!;
+
+    public void MarkFirstResponseBreached()
+    {
+        FirstResponseBreached = true;
+    }
+
+    public void MarkResolutionBreached()
+    {
+        ResolutionBreached = true;
+    }
+
+    public void MarkFollowUpBreached()
+    {
+        FollowUpBreached = true;
+    }
 }

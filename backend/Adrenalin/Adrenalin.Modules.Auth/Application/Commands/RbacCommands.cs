@@ -42,10 +42,10 @@ public sealed record SetUserRolesCommand(Guid UserId, IReadOnlyList<Guid> RoleId
 
 // ── Groups ────────────────────────────────────────────────────────────────────
 public sealed record CreateGroupCommand(string Name, string? RegionCode, string? TierCode,
-    int UnattendedAlertMinutes, Guid ActorId) : IRequest<Result<Guid>>;
+    int UnattendedAlertMinutes, int AssignmentStrategy, Guid? FallbackGroupId, Guid ActorId) : IRequest<Result<Guid>>;
 
 public sealed record UpdateGroupCommand(Guid GroupId, string Name, string? RegionCode,
-    string? TierCode, int UnattendedAlertMinutes, Guid ActorId) : IRequest<Result>;
+    string? TierCode, int UnattendedAlertMinutes, int AssignmentStrategy, Guid? FallbackGroupId, Guid ActorId) : IRequest<Result>;
 
 public sealed record DeleteGroupCommand(Guid GroupId, Guid ActorId)
     : IRequest<Result>;

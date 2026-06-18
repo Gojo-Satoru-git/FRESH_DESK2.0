@@ -1,11 +1,9 @@
-// ✅ CORRECT — usings before everything
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.Modules.Ticketing.Application.Commands;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
-using Adrenalin.SharedKernel.Mediator;
 using System;
 using System.Linq;
 using System.Threading;
@@ -19,15 +17,18 @@ public sealed class CreateTicketCommandHandler
     private readonly ITicketRepository _ticketRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IDispatcher _dispatcher;
+    private readonly ITicketRoutingEngine _routingEngine;
 
     public CreateTicketCommandHandler(
         ITicketRepository ticketRepository,
         IUnitOfWork unitOfWork,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        ITicketRoutingEngine routingEngine)
     {
         _ticketRepository = ticketRepository;
         _unitOfWork = unitOfWork;
         _dispatcher = dispatcher;
+        _routingEngine = routingEngine;
     }
 
     public async Task<Guid> Handle(
@@ -127,7 +128,17 @@ public sealed class CreateTicketCommandHandler
 
         ticket.SetTicketNumber(ticketNumber);
 
-        ticket.AssignGroup(Guid.Parse("466b8a16-7910-4e20-891f-59fbdb0ca009"), createdByUserId ?? Guid.Empty);
+        // ── Enterprise Routing Engine ──────────────────────────────────────
+        // Routes the ticket through the 4-tier cascade:
+        // 1. Explicit company routing rules
+        // 2. Category/Module match
+        // 3. Region match
+        // 4. Fallback (company default group → system fallback)
+        var routingResult = await _routingEngine.RouteAsync(ticket, cancellationToken);
+        if (routingResult.GroupId.HasValue)
+        {
+            ticket.AssignGroup(routingResult.GroupId.Value, createdByUserId ?? Guid.Empty);
+        }
 
         // Enforce Workflow: Tickets must start unassigned so they land in the Lead/Manager queue.
         // Agents cannot see them until explicitly assigned.

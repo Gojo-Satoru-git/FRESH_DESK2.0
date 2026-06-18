@@ -25,7 +25,7 @@ public sealed class TicketAttachment : SoftDeleteEntity
         TicketId = destinationTicketId;
     }
 
-    private TicketAttachment(Guid ticketId, Guid? commentId, string fileName, string fileUrl, long fileSizeBytes, string mimeType, Guid uploadedBy)
+    private TicketAttachment(Guid ticketId, Guid? commentId, string fileName, string fileUrl, long fileSizeBytes, string mimeType, Guid? uploadedBy)
     {
         TicketId = ticketId;
         CommentId = commentId;
@@ -36,7 +36,7 @@ public sealed class TicketAttachment : SoftDeleteEntity
         CreatedBy = uploadedBy;
     }
 
-    public static TicketAttachment Create(Guid ticketId, Guid? commentId, string fileName, string fileUrl, long fileSizeBytes, string mimeType, Guid uploadedBy)
+    public static TicketAttachment Create(Guid ticketId, Guid? commentId, string fileName, string fileUrl, long fileSizeBytes, string mimeType, Guid? uploadedBy)
     {
         if (ticketId == Guid.Empty)
             throw new TicketDomainException("TicketId cannot be empty.");
@@ -53,8 +53,8 @@ public sealed class TicketAttachment : SoftDeleteEntity
         if (fileSizeBytes > 50 * 1024 * 1024)
             throw new TicketDomainException("File exceeds maximum allowed size.");
 
-        if (uploadedBy == Guid.Empty)
-            throw new TicketDomainException("UploadedBy user ID cannot be empty.");
+        if (uploadedBy.HasValue && uploadedBy.Value == Guid.Empty)
+            throw new TicketDomainException("UploadedBy user ID cannot be an empty Guid.");
 
         var ticketAttachment = new TicketAttachment(
             ticketId,

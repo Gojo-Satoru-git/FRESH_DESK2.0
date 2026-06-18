@@ -12,12 +12,12 @@ public class AssignTicketCommandValidator
             .NotEmpty()
             .WithMessage("TicketId is required");
 
-        RuleFor(x => x.TriggeredBy)
-            .NotEmpty()
-            .WithMessage("TriggeredBy is required");
-
         When(x => !x.IsAutoAssignment, () =>
         {
+            RuleFor(x => x.TriggeredBy)
+                .NotEmpty()
+                .WithMessage("TriggeredBy is required for manual assignment");
+
             RuleFor(x => x)
                 .Must(x => x.OverrideAgentId.HasValue
                         || x.OverrideGroupId.HasValue)
