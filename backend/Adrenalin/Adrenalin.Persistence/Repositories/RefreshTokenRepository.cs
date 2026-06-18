@@ -60,5 +60,23 @@ public async Task<List<RefreshToken>>
         .Where(x => x.UserId == userId)
         .ToListAsync(cancellationToken);
 }
+public async Task<RefreshToken?> GetByIdAsync(
+    Guid id,
+    CancellationToken cancellationToken)
+{
+    return await _db.RefreshTokens
+        .FirstOrDefaultAsync(
+            x => x.Id == id,
+            cancellationToken);
+}
+public async Task<List<RefreshToken>>
+    GetByFamilyIdAsync(
+        Guid familyId,
+        CancellationToken cancellationToken)
+{
+    return await _db.RefreshTokens
+        .Where(x => x.FamilyId == familyId)
+        .ToListAsync(cancellationToken);
+}
 }
 }

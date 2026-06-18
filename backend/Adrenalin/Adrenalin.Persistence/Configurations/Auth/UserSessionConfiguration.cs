@@ -48,13 +48,17 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
 
         builder.Property(e => e.UserId).HasColumnName("user_id");
 
-        builder.HasOne(d => d.RefreshToken).WithMany(p => p.UserSessions)
-            .HasForeignKey(d => d.RefreshTokenId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .HasConstraintName("user_sessions_refresh_token_id_fkey");
+        builder.HasOne(x => x.RefreshToken)
+    .WithOne(x => x.UserSession)
+    .HasForeignKey<UserSession>(
+        x => x.RefreshTokenId)
+    .OnDelete(DeleteBehavior.SetNull)
+    .HasConstraintName(
+        "user_sessions_refresh_token_id_fkey");
 
         builder.HasOne(d => d.User).WithMany(p => p.UserSessions)
             .HasForeignKey(d => d.UserId)
             .HasConstraintName("user_sessions_user_id_fkey");
+        builder.Ignore(x => x.RowVersion);
     }
 }

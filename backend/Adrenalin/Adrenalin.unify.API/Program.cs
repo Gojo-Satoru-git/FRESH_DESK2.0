@@ -157,6 +157,9 @@ builder.Services.AddScoped<
     builder.Services.AddScoped<
     IContactRepository,
     ContactRepository>();
+builder.Services.AddScoped<
+    IUserSessionRepository,
+    UserSessionRepository>();
 // ── 5. All repositories — single extension ───────────────────────────────────
 builder.Services.AddPersistence();
 

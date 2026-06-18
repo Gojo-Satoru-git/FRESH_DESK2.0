@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Adrenalin.Modules.Auth.Application.Commands;
+using Adrenalin.Modules.Auth.Domain.Enums;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.SharedKernel.Exceptions;
 using Adrenalin.SharedKernel.Interfaces;
@@ -17,19 +18,21 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenHasher _tokenHasher;
     private readonly IRefreshTokenRepository _refreshTokens;
-
+    IUserSessionRepository _sessions;
      public ResetPasswordCommandHandler(
         IUserVerificationTokenRepository tokens,
         IUserRepository users,
         IPasswordHasher passwordHasher,
         ITokenHasher tokenHasher,
-        IRefreshTokenRepository refreshTokens)
+        IRefreshTokenRepository refreshTokens,
+         IUserSessionRepository sessions)
     {
         _tokens = tokens;
         _users = users;
         _passwordHasher = passwordHasher;
         _tokenHasher = tokenHasher;
         _refreshTokens = refreshTokens;
+        _sessions = sessions;
     }
     public async Task<bool> Handle(
         ResetPasswordCommand request,
@@ -64,7 +67,17 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
                 request.NewPassword);
 
         user.ChangePassword(passwordHash);
+        var sessions =
+    await _sessions.GetAllActiveByUserAsync(
+        user.Id,
+        cancellationToken);
 
+foreach (var session in sessions)
+{
+    session.End();
+
+    _sessions.Update(session);
+}
         token.MarkAsUsed();
 
         var refreshTokens =
@@ -74,7 +87,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
                     cancellationToken);
         foreach (var refreshToken in refreshTokens)
         {
-            refreshToken.Revoke();
+            refreshToken.Revoke( RevocationReason.PasswordReset);
         }
 
         return true;

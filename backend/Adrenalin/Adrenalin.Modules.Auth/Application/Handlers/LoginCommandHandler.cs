@@ -21,6 +21,7 @@ public sealed class LoginCommandHandler
 
     private readonly ITokenHasher _tokenHasher;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserSessionRepository _sessions;
 
     public LoginCommandHandler(
         IUserRepository users,
@@ -29,7 +30,9 @@ public sealed class LoginCommandHandler
         IRefreshTokenRepository refreshTokens,
         IRefreshTokenGenerator refreshTokenGenerator,
         ITokenHasher tokenHasher,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        IUserSessionRepository sessions
+
     )
     {
         _users = users;
@@ -39,6 +42,7 @@ public sealed class LoginCommandHandler
         _refreshTokenGenerator = refreshTokenGenerator;
         _tokenHasher = tokenHasher;
         _unitOfWork = unitOfWork;
+        _sessions = sessions;
     }
 
     public async Task<LoginResponseDTO> Handle(
@@ -84,15 +88,9 @@ user.RecordSuccessfulLogin();
        await _users.GetUserPermissionsAsync(
            user.Id,
            cancellationToken);
-
-
-        var accessToken =
-       _jwtProvider.GenerateToken(
-           user.Id,
-           user.Email, roles,
-           permissions,
-           user.FirstName,
-           user.LastName);
+        
+        
+        
         var refreshToken =
      _refreshTokenGenerator.Generate();
      Console.WriteLine($"Refresh Token: {refreshToken}");
@@ -114,6 +112,24 @@ user.RecordSuccessfulLogin();
         await _refreshTokens.AddAsync(
         refreshTokenEntity,
         cancellationToken);
+        var session =
+    UserSession.Start(
+        user.Id,
+         refreshTokenEntity.Id,
+        request.DeviceInfo,
+        request.IpAddress);
+
+await _sessions.AddAsync(
+    session,
+    cancellationToken);
+    var accessToken =
+       _jwtProvider.GenerateToken(
+           user.Id,
+           user.Email, roles,
+           permissions,
+            session.Id,
+           user.FirstName,
+           user.LastName);
 
        
         return new LoginResponseDTO(

@@ -92,6 +92,8 @@ builder.Property(e => e.RotatedAt)
 
 builder.Property(e => e.RevokedReason)
     .HasColumnName("revoked_reason");
+builder.Property(e => e.UserSessionId)
+    .HasColumnName("user_session_id");
         
     }
 }

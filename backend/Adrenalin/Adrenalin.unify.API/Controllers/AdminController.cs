@@ -8,6 +8,8 @@ using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Adrenalin.Modules.Auth.Domain.Enums;
+using Adrenalin.Modules.Auth.Application.Queries;
+using Adrenalin.SharedKernel.Interfaces;
 namespace Adrenalin.unify.API.Controllers
 {
     [Authorize(Policy = "user:create")]
@@ -17,11 +19,13 @@ namespace Adrenalin.unify.API.Controllers
     public sealed class AdminController: ControllerBase
     {
         private readonly IDispatcher _dispatcher;
+        
 
     public AdminController(
         IDispatcher dispatcher)
     {
         _dispatcher = dispatcher;
+       
     }
     [HttpPost("internal-users")]
     public async Task<IActionResult> CreateInternalUser(
@@ -63,5 +67,6 @@ public async Task<IActionResult> CreateExternalUser(
         UserId = userId
     });
 }
+
     }
 }

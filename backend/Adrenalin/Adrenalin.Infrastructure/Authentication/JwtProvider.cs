@@ -25,8 +25,10 @@ namespace Adrenalin.Infrastructure.Authentication
         Guid userId,
         string email, IEnumerable<string> roles,
         IEnumerable<string> permissions,
+        Guid sessionId,
         string? firstName = null,
-        string? lastName = null)
+        string? lastName = null
+    )
     {
         var claims = new List<Claim>
         {
@@ -41,7 +43,13 @@ namespace Adrenalin.Infrastructure.Authentication
             new(
                 JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString())
+            
+            
         };
+        claims.Add(
+    new Claim(
+        "session_id",
+        sessionId.ToString()));
 
         if (!string.IsNullOrWhiteSpace(firstName))
         {

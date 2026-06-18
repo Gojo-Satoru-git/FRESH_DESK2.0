@@ -25,5 +25,41 @@ namespace Adrenalin.Modules.Auth.Domain.Entities
         public User User { get; private set; } = null!;
 
         public RefreshToken? RefreshToken { get; private set; }
+        public static UserSession Start(
+    Guid userId,
+     Guid refreshTokenId,
+    string? deviceName,
+    IPAddress? ipAddress)
+{
+    return new UserSession
+    {
+        Id = Guid.NewGuid(),
+        UserId = userId,
+         RefreshTokenId = refreshTokenId,
+        DeviceName = deviceName,
+        IpAddress = ipAddress,
+        StartedAt = DateTimeOffset.UtcNow,
+        LastActiveAt = DateTimeOffset.UtcNow,
+        IsActive = true
+    };
+}
+public void SetRefreshToken(
+    Guid refreshTokenId)
+{
+    RefreshTokenId = refreshTokenId;
+}
+public void UpdateActivity()
+{
+      if (!IsActive)
+        return;
+    LastActiveAt = DateTimeOffset.UtcNow;
+}
+public void End()
+{
+      if (!IsActive)
+        return;
+    IsActive = false;
+    EndedAt = DateTimeOffset.UtcNow;
+} 
     }
 }

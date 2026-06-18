@@ -11,5 +11,6 @@ namespace Adrenalin.Modules.Auth.Domain.Constants
 
     public const int LockoutMinutes = 15;
      public const int FailedAttemptWindowMinutes = 30;
+     public const int SessionIdleTimeoutMinutes = 60;
 }
 }

@@ -1,6 +1,9 @@
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Application.DTOs;
+using Adrenalin.Modules.Auth.Application.Queries;
+using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Adrenalin.unify.API.Controllers;
@@ -10,10 +13,12 @@ namespace Adrenalin.unify.API.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly IDispatcher _dispatcher;
-
-    public AuthController(IDispatcher dispatcher)
+    private readonly ICurrentUserService _currentUser;
+    public AuthController(IDispatcher dispatcher,
+        ICurrentUserService currentUser)
     {
         _dispatcher = dispatcher;
+        _currentUser = currentUser;
     }
 
     [HttpPost("register")]
@@ -151,6 +156,66 @@ public async Task<IActionResult> ResetPassword(
     {
         Message =
             "Password reset successful"
+    });
+}
+[Authorize]
+[HttpGet("sessions")]
+public async Task<IActionResult> GetSessions(
+    CancellationToken cancellationToken)
+{
+    
+    var result =
+        await _dispatcher.Send(
+            new GetMySessionsQuery(
+                _currentUser.UserId!.Value
+            ),
+            cancellationToken);
+
+    return Ok(result);
+}
+[Authorize]
+[HttpDelete("sessions/{sessionId}")]
+public async Task<IActionResult> LogoutSession(
+    Guid sessionId,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new LogoutSessionCommand(sessionId),
+        cancellationToken);
+
+    return Ok();
+}
+[Authorize]
+[HttpPost("logout-all")]
+public async Task<IActionResult> LogoutAll(
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new LogoutAllSessionsCommand(
+            _currentUser.UserId!.Value),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message = "Logged out from all devices"
+    });
+}
+[Authorize]
+[HttpPost("change-password")]
+public async Task<IActionResult> ChangePassword(
+    ChangePasswordRequestDTO request,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new ChangePasswordCommand(
+            _currentUser.UserId!.Value,
+            request.CurrentPassword,
+            request.NewPassword),
+        cancellationToken);
+
+    return Ok(new
+    {
+        Message = "Password changed successfully. Please login again."
     });
 }
 }

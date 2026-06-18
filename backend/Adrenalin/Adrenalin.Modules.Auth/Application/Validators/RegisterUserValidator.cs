@@ -20,7 +20,6 @@ namespace Adrenalin.Modules.Auth.Application.Validators
             RuleFor(x => x.Password)
             .NotEmpty()
             .MinimumLength(12)
-            .MaximumLength(14)
             .Matches(@"[A-Z]")
             .WithMessage("Password must contain at least one uppercase letter.")
             .Matches(@"[a-z]")

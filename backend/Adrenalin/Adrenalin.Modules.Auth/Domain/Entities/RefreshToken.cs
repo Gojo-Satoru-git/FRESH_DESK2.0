@@ -16,7 +16,9 @@ public sealed class RefreshToken :BaseEntity
     Guid familyId,
     DateTimeOffset expiresAt,
     string? deviceInfo = null,
-    IPAddress? ipAddress = null)
+    IPAddress? ipAddress = null,
+    Guid? userSessionId = null
+    )
 {
     Id = Guid.NewGuid();
     CreatedAt = DateTimeOffset.UtcNow;
@@ -28,6 +30,7 @@ public sealed class RefreshToken :BaseEntity
     DeviceInfo = deviceInfo;
     IpAddress = ipAddress;
     IsRevoked = false;
+    UserSessionId = userSessionId;
 }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -68,15 +71,14 @@ public sealed class RefreshToken :BaseEntity
         get;
         private set;
     } = [];
-    public ICollection<UserSession> UserSessions
-    {
-        get;
-        private set;
-    } = [];
-    public void Revoke()
+    public Guid? UserSessionId { get; private set; }
+    public UserSession? UserSession { get; private set; }
+    public void Revoke(  RevocationReason reason =
+        RevocationReason.Logout)
 {
     IsRevoked = true;
     RevokedAt = DateTimeOffset.UtcNow;
+     RevokedReason = reason;
 }
 }
 }

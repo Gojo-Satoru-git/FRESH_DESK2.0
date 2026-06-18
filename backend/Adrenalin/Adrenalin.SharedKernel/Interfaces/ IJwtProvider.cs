@@ -12,7 +12,9 @@ namespace Adrenalin.SharedKernel.Interfaces
             string email,
             IEnumerable<string> roles,
             IEnumerable<string> permissions,
+             Guid sessionId,
             string? firstName = null,
-            string? lastName = null);
+            string? lastName = null
+           );
     }
 }
