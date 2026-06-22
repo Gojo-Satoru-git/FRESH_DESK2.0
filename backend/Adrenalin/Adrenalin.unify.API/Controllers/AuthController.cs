@@ -5,6 +5,7 @@ using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Adrenalin.unify.API.Controllers;
 
@@ -38,7 +39,7 @@ public sealed class AuthController : ControllerBase
 
         return Ok(new { UserId = userId });
     }
-
+    [EnableRateLimiting("LoginPolicy")]
     [HttpPost("login")]
     public async Task<IActionResult> Login(
         LoginRequestDTO request,
@@ -52,6 +53,7 @@ public sealed class AuthController : ControllerBase
 
         return Ok(new { UserId = userId, Message = "Login successful" });
     }
+    [EnableRateLimiting("RefreshPolicy")]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(
     RefreshTokenRequestDTO request,
@@ -94,6 +96,7 @@ public async Task<IActionResult> VerifyEmail(
         Message = "Email verified successfully"
     });
 }
+[EnableRateLimiting("ForgotPasswordPolicy")]
   [HttpGet("forgot-password")]
 public async Task<IActionResult> ForgotPassword(
     ForgotPasswordRequestDTO request,
@@ -111,6 +114,7 @@ public async Task<IActionResult> ForgotPassword(
     }
     ); 
 }
+[EnableRateLimiting("LoginPolicy")]
 [HttpPost("resend-verification")]
 public async Task<IActionResult> ResendVerification(
     ResendVerificationRequestDTO request,
@@ -126,6 +130,8 @@ public async Task<IActionResult> ResendVerification(
         Message = "Verification email sent."
     });
 }
+
+[EnableRateLimiting("LoginPolicy")]
 [HttpPost("verify-email-otp")]
 public async Task<IActionResult> VerifyEmailOtp(
     VerifyEmailOtpRequestDTO request,
@@ -141,6 +147,7 @@ public async Task<IActionResult> VerifyEmailOtp(
         Message = "Email verified successfully"
     });
 }
+[EnableRateLimiting("LoginPolicy")]
 [HttpPost("reset-password")]
 public async Task<IActionResult> ResetPassword(
     ResetPasswordRequestDTO request,
@@ -200,6 +207,7 @@ public async Task<IActionResult> LogoutAll(
         Message = "Logged out from all devices"
     });
 }
+
 [Authorize]
 [HttpPost("change-password")]
 public async Task<IActionResult> ChangePassword(
