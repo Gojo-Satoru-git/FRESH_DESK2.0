@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-knowledge-base',
@@ -12,8 +12,12 @@ import { environment } from '../../../environments/environment.development';
   template: `
     <div class="min-h-[calc(100vh-64px)] bg-[#F8FAFC] pb-12 font-sans">
       <!-- HERO SECTION -->
-      <div class="relative overflow-hidden bg-gradient-to-br from-[#012A4A] via-[#01497C] to-[#013A63] text-white py-16 px-6 shadow-md">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent)] pointer-events-none"></div>
+      <div
+        class="relative overflow-hidden bg-gradient-to-br from-[#012A4A] via-[#01497C] to-[#013A63] text-white py-16 px-6 shadow-md"
+      >
+        <div
+          class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent)] pointer-events-none"
+        ></div>
         <div class="max-w-4xl mx-auto text-center space-y-6">
           <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">
             How can we help you today?
@@ -23,7 +27,10 @@ import { environment } from '../../../environments/environment.development';
           </p>
 
           <!-- SEARCH BAR -->
-          <form (submit)="onSearchSubmit($event)" class="relative w-full max-w-2xl mx-auto mt-8 shadow-xl rounded-2xl">
+          <form
+            (submit)="onSearchSubmit($event)"
+            class="relative w-full max-w-2xl mx-auto mt-8 shadow-xl rounded-2xl"
+          >
             <span class="absolute left-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">🔍</span>
             <input
               type="text"
@@ -52,7 +59,9 @@ import { environment } from '../../../environments/environment.development';
           @if (isLoading()) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               @for (i of [1, 2, 3, 4]; track i) {
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse space-y-3">
+                <div
+                  class="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse space-y-3"
+                >
                   <div class="h-6 w-1/2 bg-slate-200 rounded"></div>
                   <div class="h-4 w-5/6 bg-slate-200 rounded"></div>
                   <div class="h-4 w-1/4 bg-slate-200 rounded"></div>
@@ -60,7 +69,9 @@ import { environment } from '../../../environments/environment.development';
               }
             </div>
           } @else if (folders().length === 0) {
-            <div class="bg-white p-10 border border-slate-200 rounded-2xl text-center text-slate-400">
+            <div
+              class="bg-white p-10 border border-slate-200 rounded-2xl text-center text-slate-400"
+            >
               <span class="text-4xl block mb-2">📦</span>
               <p class="font-medium text-slate-500">No directories created yet.</p>
               <p class="text-xs text-slate-400 mt-1">Check back later for support articles.</p>
@@ -75,16 +86,23 @@ import { environment } from '../../../environments/environment.development';
                   <div class="space-y-2">
                     <div class="flex items-center justify-between">
                       <span class="text-2xl">📁</span>
-                      <span class="text-xs font-bold text-slate-400 group-hover:text-blue-500 transition-colors">Browse →</span>
+                      <span
+                        class="text-xs font-bold text-slate-400 group-hover:text-blue-500 transition-colors"
+                        >Browse →</span
+                      >
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                    <h3
+                      class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors"
+                    >
                       {{ folder.name }}
                     </h3>
                     <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                       {{ getFolderDescription(folder) }}
                     </p>
                   </div>
-                  <div class="border-t border-slate-100 pt-3 flex items-center justify-between text-xs font-semibold text-slate-500">
+                  <div
+                    class="border-t border-slate-100 pt-3 flex items-center justify-between text-xs font-semibold text-slate-500"
+                  >
                     <span>Subcategories: {{ folder.children?.length || 0 }}</span>
                     <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg">
                       {{ getFolderArticleCount(folder) }} Articles
@@ -123,11 +141,17 @@ import { environment } from '../../../environments/environment.development';
                     [class.pb-0]="last"
                     [class.pt-0]="$first"
                   >
-                    <h4 class="text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors line-clamp-1">
+                    <h4
+                      class="text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors line-clamp-1"
+                    >
                       {{ art.title }}
                     </h4>
-                    <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-medium">
-                      <span class="uppercase tracking-wider px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold">
+                    <div
+                      class="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-medium"
+                    >
+                      <span
+                        class="uppercase tracking-wider px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold"
+                      >
                         {{ formatArticleType(art.articleType) }}
                       </span>
                       <span>{{ art.updatedAt || art.createdAt | date: 'shortDate' }}</span>
@@ -140,7 +164,7 @@ import { environment } from '../../../environments/environment.development';
         </div>
       </div>
     </div>
-  `
+  `,
 })
 export class KnowledgeBaseComponent implements OnInit {
   private http = inject(HttpClient);
@@ -159,34 +183,36 @@ export class KnowledgeBaseComponent implements OnInit {
   loadKBData() {
     this.isLoading.set(true);
 
-    this.http.get<any[]>(`${environment.apiUrl}/api/kb/folders/tree`).subscribe({
+    this.http.get<any[]>(`${environment.apiBaseUrl}/api/kb/folders/tree`).subscribe({
       next: (tree) => {
         this.folders.set(tree || []);
-        
+
         // Fetch published articles
-        this.http.get<any>(`${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000`).subscribe({
-          next: (res) => {
-            const articles = res.items || [];
-            const counts: Record<string, number> = {};
-            
-            articles.forEach((art: any) => {
-              if (art.folderId) {
-                counts[art.folderId] = (counts[art.folderId] || 0) + 1;
-              }
-            });
-            
-            this.articleCounts.set(counts);
-            this.recentArticles.set(articles.slice(0, 5));
-            this.isLoading.set(false);
-          },
-          error: () => {
-            this.isLoading.set(false);
-          }
-        });
+        this.http
+          .get<any>(`${environment.apiBaseUrl}/api/kb/articles?status=1&pageSize=1000`)
+          .subscribe({
+            next: (res) => {
+              const articles = res.items || [];
+              const counts: Record<string, number> = {};
+
+              articles.forEach((art: any) => {
+                if (art.folderId) {
+                  counts[art.folderId] = (counts[art.folderId] || 0) + 1;
+                }
+              });
+
+              this.articleCounts.set(counts);
+              this.recentArticles.set(articles.slice(0, 5));
+              this.isLoading.set(false);
+            },
+            error: () => {
+              this.isLoading.set(false);
+            },
+          });
       },
       error: () => {
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -202,7 +228,10 @@ export class KnowledgeBaseComponent implements OnInit {
 
   getFolderDescription(folder: any): string {
     if (folder.children && folder.children.length > 0) {
-      const subNames = folder.children.slice(0, 3).map((c: any) => c.name).join(', ');
+      const subNames = folder.children
+        .slice(0, 3)
+        .map((c: any) => c.name)
+        .join(', ');
       const suffix = folder.children.length > 3 ? '...' : '';
       return `Contains subcategories like ${subNames}${suffix}.`;
     }
@@ -219,7 +248,7 @@ export class KnowledgeBaseComponent implements OnInit {
     event.preventDefault();
     if (this.searchQuery.trim()) {
       this.router.navigate(['/customer-portal/knowledge-base/articles'], {
-        queryParams: { search: this.searchQuery.trim() }
+        queryParams: { search: this.searchQuery.trim() },
       });
     }
   }
@@ -231,7 +260,7 @@ export class KnowledgeBaseComponent implements OnInit {
     const node = this.findFolderNode(this.folders(), folderId);
     this.router.navigate(['/customer-portal/knowledge-base/articles'], {
       queryParams: { folderId },
-      state: { folderNode: node }
+      state: { folderNode: node },
     });
   }
 
@@ -248,7 +277,7 @@ export class KnowledgeBaseComponent implements OnInit {
 
   viewArticle(articleId: string) {
     this.router.navigate(['/customer-portal/knowledge-base/articles'], {
-      queryParams: { articleId }
+      queryParams: { articleId },
     });
   }
 }

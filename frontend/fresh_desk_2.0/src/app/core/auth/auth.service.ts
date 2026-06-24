@@ -1,8 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment.development';
-import { of, delay } from 'rxjs';
+import { Observable } from 'rxjs';
 
 export interface User {
   id: string;
@@ -13,77 +11,41 @@ export interface User {
   fullName?: string;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthService {
-  private http = inject(HttpClient);
-  private router = inject(Router);
+export interface LoginResponse {
+  userId: {
+    accessToken: string;
+    expiresAt: string;
+  };
+  message: string;
+}
 
-  // Global Signal holding the logged-in user state
+@Injectable()
+export abstract class AuthService {
+  protected router = inject(Router);
+  protected readonly tokenKey = 'jwt_token';
+
   currentUser = signal<User | null>(null);
   permissions = signal<string[]>([]);
   groups = signal<string[]>([]);
   companyId = signal<string | null>(null);
   contactId = signal<string | null>(null);
 
-  // The key we use to store the token in the browser
-  private readonly TOKEN_KEY = 'jwt_token';
-
-  constructor() {
-    const token = this.getToken();
-    if (token) {
-      const user = this.getUserFromToken(token);
-      if (user) {
-        this.currentUser.set(user);
-        this.loadUserMetadata();
-      } else {
-        this.logout();
-      }
-    }
-  }
-
-  loadUserMetadata() {
-    this.http.get<{ permissions: string[], groups: string[], companyId: string, contactId: string }>(`${environment.apiUrl}/api/me`).subscribe({
-      next: (res) => {
-        this.permissions.set(res.permissions || []);
-        this.groups.set(res.groups || []);
-        this.companyId.set(res.companyId || null);
-        this.contactId.set(res.contactId || null);
-      },
-      error: (err) => {
-        console.error('Failed to load user metadata', err);
-      }
-    });
-  }
-
-  // --- LOGIN LOGIC ---
-  login(credentials: { email: string; password: string }) {
-    return this.http.post<{ userId: { accessToken: string; expiresAt: string }; message: string }>(
-      `${environment.apiUrl}/api/auth/login`,
-      credentials,
-    );
-  }
-
-  // --- REGISTRATION LOGIC ---
-  register(userData: {
+  abstract loadUserMetadata(): void;
+  abstract login(credentials: { email: string; password: string }): Observable<LoginResponse>;
+  abstract register(userData: {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     phone: string;
     username?: string;
-  }) {
-    return this.http.post<{ userId: string }>(`${environment.apiUrl}/api/auth/register`, userData);
-  }
+  }): Observable<{ userId: string }>;
 
-  // --- ROUTING & STATE MANAGEMENT ---
-  handleLoginSuccess(token: string, user: User) {
-    localStorage.setItem(this.TOKEN_KEY, token); // Save token securely
-    this.currentUser.set(user); // Update the global signal
-    this.loadUserMetadata(); // Load permissions and groups
+  handleLoginSuccess(token: string, user: User): void {
+    localStorage.setItem(this.tokenKey, token);
+    this.currentUser.set(user);
+    this.loadUserMetadata();
 
-    // The Traffic Cop Logic
     if (user.role === 'admin') {
       this.router.navigate(['/admin']);
     } else if (user.role === 'team_lead') {
@@ -95,7 +57,6 @@ export class AuthService {
     }
   }
 
-  // Decode JWT payload to get user info
   getUserFromToken(token: string): User | null {
     try {
       const parts = token.split('.');
@@ -113,15 +74,15 @@ export class AuthService {
       const roleClaim =
         payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload['role'];
 
-      let role: 'admin' | 'agent' | 'team_lead' | 'supervisor' | 'customer' = 'customer';
+      let role: User['role'] = 'customer';
       if (roleClaim) {
         const roles = Array.isArray(roleClaim) ? roleClaim : [roleClaim];
-        const lowerRoles = roles.map((r) => r.toLowerCase());
+        const lowerRoles = roles.map((r: string) => r.toLowerCase());
         if (lowerRoles.includes('admin')) {
           role = 'admin';
         } else if (lowerRoles.includes('team_lead')) {
           role = 'team_lead';
-        } else if (lowerRoles.some(r => r === 'agent' || r.endsWith('_agent'))) {
+        } else if (lowerRoles.some((r: string) => r === 'agent' || r.endsWith('_agent'))) {
           role = 'agent';
         } else if (lowerRoles.includes('supervisor')) {
           role = 'supervisor';
@@ -129,32 +90,38 @@ export class AuthService {
           role = 'customer';
         }
       }
-      const firstName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] || payload['given_name'] || '';
-      const lastName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] || payload['family_name'] || '';
-      const fullName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload['name'] || '';
+      const firstName =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] ||
+        payload['given_name'] ||
+        '';
+      const lastName =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] ||
+        payload['family_name'] ||
+        '';
+      const fullName =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ||
+        payload['name'] ||
+        '';
+
       return {
         id: payload.sub,
         email: payload.email,
-        role: role,
-        firstName: firstName,
-        lastName: lastName,
+        role,
+        firstName,
+        lastName,
         fullName: fullName || `${firstName} ${lastName}`.trim(),
       };
-    } catch (e) {
+    } catch {
       return null;
     }
   }
 
-  // --- JWT INTERCEPTOR UTILITIES ---
-
-  // The Interceptor will call this on every outgoing HTTP request
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(this.tokenKey);
   }
 
-  // Clear everything out and send them to the login screen
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.tokenKey);
     this.currentUser.set(null);
     this.permissions.set([]);
     this.groups.set([]);
@@ -163,12 +130,24 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
-  // Helper check for Route Guards
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
 
   hasPermission(permission: string): boolean {
     return this.permissions().includes(permission);
+  }
+
+  protected initializeFromStoredToken(): void {
+    const token = this.getToken();
+    if (!token) return;
+
+    const user = this.getUserFromToken(token);
+    if (user) {
+      this.currentUser.set(user);
+      this.loadUserMetadata();
+    } else {
+      this.logout();
+    }
   }
 }

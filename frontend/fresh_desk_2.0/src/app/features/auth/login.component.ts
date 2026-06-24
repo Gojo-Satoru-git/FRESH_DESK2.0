@@ -5,8 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
 import { UiInputComponent } from '../../shared/components/ui-input/ui-input.component';
 import { AuthService } from '../../core/auth/auth.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.development';
+import { TicketService } from '../tickets/services/ticket.service';
 
 @Component({
   selector: 'app-login',
@@ -23,7 +22,7 @@ import { environment } from '../../../environments/environment.development';
 export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
-  private http = inject(HttpClient);
+  private ticketService = inject(TicketService);
 
   // Local UI State using Signals
   isLoading = signal<boolean>(false);
@@ -36,7 +35,7 @@ export class LoginComponent implements OnInit {
   }
 
   private loadActiveBanner() {
-    this.http.get<any[]>(`${environment.apiUrl}/api/kb/banners/active`).subscribe({
+    this.ticketService.getActiveBanners().subscribe({
       next: (banners) => {
         if (banners && banners.length > 0) {
           this.activeBanner.set(banners[0]);
@@ -63,7 +62,7 @@ export class LoginComponent implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const email = this.loginForm.value.email!.trim().toLowerCase();;
+    const email = this.loginForm.value.email!.trim().toLowerCase();
     const password = this.loginForm.value.password!;
 
     this.authService.login({ email, password }).subscribe({

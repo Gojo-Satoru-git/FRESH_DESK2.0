@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 
 export interface NotificationLog {
   id: string;
@@ -20,7 +20,7 @@ export interface NotificationLog {
 })
 export class NotificationService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/api/notifications`;
+  private apiUrl = `${environment.apiBaseUrl}/api/notifications`;
 
   /**
    * GET /api/notifications/unread
@@ -31,7 +31,7 @@ export class NotificationService {
       catchError(() => {
         // Return an empty array if the notification center is not implemented or errors out
         return of([]);
-      })
+      }),
     );
   }
 
