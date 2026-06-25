@@ -381,7 +381,7 @@ export class TicketListComponent implements OnInit {
 
   loading = signal(true);
   error = signal<string | null>(null);
-  currentView = signal<'all' | 'my' | 'assigned'>('all');
+  currentView = signal<'all' | 'my' | 'assigned'>('assigned');
   currentPage = signal(1);
   totalCount = signal(0);
   pageSize = 20;

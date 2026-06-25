@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PagedResult } from '../../tickets/models/ticket.model';
+import { environment } from '../../../../environments/environment';
 
 export interface UserSummary {
   id: string;
@@ -84,12 +85,12 @@ export interface CreateCompanyRequest {
 })
 export class AdminService {
   private http = inject(HttpClient);
-  private rbacApiUrl = '/api/rbac/users';
-  private adminApiUrl = '/api/admin';
-  private rolesApiUrl = '/api/rbac/roles';
-  private permissionsApiUrl = '/api/rbac/permissions';
-  private groupsApiUrl = '/api/rbac/groups';
-  private companiesApiUrl = '/api/companies';
+  private rbacApiUrl = `${environment.apiBaseUrl}/api/rbac/users`;
+  private adminApiUrl = `${environment.apiBaseUrl}/api/admin`;
+  private rolesApiUrl = `${environment.apiBaseUrl}/api/rbac/roles`;
+  private permissionsApiUrl = `${environment.apiBaseUrl}/api/rbac/permissions`;
+  private groupsApiUrl = `${environment.apiBaseUrl}/api/rbac/groups`;
+  private companiesApiUrl = `${environment.apiBaseUrl}/api/companies`;
 
   // --- Users ---
   getUsers(page: number = 1, pageSize: number = 20, email?: string, isActive?: boolean): Observable<PagedResult<UserSummary>> {
