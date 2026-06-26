@@ -9,5 +9,6 @@ public sealed record ContactDto(
     string? Phone,
     bool IsAuthorized,
     bool AutoCreated,
+    bool CanViewAllTickets,
     DateTimeOffset CreatedAt
 );

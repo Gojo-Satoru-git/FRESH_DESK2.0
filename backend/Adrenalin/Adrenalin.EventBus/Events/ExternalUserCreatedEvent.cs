@@ -10,6 +10,7 @@ namespace Adrenalin.EventBus.Events
     Guid CompanyId,
     string Email,
     string FullName,
+    bool CanViewAllTickets,
      Guid CreatedBy
 );
 }

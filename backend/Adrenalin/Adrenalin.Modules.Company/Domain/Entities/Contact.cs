@@ -20,6 +20,7 @@ public sealed class Contact : SoftDeleteEntity
     public bool AutoCreated { get; private set; }
 
     public Company Company { get; private set; } = null!;
+    public bool CanViewAllTickets { get; private set; }
 
     private Contact() { }
     private static string NormalizeEmail(string email)
@@ -27,7 +28,7 @@ public sealed class Contact : SoftDeleteEntity
         return email.Trim().ToLowerInvariant();
     }
 
-    public static Contact Create(Guid companyId, string email, string name, bool autoCreated = true, bool isAuthorized = true, Guid? userId = null)
+    public static Contact Create(Guid companyId, string email, string name, bool autoCreated = true, bool isAuthorized = true, Guid? userId = null,bool canViewAllTickets = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -40,7 +41,8 @@ public sealed class Contact : SoftDeleteEntity
             Name = name.Trim(),
             AutoCreated = autoCreated,
             IsAuthorized = isAuthorized,
-            UserId = userId
+            UserId = userId,
+            CanViewAllTickets = canViewAllTickets
         };
     }
 
@@ -77,4 +79,13 @@ public sealed class Contact : SoftDeleteEntity
     {
         UserId = null;
     }
+    public void GrantTicketVisibility()
+{
+    CanViewAllTickets = true;
+}
+
+public void RevokeTicketVisibility()
+{
+    CanViewAllTickets = false;
+}
 }

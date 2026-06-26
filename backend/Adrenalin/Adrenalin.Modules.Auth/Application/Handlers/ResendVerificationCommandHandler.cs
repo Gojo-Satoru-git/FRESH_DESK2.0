@@ -60,7 +60,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             cancellationToken);
 
         var verifyUrl =
-            $"http://localhost:5088/api/auth/verify-email?token={rawToken}";
+            $"http://localhost:4200/verify-email?token={rawToken}";
        await _emailService.SendAsync(
     user.Email,
     "Verify Your Email",

@@ -11,6 +11,7 @@ namespace Adrenalin.Modules.Company.Applications.Commands
         Guid CompanyId,
         string Email,
         string FullName,
+        bool CanViewAllTickets,
         Guid CreatedBy
     ) : IRequest<Guid>;
 }
