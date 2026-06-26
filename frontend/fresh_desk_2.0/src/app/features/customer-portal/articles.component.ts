@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 interface KbArticleSummary {
   id: string;
@@ -39,9 +39,10 @@ interface KbArticleDetail {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="flex h-[calc(100vh-64px)] bg-[#F8FAFC] text-slate-800 font-sans overflow-hidden">
-      
       <!-- ================= LEFT PANEL: ARTICLES LIST ================= -->
-      <aside class="w-80 md:w-96 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm z-10">
+      <aside
+        class="w-80 md:w-96 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm z-10"
+      >
         <!-- Header -->
         <div class="p-5 border-b border-slate-100 bg-white space-y-4">
           <div class="flex items-center gap-3">
@@ -80,7 +81,9 @@ interface KbArticleDetail {
               </div>
             }
           } @else if (filteredArticles().length === 0) {
-            <div class="p-8 text-center text-slate-400 flex flex-col items-center justify-center h-48">
+            <div
+              class="p-8 text-center text-slate-400 flex flex-col items-center justify-center h-48"
+            >
               <span class="text-3xl mb-2">📄</span>
               <p class="text-sm font-medium">No articles found</p>
               <p class="text-xs text-slate-400 mt-1">Try adapting your search parameters</p>
@@ -97,8 +100,12 @@ interface KbArticleDetail {
                 <h4 class="text-sm font-semibold text-slate-800 mb-1.5 line-clamp-2">
                   {{ article.title }}
                 </h4>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-2 font-mono">
-                  <span class="uppercase tracking-wider px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold">
+                <div
+                  class="flex items-center justify-between text-[10px] text-slate-400 font-medium mt-2 font-mono"
+                >
+                  <span
+                    class="uppercase tracking-wider px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold"
+                  >
                     {{ formatArticleType(article.articleType) }}
                   </span>
                   <span>Updated {{ article.updatedAt || '' | date: 'shortDate' }}</span>
@@ -123,12 +130,20 @@ interface KbArticleDetail {
           } @else if (articleDetail(); as art) {
             <div class="p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
               <!-- Article Card -->
-              <div class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200/60 shadow-sm relative overflow-hidden space-y-6">
-                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+              <div
+                class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200/60 shadow-sm relative overflow-hidden space-y-6"
+              >
+                <div
+                  class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
+                ></div>
 
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div
+                  class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4"
+                >
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg">
+                    <span
+                      class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg"
+                    >
                       {{ formatArticleType(art.articleType) }}
                     </span>
                   </div>
@@ -166,7 +181,9 @@ interface KbArticleDetail {
                           <div class="flex items-center gap-2.5 min-w-0">
                             <span class="text-lg">📄</span>
                             <div class="min-w-0">
-                              <p class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition truncate">
+                              <p
+                                class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition truncate"
+                              >
                                 {{ file.fileName }}
                               </p>
                               @if (file.fileSizeBytes) {
@@ -176,7 +193,10 @@ interface KbArticleDetail {
                               }
                             </div>
                           </div>
-                          <span class="text-slate-400 group-hover:text-blue-500 text-xs font-bold transition">↓</span>
+                          <span
+                            class="text-slate-400 group-hover:text-blue-500 text-xs font-bold transition"
+                            >↓</span
+                          >
                         </a>
                       }
                     </div>
@@ -187,20 +207,24 @@ interface KbArticleDetail {
           }
         } @else {
           <!-- Empty State -->
-          <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
-            <div class="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-4xl mb-4 shadow-inner">
+          <div
+            class="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400"
+          >
+            <div
+              class="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-4xl mb-4 shadow-inner"
+            >
               📄
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-1">Select an Article</h3>
             <p class="text-sm max-w-sm text-slate-500">
-              Choose an article from the left panel list to read detailed documentation, guides, or manuals.
+              Choose an article from the left panel list to read detailed documentation, guides, or
+              manuals.
             </p>
           </div>
         }
       </main>
-
     </div>
-  `
+  `,
 })
 export class ArticlesComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -230,16 +254,18 @@ export class ArticlesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       this.folderId = params['folderId'] || null;
       this.searchQuery = params['search'] || null;
       const initialArticleId: string | null = params['articleId'] || null;
 
       if (this.folderId) {
         this.listHeader.set('Folder Category');
-        this.http.get<any>(`${environment.apiUrl}/api/kb/folders/${this.folderId}`).subscribe((f: any) => {
-          if (f && f.name) this.listHeader.set(f.name);
-        });
+        this.http
+          .get<any>(`${environment.apiBaseUrl}/api/kb/folders/${this.folderId}`)
+          .subscribe((f: any) => {
+            if (f && f.name) this.listHeader.set(f.name);
+          });
       } else if (this.searchQuery) {
         this.listHeader.set(`Search: "${this.searchQuery}"`);
       } else {
@@ -273,24 +299,30 @@ export class ArticlesComponent implements OnInit {
         this.fetchArticlesForFolderIds(folderIds, initialArticleId);
       } else {
         // Fallback when navigated directly via URL (no router state): fetch one level of children.
-        this.http.get<any[]>(`${environment.apiUrl}/api/kb/folders/${this.folderId}/children`).subscribe({
-          next: (children: any[]) => {
-            const folderIds: string[] = [this.folderId!, ...(children || []).map((c: any) => c.id as string)];
-            this.fetchArticlesForFolderIds(folderIds, initialArticleId);
-          },
-          error: () => {
-            this.fetchArticlesForFolderIds([this.folderId!], initialArticleId);
-          }
-        });
+        this.http
+          .get<any[]>(`${environment.apiBaseUrl}/api/kb/folders/${this.folderId}/children`)
+          .subscribe({
+            next: (children: any[]) => {
+              const folderIds: string[] = [
+                this.folderId!,
+                ...(children || []).map((c: any) => c.id as string),
+              ];
+              this.fetchArticlesForFolderIds(folderIds, initialArticleId);
+            },
+            error: () => {
+              this.fetchArticlesForFolderIds([this.folderId!], initialArticleId);
+            },
+          });
       }
     } else {
-      let url = `${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000`;
+      let url = `${environment.apiBaseUrl}/api/kb/articles?status=1&pageSize=1000`;
       if (this.searchQuery) {
         url += `&titleQuery=${encodeURIComponent(this.searchQuery)}`;
       }
       this.http.get<{ items: KbArticleSummary[] }>(url).subscribe({
-        next: (res: { items: KbArticleSummary[] }) => this.applyArticleResults(res.items || [], initialArticleId),
-        error: () => this.isLoadingList.set(false)
+        next: (res: { items: KbArticleSummary[] }) =>
+          this.applyArticleResults(res.items || [], initialArticleId),
+        error: () => this.isLoadingList.set(false),
       });
     }
   }
@@ -299,8 +331,8 @@ export class ArticlesComponent implements OnInit {
   private fetchArticlesForFolderIds(folderIds: string[], initialArticleId: string | null) {
     const requests = folderIds.map((id: string) =>
       this.http.get<{ items: KbArticleSummary[] }>(
-        `${environment.apiUrl}/api/kb/articles?status=1&pageSize=1000&folderId=${id}`
-      )
+        `${environment.apiBaseUrl}/api/kb/articles?status=1&pageSize=1000&folderId=${id}`,
+      ),
     );
 
     forkJoin(requests).subscribe({
@@ -308,7 +340,7 @@ export class ArticlesComponent implements OnInit {
         const seen = new Set<string>();
         const merged: KbArticleSummary[] = [];
         for (const res of responses) {
-          for (const art of (res.items || [])) {
+          for (const art of res.items || []) {
             if (!seen.has(art.id)) {
               seen.add(art.id);
               merged.push(art);
@@ -317,7 +349,7 @@ export class ArticlesComponent implements OnInit {
         }
         this.applyArticleResults(merged, initialArticleId);
       },
-      error: () => this.isLoadingList.set(false)
+      error: () => this.isLoadingList.set(false),
     });
   }
 
@@ -343,18 +375,21 @@ export class ArticlesComponent implements OnInit {
     this.attachments.set([]);
     this.articleDetail.set(null);
 
-    this.http.get<{ article: KbArticleDetail, attachments: KbAttachment[] }>(
-      `${environment.apiUrl}/api/kb/articles/${id}/attachments`
-    ).subscribe({
-      next: (res: { article: KbArticleDetail, attachments: KbAttachment[] }) => {
-        this.articleDetail.set(res.article);
-        this.attachments.set(res.attachments || []);
-        this.isLoadingDetails.set(false);
-      },
-      error: () => {
-        this.isLoadingDetails.set(false);
-      }
-    });
+    this.http
+      .get<{
+        article: KbArticleDetail;
+        attachments: KbAttachment[];
+      }>(`${environment.apiBaseUrl}/api/kb/articles/${id}/attachments`)
+      .subscribe({
+        next: (res: { article: KbArticleDetail; attachments: KbAttachment[] }) => {
+          this.articleDetail.set(res.article);
+          this.attachments.set(res.attachments || []);
+          this.isLoadingDetails.set(false);
+        },
+        error: () => {
+          this.isLoadingDetails.set(false);
+        },
+      });
   }
 
   onLocalSearch() {
@@ -363,14 +398,14 @@ export class ArticlesComponent implements OnInit {
       this.filteredArticles.set(this.articles());
     } else {
       this.filteredArticles.set(
-        this.articles().filter((art: KbArticleSummary) => art.title.toLowerCase().includes(query))
+        this.articles().filter((art: KbArticleSummary) => art.title.toLowerCase().includes(query)),
       );
     }
   }
 
   getAbsoluteFileUrl(relativeUrl: string): string {
     if (relativeUrl.startsWith('http')) return relativeUrl;
-    return `${environment.apiUrl}${relativeUrl}`;
+    return `${environment.apiBaseUrl}${relativeUrl}`;
   }
 
   formatBytes(bytes?: number): string {

@@ -8,25 +8,38 @@ export const teamLeadRoutes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () =>
+          import('./dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },
       {
         path: 'queue',
-        loadComponent: () => import('./queue/queue.component').then(m => m.QueueComponent)
+        loadComponent: () =>
+          import('./queue/queue.component').then((m) => m.QueueComponent),
       },
       {
         path: 'assignment',
-        loadComponent: () => import('./assignment/assignment.component').then(m => m.AssignmentComponent)
+        loadComponent: () =>
+          import('./assignment/assignment.component').then((m) => m.AssignmentComponent),
+      },
+      {
+        path: 'my-tickets',
+        loadComponent: () =>
+          import('./my-tickets/team-lead-my-tickets.component').then(
+            (m) => m.TeamLeadMyTicketsComponent
+          ),
       },
       {
         path: 'tickets/:id',
-        loadComponent: () => import('../tickets/components/ticket-detail.component').then(m => m.TicketDetailComponent)
+        loadComponent: () =>
+          import('../tickets/components/ticket-detail.component').then(
+            (m) => m.TicketDetailComponent
+          ),
       },
       {
         path: '',
         redirectTo: 'dashboard',
-        pathMatch: 'full'
-      }
-    ]
-  }
+        pathMatch: 'full',
+      },
+    ],
+  },
 ];

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TicketService } from '../../tickets/services/ticket.service';
 import { PagedResult, TicketListItem } from '../../tickets/models/ticket.model';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 
 interface UserSummaryDto {
   id: string;
@@ -282,7 +282,7 @@ export class ContactListComponent implements OnInit {
   }
 
   private loadContacts(): void {
-    let url = `${environment.apiUrl}/api/rbac/users?pageNumber=${this.page()}&pageSize=${this.pageSize}`;
+    let url = `${environment.apiBaseUrl}/api/rbac/users?pageNumber=${this.page()}&pageSize=${this.pageSize}`;
     if (this.searchTerm()) {
       url += `&email=${encodeURIComponent(this.searchTerm())}`;
     }

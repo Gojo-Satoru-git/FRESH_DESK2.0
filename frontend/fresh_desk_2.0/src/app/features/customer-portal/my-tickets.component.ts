@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RaiseTicketComponent } from './raise-ticket.component';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 // ================= TYPE INTERFACES =================
 interface TicketListItem {
@@ -72,49 +72,49 @@ interface ConfirmDialog {
   template: `
     <div class="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans flex flex-col">
       <header
-  class="bg-gray-200 border-b border-slate-200 sticky top-0 z-20 rounded-xl shadow-lg w-full px-2 py-2"
->
-  <div
-    class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4"
-  >
-    <div class="relative w-full md:w-80 flex-shrink-0">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
-      <input
-        type="text"
-        placeholder="Search by ID or Subject..."
-        class="w-full pl-9 pr-4 py-2 text-lg bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-700"
-        [ngModel]="searchTerm()"
-        (ngModelChange)="searchTerm.set($event)"
-      />
-    </div>
-
-    <nav
-      class="flex gap-1 bg-gray-200 p-1 rounded-xl border border-slate-200/50 flex-1 overflow-x-auto justify-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-    >
-      @for (tab of statusTabs; track tab) {
-        <button
-          (click)="selectedStatus.set(tab)"
-          class="px-6 md:px-8 py-2 rounded-xl text-xl font-bold transition-all duration-200 flex-shrink-0 whitespace-nowrap text-center"
-          [class.bg-white]="selectedStatus() === tab"
-          [class.text-[#0F172A]]="selectedStatus() === tab"
-          [class.shadow-sm]="selectedStatus() === tab"
-          [class.text-slate-500]="selectedStatus() !== tab"
-          [class.hover:text-slate-800]="selectedStatus() !== tab"
+        class="bg-gray-200 border-b border-slate-200 sticky top-0 z-20 rounded-xl shadow-lg w-full px-2 py-2"
+      >
+        <div
+          class="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4"
         >
-          {{ tab }}
-        </button>
-      }
-    </nav>
+          <div class="relative w-full md:w-80 flex-shrink-0">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
+            <input
+              type="text"
+              placeholder="Search by ID or Subject..."
+              class="w-full pl-9 pr-4 py-2 text-lg bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-700"
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)"
+            />
+          </div>
 
-    <button
-      (click)="openRaiseTicket()"
-      class="flex-shrink-0 ml-0 md:ml-4 w-full md:w-auto justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
-    >
-      <span class="text-2xl leading-none font-normal">+</span>
-      New Ticket
-    </button>
-  </div>
-</header>
+          <nav
+            class="flex gap-1 bg-gray-200 p-1 rounded-xl border border-slate-200/50 flex-1 overflow-x-auto justify-start [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          >
+            @for (tab of statusTabs; track tab) {
+              <button
+                (click)="selectedStatus.set(tab)"
+                class="px-6 md:px-8 py-2 rounded-xl text-xl font-bold transition-all duration-200 flex-shrink-0 whitespace-nowrap text-center"
+                [class.bg-white]="selectedStatus() === tab"
+                [class.text-[#0F172A]]="selectedStatus() === tab"
+                [class.shadow-sm]="selectedStatus() === tab"
+                [class.text-slate-500]="selectedStatus() !== tab"
+                [class.hover:text-slate-800]="selectedStatus() !== tab"
+              >
+                {{ tab }}
+              </button>
+            }
+          </nav>
+
+          <button
+            (click)="openRaiseTicket()"
+            class="flex-shrink-0 ml-0 md:ml-4 w-full md:w-auto justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+          >
+            <span class="text-2xl leading-none font-normal">+</span>
+            New Ticket
+          </button>
+        </div>
+      </header>
 
       <main class="max-w-7xl mx-auto p-6 w-full flex-1">
         @if (isLoadingList()) {
@@ -270,35 +270,55 @@ interface ConfirmDialog {
                   }
 
                   <!-- BEFORE -->
-                @if (t.status === 'Resolved') {
-                  <!-- Close Ticket button -->
-                  <!-- Reopen Ticket button -->
-                }
+                  @if (t.status === 'Resolved') {
+                    <!-- Close Ticket button -->
+                    <!-- Reopen Ticket button -->
+                  }
 
-                <!-- AFTER -->
-                @if (t.status.toLowerCase() === 'resolved') {
-                  <button
-                    (click)="closeTicket(t.id)"
-                    class="px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Close Ticket
-                  </button>
-                }
+                  <!-- AFTER -->
+                  @if (t.status.toLowerCase() === 'resolved') {
+                    <button
+                      (click)="closeTicket(t.id)"
+                      class="px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3.5 w-3.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Close Ticket
+                    </button>
+                  }
 
-                @if (t.status.toLowerCase() === 'resolved' || t.status.toLowerCase() === 'closed') {
-                  <button
-                    (click)="reopenTicket(t.id)"
-                    class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                    </svg>
-                    Reopen Ticket
-                  </button>
-                }
+                  @if (
+                    t.status.toLowerCase() === 'resolved' || t.status.toLowerCase() === 'closed'
+                  ) {
+                    <button
+                      (click)="reopenTicket(t.id)"
+                      class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-bold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3.5 w-3.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      Reopen Ticket
+                    </button>
+                  }
 
                   <button
                     (click)="closeDetailModal()"
@@ -448,57 +468,79 @@ interface ConfirmDialog {
                       </div>
                     </div>
                   } @else {
-  <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-6">
+                      <!-- Status Flow Stepper -->
+                      <div
+                        class="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-4 shadow-sm overflow-x-auto"
+                      >
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                          Lifecycle Progress
+                        </h3>
+                        <div class="flex items-center gap-0 min-w-max">
+                          @for (step of statusFlow; track step; let i = $index; let last = $last) {
+                            <div class="flex-1 flex items-center">
+                              <div class="flex flex-col items-center flex-shrink-0">
+                                <div
+                                  class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
+                                  [ngClass]="{
+                                    'bg-blue-600 border-blue-600 text-white': isCompletedStep(
+                                      t,
+                                      step
+                                    ),
+                                    'border-blue-600 text-blue-600 bg-blue-50 ring-2 ring-blue-100':
+                                      isCurrentStep(t, step),
+                                    'border-slate-300 text-slate-400 bg-white':
+                                      !isCompletedStep(t, step) && !isCurrentStep(t, step),
+                                  }"
+                                >
+                                  @if (isCompletedStep(t, step)) {
+                                    <svg
+                                      class="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  } @else {
+                                    {{ i + 1 }}
+                                  }
+                                </div>
+                                <span
+                                  class="text-[9px] font-medium mt-1.5 text-center w-14 leading-tight"
+                                  [ngClass]="{
+                                    'text-blue-700 font-bold': isCurrentStep(t, step),
+                                    'text-blue-500':
+                                      isCompletedStep(t, step) && !isCurrentStep(t, step),
+                                    'text-slate-400':
+                                      !isCompletedStep(t, step) && !isCurrentStep(t, step),
+                                  }"
+                                >
+                                  {{ step }}
+                                </span>
+                              </div>
+                              @if (!last) {
+                                <div
+                                  class="flex-1 h-0.5 mx-1 mb-4 min-w-[24px] rounded"
+                                  [ngClass]="
+                                    isCompletedStep(t, step) ? 'bg-blue-500' : 'bg-slate-200'
+                                  "
+                                ></div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </div>
 
-    <!-- Status Flow Stepper -->
-    <div class="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-4 shadow-sm overflow-x-auto">
-      <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Lifecycle Progress</h3>
-      <div class="flex items-center gap-0 min-w-max">
-        @for (step of statusFlow; track step; let i = $index; let last = $last) {
-          <div class="flex-1 flex items-center">
-            <div class="flex flex-col items-center flex-shrink-0">
-              <div
-                class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
-                [ngClass]="{
-                  'bg-blue-600 border-blue-600 text-white': isCompletedStep(t, step),
-                  'border-blue-600 text-blue-600 bg-blue-50 ring-2 ring-blue-100': isCurrentStep(t, step),
-                  'border-slate-300 text-slate-400 bg-white': !isCompletedStep(t, step) && !isCurrentStep(t, step)
-                }"
-              >
-                @if (isCompletedStep(t, step)) {
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                  </svg>
-                } @else {
-                  {{ i + 1 }}
-                }
-              </div>
-              <span
-                class="text-[9px] font-medium mt-1.5 text-center w-14 leading-tight"
-                [ngClass]="{
-                  'text-blue-700 font-bold': isCurrentStep(t, step),
-                  'text-blue-500': isCompletedStep(t, step) && !isCurrentStep(t, step),
-                  'text-slate-400': !isCompletedStep(t, step) && !isCurrentStep(t, step)
-                }"
-              >
-                {{ step }}
-              </span>
-            </div>
-            @if (!last) {
-              <div
-                class="flex-1 h-0.5 mx-1 mb-4 min-w-[24px] rounded"
-                [ngClass]="isCompletedStep(t, step) ? 'bg-blue-500' : 'bg-slate-200'"
-              ></div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- Top Grid: Metadata -->
-    <div
-      class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 border border-slate-200/60 rounded-xl p-4 shadow-sm"
-    >
+                      <!-- Top Grid: Metadata -->
+                      <div
+                        class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 border border-slate-200/60 rounded-xl p-4 shadow-sm"
+                      >
                         <div class="flex flex-col gap-1">
                           <span
                             class="text-xs font-extrabold text-slate-500 uppercase tracking-widest"
@@ -597,27 +639,32 @@ interface ConfirmDialog {
                                   <span class="text-white text-xl ml-1">▶</span>
                                 </div>
                               </div>
-                            } @else if (file.mimeType === 'message/rfc822' || file.mimeType === 'application/vnd.ms-outlook') {
-  
-                            <a [href]="getFileUrl(file.fileUrl)"
-                            target="_blank"
-                            class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
-                          >
-                            <span class="text-4xl mb-2">✉️</span>
-                            <span class="text-xs font-semibold uppercase tracking-wider">Email</span>
-                          </a>
-                        } @else {
-                          
-                           <a [href]="getFileUrl(file.fileUrl)"
-                            target="_blank"
-                            class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
-                          >
-                            <span class="text-4xl mb-2">📎</span>
-                            <span class="text-xs font-semibold uppercase tracking-wider"
-                              >Document</span
-                            >
-                          </a>
-                        }
+                            } @else if (
+                              file.mimeType === 'message/rfc822' ||
+                              file.mimeType === 'application/vnd.ms-outlook'
+                            ) {
+                              <a
+                                [href]="getFileUrl(file.fileUrl)"
+                                target="_blank"
+                                class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
+                              >
+                                <span class="text-4xl mb-2">✉️</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider"
+                                  >Email</span
+                                >
+                              </a>
+                            } @else {
+                              <a
+                                [href]="getFileUrl(file.fileUrl)"
+                                target="_blank"
+                                class="flex flex-col items-center justify-center h-full w-full text-slate-400 hover:text-blue-500 transition-colors"
+                              >
+                                <span class="text-4xl mb-2">📎</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider"
+                                  >Document</span
+                                >
+                              </a>
+                            }
                           </div>
 
                           <!-- File Details Area -->
@@ -994,10 +1041,13 @@ export class MyTicketsComponent implements OnInit {
     }
 
     this.http
-      .get<{ items: TicketListItem[] }>(`${environment.apiUrl}/api/tickets/my`, { params })
+      .get<{ items: TicketListItem[] }>(`${environment.apiBaseUrl}/api/tickets/my`, { params })
       .subscribe({
         next: (res) => {
-          console.log('LIST statuses:', res.items.map(i => i.status));
+          console.log(
+            'LIST statuses:',
+            res.items.map((i) => i.status),
+          );
           this.tickets.set(res.items || []);
           this.isLoadingList.set(false);
         },
@@ -1010,15 +1060,13 @@ export class MyTicketsComponent implements OnInit {
   }
 
   openTicketDetails(id: string) {
-  const listTicket = this.tickets().find(t => t.id === id);
-  const listStatus = listTicket?.status;
-  this.selectedTicketId.set(id);
-  this.showDetailModal.set(true);
-  this.selectTicket(id, listStatus);
-  this.setBodyScroll(true);
-}
-
-  
+    const listTicket = this.tickets().find((t) => t.id === id);
+    const listStatus = listTicket?.status;
+    this.selectedTicketId.set(id);
+    this.showDetailModal.set(true);
+    this.selectTicket(id, listStatus);
+    this.setBodyScroll(true);
+  }
 
   closeDetailModal() {
     this.showDetailModal.set(false);
@@ -1032,66 +1080,76 @@ export class MyTicketsComponent implements OnInit {
     this.mediaViewer = { url: null, type: null };
   }
 
-statusFlow = ['open', 'assigned', 'pending', 'resolved', 'closed'];
+  statusFlow = ['open', 'assigned', 'pending', 'resolved', 'closed'];
 
-private customerStatusMap: Record<string, string> = {
-  new:              'open',
-  open:             'assigned',
-  in_progress:      'assigned',
-  inprogress:       'assigned',
-  pending_customer: 'pending',
-  pendingcustomer:  'pending',
-  pending_internal: 'pending',
-  pendinginternal:  'pending',
-  on_hold:          'pending',
-  onhold:           'pending',
-  resolved:         'resolved',
-  closed:           'closed',
-  reopened:         'open',
-};
+  private customerStatusMap: Record<string, string> = {
+    new: 'open',
+    open: 'assigned',
+    in_progress: 'assigned',
+    inprogress: 'assigned',
+    pending_customer: 'pending',
+    pendingcustomer: 'pending',
+    pending_internal: 'pending',
+    pendinginternal: 'pending',
+    on_hold: 'pending',
+    onhold: 'pending',
+    resolved: 'resolved',
+    closed: 'closed',
+    reopened: 'open',
+  };
 
-private statusLabels: Record<string, string> = {
-  open:     'Open',
-  assigned: 'Assigned',
-  pending:  'Pending',
-  resolved: 'Resolved',
-  closed:   'Closed',
-};
+  private statusLabels: Record<string, string> = {
+    open: 'Open',
+    assigned: 'Assigned',
+    pending: 'Pending',
+    resolved: 'Resolved',
+    closed: 'Closed',
+  };
 
-getStepLabel(step: string): string {
-  return this.statusLabels[step] ?? step;
-}
+  getStepLabel(step: string): string {
+    return this.statusLabels[step] ?? step;
+  }
 
-getCustomerStatusLabel(status: string): string {
-  const s = this.normalizeStatus(status);
-  if (['new'].includes(s)) return 'Open';
-  if (['open' , 'in_progress', 'inprogress'].includes(s)) return 'Assigned';
-  if (['pending_customer', 'pendingcustomer', 'pending_internal', 'pendinginternal', 'on_hold', 'onhold'].includes(s)) return 'Pending';
-  if (s === 'resolved') return 'Resolved';
-  if (s === 'closed')   return 'Closed';
-  return 'Open';
-}
+  getCustomerStatusLabel(status: string): string {
+    const s = this.normalizeStatus(status);
+    if (['new'].includes(s)) return 'Open';
+    if (['open', 'in_progress', 'inprogress'].includes(s)) return 'Assigned';
+    if (
+      [
+        'pending_customer',
+        'pendingcustomer',
+        'pending_internal',
+        'pendinginternal',
+        'on_hold',
+        'onhold',
+      ].includes(s)
+    )
+      return 'Pending';
+    if (s === 'resolved') return 'Resolved';
+    if (s === 'closed') return 'Closed';
+    return 'Open';
+  }
 
-private normalizeStatus(s: string): string {
-  // converts PascalCase → snake_case and lowercases
-  // e.g. "InProgress" → "in_progress", "on_hold" → "on_hold"
-  return s
-    .replace(/([A-Z])/g, '_$1')
-    .toLowerCase()
-    .replace(/^_/, '');
-}
+  private normalizeStatus(s: string): string {
+    // converts PascalCase → snake_case and lowercases
+    // e.g. "InProgress" → "in_progress", "on_hold" → "on_hold"
+    return s
+      .replace(/([A-Z])/g, '_$1')
+      .toLowerCase()
+      .replace(/^_/, '');
+  }
 
-isCurrentStep(ticket: TicketDetail, step: string): boolean {
-  const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
-  return mapped === step;
-}
+  isCurrentStep(ticket: TicketDetail, step: string): boolean {
+    const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
+    return mapped === step;
+  }
 
-isCompletedStep(ticket: TicketDetail, step: string): boolean {
-  const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
-  const currentIdx = this.statusFlow.indexOf(mapped);
-  const stepIdx = this.statusFlow.indexOf(step);
-  return stepIdx < currentIdx;
-}
+  isCompletedStep(ticket: TicketDetail, step: string): boolean {
+    const mapped = this.customerStatusMap[this.normalizeStatus(ticket.status)] ?? 'open';
+    const currentIdx = this.statusFlow.indexOf(mapped);
+    const stepIdx = this.statusFlow.indexOf(step);
+    return stepIdx < currentIdx;
+  }
 
   viewMedia(url: string, type: 'image' | 'video') {
     this.mediaViewer = { url, type };
@@ -1112,25 +1170,25 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
   }
 
   selectTicket(id: string, overrideStatus?: string) {
-  this.isLoadingDetails.set(true);
-  this.http.get<TicketDetail>(`${environment.apiUrl}/api/tickets/${id}`).subscribe({
-    next: (res) => {
-      // Trust the list status if provided — detail endpoint may return stale/wrong status
-      if (overrideStatus) {
-        res.status = overrideStatus;
-      }
-      this.ticketDetail.set(res);
-      this.isLoadingDetails.set(false);
-      if (this.isEditingTicket()) {
-        this.initEditForm(res);
-      }
-    },
-    error: (err) => {
-      console.error('Error fetching ticket details', err);
-      this.isLoadingDetails.set(false);
-    },
-  });
-}
+    this.isLoadingDetails.set(true);
+    this.http.get<TicketDetail>(`${environment.apiBaseUrl}/api/tickets/${id}`).subscribe({
+      next: (res) => {
+        // Trust the list status if provided — detail endpoint may return stale/wrong status
+        if (overrideStatus) {
+          res.status = overrideStatus;
+        }
+        this.ticketDetail.set(res);
+        this.isLoadingDetails.set(false);
+        if (this.isEditingTicket()) {
+          this.initEditForm(res);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching ticket details', err);
+        this.isLoadingDetails.set(false);
+      },
+    });
+  }
 
   initEditForm(ticket: TicketDetail) {
     this.editForm = {
@@ -1143,7 +1201,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
 
   saveTicketUpdate(ticketId: string) {
     this.isSavingUpdate.set(true);
-    this.http.put(`${environment.apiUrl}/api/tickets/${ticketId}`, this.editForm).subscribe({
+    this.http.put(`${environment.apiBaseUrl}/api/tickets/${ticketId}`, this.editForm).subscribe({
       next: () => {
         const files = this.editSelectedFiles();
         if (files.length > 0) {
@@ -1153,7 +1211,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
             const formData = new FormData();
             formData.append('File', file);
             this.http
-              .post(`${environment.apiUrl}/api/tickets/${ticketId}/attachments`, formData)
+              .post(`${environment.apiBaseUrl}/api/tickets/${ticketId}/attachments`, formData)
               .subscribe({
                 next: () => {
                   uploadedCount++;
@@ -1194,7 +1252,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
       'Are you sure you want to delete this attachment?',
       () => {
         this.http
-          .delete(`${environment.apiUrl}/api/tickets/${ticketId}/attachments/${attachmentId}`)
+          .delete(`${environment.apiBaseUrl}/api/tickets/${ticketId}/attachments/${attachmentId}`)
           .subscribe({
             next: () => {
               this.selectTicket(ticketId);
@@ -1226,7 +1284,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
       () => {
         const currentUserId = '00000000-0000-0000-0000-000000000000';
         this.http
-          .post(`${environment.apiUrl}/api/tickets/${ticketId}/close`, {
+          .post(`${environment.apiBaseUrl}/api/tickets/${ticketId}/close`, {
             closedBy: currentUserId,
             notes: 'Closed by customer',
           })
@@ -1248,7 +1306,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
       'Are you sure you want to reopen this ticket?',
       () => {
         this.http
-          .post(`${environment.apiUrl}/api/tickets/${ticketId}/reopen`, {
+          .post(`${environment.apiBaseUrl}/api/tickets/${ticketId}/reopen`, {
             reason: 'Reopened by customer',
           })
           .subscribe({
@@ -1288,7 +1346,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
 
     if (this.newCommentText.trim()) {
       this.http
-        .post<string>(`${environment.apiUrl}/api/tickets/${ticketId}/comments`, {
+        .post<string>(`${environment.apiBaseUrl}/api/tickets/${ticketId}/comments`, {
           body: this.newCommentText,
         })
         .subscribe({
@@ -1323,7 +1381,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
       }
 
       this.http
-        .post(`${environment.apiUrl}/api/tickets/${ticketId}/attachments`, formData)
+        .post(`${environment.apiBaseUrl}/api/tickets/${ticketId}/attachments`, formData)
         .subscribe({
           next: () => {
             uploadedCount++;
@@ -1351,7 +1409,7 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
   getFileUrl(url: string): string {
     if (!url) return '#';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `${environment.apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${environment.apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
   formatBytes(bytes: number, decimals = 2): string {
@@ -1365,9 +1423,9 @@ isCompletedStep(ticket: TicketDetail, step: string): boolean {
 
   getStatusClasses(status: string): string {
     const label = this.getCustomerStatusLabel(status);
-    if (label === 'Open')     return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (label === 'Open') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     if (label === 'Assigned') return 'bg-blue-50 text-blue-700 border-blue-200';
-    if (label === 'Pending')  return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    if (label === 'Pending') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
     if (label === 'Resolved') return 'bg-green-50 text-green-700 border-green-200';
     return 'bg-gray-100 text-slate-600 border-slate-200';
   }
