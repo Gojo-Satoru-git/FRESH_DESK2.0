@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService, LoginResponse } from './auth.service';
 
@@ -10,28 +10,19 @@ export class ApiAuthService extends AuthService {
 
   constructor() {
     super();
-    this.initializeFromStoredToken();
   }
 
-  override loadUserMetadata(): void {
-    this.http
-      .get<{
-        permissions: string[];
-        groups: string[];
-        companyId: string;
-        contactId: string;
-      }>(`${environment.apiBaseUrl}/api/me`)
-      .subscribe({
-        next: (res) => {
+  override loadUserMetadata(): Observable<any> {
+    return this.http
+      .get<{ permissions: string[]; groups: string[]; companyId: string; contactId: string; }>(`${environment.apiBaseUrl}/api/me`)
+      .pipe(
+        tap((res) => {
           this.permissions.set(res.permissions || []);
           this.groups.set(res.groups || []);
           this.companyId.set(res.companyId || null);
           this.contactId.set(res.contactId || null);
-        },
-        error: (err) => {
-          console.error('Failed to load user metadata', err);
-        },
-      });
+        })
+      );
   }
 
   override login(credentials: { email: string; password: string }): Observable<LoginResponse> {

@@ -488,7 +488,7 @@ export class TicketListComponent implements OnInit {
 
   selectTicket(ticket: TicketListItem) {
     this.selectedId.set(ticket.id);
-    this.router.navigate(['/agent/tickets', ticket.id]);
+    this.router.navigate(['/workspace/tickets', ticket.id]);
   }
 
   onModalClose() {

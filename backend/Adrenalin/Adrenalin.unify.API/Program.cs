@@ -79,32 +79,40 @@ builder.Services.AddDbContext<AdrenalinDbContext>(
     });
     builder.Services.AddRateLimiter(options =>
 {
-     options.AddPolicy("LoginPolicy", _ =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            "login",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1)
-            }));
-        
-        options.AddPolicy("RefreshPolicy", _ =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            "refresh",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 20,
-                Window = TimeSpan.FromMinutes(1)
-            }));
+    options.AddPolicy("LoginPolicy", context =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey:
+            context.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+        options.AddPolicy("RefreshPolicy", context =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey:
+            context.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 20,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
 
-         options.AddPolicy("ForgotPasswordPolicy", _ =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            "forgot",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 3,
-                Window = TimeSpan.FromMinutes(15)
-            }));
+         options.AddPolicy("ForgotPasswordPolicy", context =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey:
+            context.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 3,
+            Window = TimeSpan.FromMinutes(15),
+            QueueLimit = 0
+        }));
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });

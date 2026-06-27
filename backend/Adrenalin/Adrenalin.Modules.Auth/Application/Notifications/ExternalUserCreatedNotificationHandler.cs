@@ -23,12 +23,16 @@ namespace Adrenalin.Modules.Auth.Application.Notifications
         CancellationToken cancellationToken)
     {
         Console.WriteLine("NOTIFICATION HANDLER HIT");
+        var canViewAllTickets =
+    notification.RoleName ==
+    "CustomerAdmin";
         await _eventBus.PublishAsync(
             new ExternalUserCreatedEvent(
                 notification.UserId,
                 notification.CompanyId,
                 notification.Email,
                 notification.FullName,
+               canViewAllTickets,
                 notification.CreatedBy),
             cancellationToken);
     }

@@ -34,7 +34,9 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(e => e.IsAuthorized).HasDefaultValue(true).HasColumnName("is_authorized");
         
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
-        
+        builder.Property(e => e.CanViewAllTickets)
+       .HasColumnName("can_view_all_tickets")
+       .HasDefaultValue(false);
         
         
         builder.Property(e => e.Name).HasMaxLength(200).HasColumnName("name");

@@ -32,6 +32,7 @@ namespace Adrenalin.Modules.Company.Applications.EventHandlers
                 notification.CompanyId,
                 notification.Email,
                 notification.FullName,
+                 notification.CanViewAllTickets,
                 notification.CreatedBy),
             cancellationToken);
         

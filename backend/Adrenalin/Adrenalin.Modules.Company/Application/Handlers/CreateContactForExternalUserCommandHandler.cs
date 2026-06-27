@@ -29,7 +29,8 @@ namespace Adrenalin.Modules.Company.Applications.Handlers
                 request.FullName,
                 true,
                 true,
-                request.UserId);
+                request.UserId,
+                request.CanViewAllTickets);
 
         await _contacts.AddAsync(
             contact,

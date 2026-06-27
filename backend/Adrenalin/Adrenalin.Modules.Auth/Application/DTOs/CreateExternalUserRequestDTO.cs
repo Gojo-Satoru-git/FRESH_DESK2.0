@@ -16,6 +16,7 @@ namespace Adrenalin.Modules.Auth.Application.DTOs
     public string Phone { get; set; } = string.Empty;
 
     public Guid CompanyId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
 
    
 }

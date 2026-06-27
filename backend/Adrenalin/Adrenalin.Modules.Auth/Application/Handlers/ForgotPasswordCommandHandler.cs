@@ -59,7 +59,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             verificationToken,
             cancellationToken);
          var resetUrl =
-            $"http://localhost:5088/api/auth/reset-password?token={rawToken}";
+            $"http://localhost:4200/reset-password?token={rawToken}";
 
         await _emailService.SendAsync(
     user.Email,

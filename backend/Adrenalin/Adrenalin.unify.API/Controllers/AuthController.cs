@@ -97,7 +97,7 @@ public async Task<IActionResult> VerifyEmail(
     });
 }
 [EnableRateLimiting("ForgotPasswordPolicy")]
-  [HttpGet("forgot-password")]
+  [HttpPost("forgot-password")]
 public async Task<IActionResult> ForgotPassword(
     ForgotPasswordRequestDTO request,
     CancellationToken cancellationToken)

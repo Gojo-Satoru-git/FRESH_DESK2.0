@@ -207,6 +207,7 @@ public sealed class CompanyQueryService : ICompanyQueryService
                 c.Phone,
                 c.IsAuthorized,
                 c.AutoCreated,
+                c.CanViewAllTickets,
                 c.CreatedAt))
             .ToListAsync(cancellationToken);
 

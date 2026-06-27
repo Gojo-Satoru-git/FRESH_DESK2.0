@@ -229,11 +229,11 @@ export class TicketDashboardComponent implements OnInit {
   }
 
   navigateToList(filter?: string) {
-    this.router.navigate(['/agent/tickets/list'], filter ? { queryParams: { status: filter } } : {});
+    this.router.navigate(['/workspace/tickets/list'], filter ? { queryParams: { status: filter } } : {});
   }
 
   openTicket(id: string) {
-    this.router.navigate(['/agent/tickets', id]);
+    this.router.navigate(['/workspace/tickets', id]);
   }
 
   getPriorityBadge(priority: string): string {

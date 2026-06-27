@@ -138,7 +138,7 @@ var adminId = _currentUser.UserId.Value;
             resetToken,
             cancellationToken);
          var resetLink =
-            $"http://localhost:5088/api/auth/reset-password?token={rawToken}";
+            $"http://localhost:4200/reset-password?token={rawToken}";
 
        await _emailService.SendAsync(
     user.Email,

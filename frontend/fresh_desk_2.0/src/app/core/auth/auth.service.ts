@@ -30,7 +30,7 @@ export abstract class AuthService {
   companyId = signal<string | null>(null);
   contactId = signal<string | null>(null);
 
-  abstract loadUserMetadata(): void;
+  abstract loadUserMetadata(): Observable<any>;
   abstract login(credentials: { email: string; password: string }): Observable<LoginResponse>;
   abstract register(userData: {
     firstName: string;
@@ -44,17 +44,22 @@ export abstract class AuthService {
   handleLoginSuccess(token: string, user: User): void {
     localStorage.setItem(this.tokenKey, token);
     this.currentUser.set(user);
-    this.loadUserMetadata();
 
-    if (user.role === 'admin') {
-      this.router.navigate(['/admin']);
-    } else if (user.role === 'team_lead') {
-      this.router.navigate(['/team-lead/dashboard']);
-    } else if (user.role === 'customer') {
-      this.router.navigate(['/customer-portal']);
-    } else {
-      this.router.navigate(['/agent/dashboard']);
-    }
+    // We subscribe to ensure metadata is loaded before routing
+    this.loadUserMetadata().subscribe({
+      next: () => {
+        // EVERYONE except customers goes to the unified workspace!
+        if (user.role === 'customer') {
+          this.router.navigate(['/customer-portal']);
+        } else {
+          this.router.navigate(['/workspace/dashboard']);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load metadata during login success', err);
+        this.logout();
+      },
+    });
   }
 
   getUserFromToken(token: string): User | null {
@@ -133,21 +138,48 @@ export abstract class AuthService {
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
-
+  // --- NEW PBAC HELPER METHODS ---
   hasPermission(permission: string): boolean {
     return this.permissions().includes(permission);
   }
 
-  protected initializeFromStoredToken(): void {
-    const token = this.getToken();
-    if (!token) return;
+  hasAnyPermission(permissions: string[]): boolean {
+    if (!permissions || permissions.length === 0) return true;
+    const userPerms = this.permissions();
+    return permissions.some((p) => userPerms.includes(p));
+  }
 
-    const user = this.getUserFromToken(token);
-    if (user) {
-      this.currentUser.set(user);
-      this.loadUserMetadata();
-    } else {
-      this.logout();
-    }
+  hasAllPermissions(permissions: string[]): boolean {
+    if (!permissions || permissions.length === 0) return true;
+    const userPerms = this.permissions();
+    return permissions.every((p) => userPerms.includes(p));
+  }
+
+  initializeSession(): Promise<void> {
+    return new Promise((resolve) => {
+      const token = this.getToken();
+      if (!token) {
+        resolve(); // No token, let the app boot (they are logged out)
+        return;
+      }
+
+      const user = this.getUserFromToken(token);
+      if (user) {
+        this.currentUser.set(user);
+
+        // We need to wait for loadUserMetadata to finish.
+        // We will modify loadUserMetadata to accept an optional callback or return an Observable.
+        this.loadUserMetadata().subscribe({
+          next: () => resolve(),
+          error: () => {
+            this.logout();
+            resolve();
+          },
+        });
+      } else {
+        this.logout();
+        resolve();
+      }
+    });
   }
 }

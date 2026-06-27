@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of, throwError } from 'rxjs';
 import { AuthService, LoginResponse, User } from './auth.service';
+import { PERMISSIONS } from './permission.constants';
+import { tap } from 'rxjs';
 
 interface MockUser extends User {
   password: string;
@@ -19,7 +21,18 @@ const mockUsers: MockUser[] = [
     firstName: 'Asha',
     lastName: 'Admin',
     fullName: 'Asha Admin',
-    permissions: ['ticket:read', 'ticket:write', 'admin:read', 'admin:write'],
+    permissions: [
+      PERMISSIONS.DASHBOARD.VIEW_ADMIN,
+      PERMISSIONS.DASHBOARD.VIEW_AGENT,
+      PERMISSIONS.TICKET.READ_ALL,
+      PERMISSIONS.TICKET.CREATE,
+      PERMISSIONS.TICKET.UPDATE,
+      PERMISSIONS.TICKET.DELETE,
+      PERMISSIONS.TICKET.ASSIGN,
+      PERMISSIONS.TICKET.BULK_ASSIGN,
+      PERMISSIONS.KB.PUBLISH,
+      PERMISSIONS.KB.MANAGE_FOLDERS
+    ],
     groups: ['group-admin'],
     companyId: null,
     contactId: null,
@@ -32,7 +45,17 @@ const mockUsers: MockUser[] = [
     firstName: 'Anika',
     lastName: 'Rao',
     fullName: 'Anika Rao',
-    permissions: ['ticket:read', 'ticket:write'],
+    permissions: [
+      PERMISSIONS.DASHBOARD.VIEW_AGENT,
+      PERMISSIONS.TICKET.READ_ASSIGNED,
+      PERMISSIONS.TICKET.READ_QUEUE,
+      PERMISSIONS.TICKET.COMMENT,
+      PERMISSIONS.TICKET.RESOLVE,
+      PERMISSIONS.TICKET.CREATE,
+      PERMISSIONS.TICKET.ATTACHMENT_UPLOAD,
+      PERMISSIONS.KB.READ,
+      PERMISSIONS.KB.CREATE // Can draft KB articles but not publish
+    ],
     groups: ['group-support'],
     companyId: 'company-001',
     contactId: null,
@@ -45,7 +68,17 @@ const mockUsers: MockUser[] = [
     firstName: 'Kabir',
     lastName: 'Lead',
     fullName: 'Kabir Lead',
-    permissions: ['ticket:read', 'ticket:write', 'team:assign'],
+    permissions: [
+      PERMISSIONS.DASHBOARD.VIEW_TEAM_LEAD,
+      PERMISSIONS.TICKET.READ_TEAM,
+      PERMISSIONS.TICKET.READ_QUEUE,
+      PERMISSIONS.TICKET.ASSIGN,
+      PERMISSIONS.TICKET.REASSIGN,
+      PERMISSIONS.TICKET.COMMENT,
+      PERMISSIONS.TICKET.RESOLVE,
+      PERMISSIONS.KB.READ,
+      PERMISSIONS.KB.PUBLISH
+    ],
     groups: ['group-support'],
     companyId: 'company-001',
     contactId: null,
@@ -58,7 +91,14 @@ const mockUsers: MockUser[] = [
     firstName: 'Rohan',
     lastName: 'Iyer',
     fullName: 'Rohan Iyer',
-    permissions: ['ticket:read', 'ticket:create'],
+    permissions: [
+      PERMISSIONS.DASHBOARD.VIEW_CUSTOMER,
+      PERMISSIONS.TICKET.READ_COMPANY,
+      PERMISSIONS.TICKET.CREATE,
+      PERMISSIONS.TICKET.COMMENT,
+      PERMISSIONS.TICKET.ATTACHMENT_UPLOAD,
+      PERMISSIONS.KB.READ
+    ],
     groups: ['group-customer'],
     companyId: 'company-001',
     contactId: 'contact-001',
@@ -69,17 +109,21 @@ const mockUsers: MockUser[] = [
 export class MockAuthService extends AuthService {
   constructor() {
     super();
-    this.initializeFromStoredToken();
   }
 
-  override loadUserMetadata(): void {
-    const user = this.currentUser();
-    const mockUser = user ? mockUsers.find((item) => item.email === user.email) : null;
+  override loadUserMetadata(): Observable<any> {
+    return of(null).pipe(
+      delay(200), // Simulate network delay
+      tap(() => {
+        const user = this.currentUser();
+        const mockUser = user ? mockUsers.find((item) => item.email === user.email) : null;
 
-    this.permissions.set(mockUser?.permissions ?? []);
-    this.groups.set(mockUser?.groups ?? []);
-    this.companyId.set(mockUser?.companyId ?? null);
-    this.contactId.set(mockUser?.contactId ?? null);
+        this.permissions.set(mockUser?.permissions ?? []);
+        this.groups.set(mockUser?.groups ?? []);
+        this.companyId.set(mockUser?.companyId ?? null);
+        this.contactId.set(mockUser?.contactId ?? null);
+      })
+    );
   }
 
   override login(credentials: { email: string; password: string }): Observable<LoginResponse> {

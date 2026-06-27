@@ -22,6 +22,12 @@ namespace Adrenalin.Infrastructure.Email
         {
             _settings = configuration.GetSection("Email").Get<EmailSettings>()
                          ?? new EmailSettings();
+             Console.WriteLine("=== EMAIL SETTINGS ===");
+    Console.WriteLine($"Host: {_settings.Host}");
+    Console.WriteLine($"Port: {_settings.Port}");
+    Console.WriteLine($"User: {_settings.Username}");
+    Console.WriteLine($"Pass: {_settings.Password}");
+    Console.WriteLine($"From: {_settings.From}");
         }
 
         public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
@@ -49,8 +55,10 @@ namespace Adrenalin.Infrastructure.Email
                 _settings.Port,
                 SecureSocketOptions.StartTls,
                 cancellationToken);
-
+            Console.WriteLine($"SMTP USER = {_settings.Username}");
+                Console.WriteLine($"SMTP PASS = {_settings.Password}");
             await smtp.AuthenticateAsync(
+                
                 _settings.Username,
                 _settings.Password,
                 cancellationToken);

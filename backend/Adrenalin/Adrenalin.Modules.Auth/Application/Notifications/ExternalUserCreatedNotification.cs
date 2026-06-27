@@ -11,6 +11,7 @@ namespace Adrenalin.Modules.Auth.Application.Notifications
     Guid CompanyId,
     string Email,
     string FullName,
+     string RoleName,
       Guid CreatedBy
 ) : INotification;
 }

@@ -59,7 +59,8 @@ public async Task<IActionResult> CreateExternalUser(
                 request.FirstName,
                 request.LastName,
                 request.Phone,
-                request.CompanyId),
+                request.CompanyId,
+                 request.RoleName),
             cancellationToken);
 
     return Ok(new

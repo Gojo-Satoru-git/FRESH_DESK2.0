@@ -54,10 +54,23 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
         _emailService = emailService;
          _currentUser = currentUser;
     }
+    
      public async Task<Guid> Handle(
         CreateExternalUserCommand request,
         CancellationToken cancellationToken)
     {
+        var allowedRoles = new[]
+{
+    "Customer",
+    "CustomerAdmin"
+};
+if(!allowedRoles.Contains(
+    request.RoleName,
+    StringComparer.OrdinalIgnoreCase))
+{
+    throw new Exception(
+        "Invalid external role");
+}
         var existing =
             await _users.GetByEmailAsync(
                 request.Email,
@@ -67,9 +80,9 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             throw new Exception(
                 "Email already exists");
          var role =
-            await _roles.GetByNameAsync(
-                "Customer",
-                cancellationToken);
+             await _roles.GetByNameAsync(
+        request.RoleName,
+        cancellationToken);
 
         if (role is null)
             throw new Exception(
@@ -80,6 +93,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
         var passwordHash =
             _passwordHasher.Hash(
                 tempPassword);
+        
           var user =
             User.Create(
                 request.Email,
@@ -118,7 +132,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
             resetToken,
             cancellationToken);
         var resetLink =
-    $"http://localhost:5088/reset-password?token={rawToken}";
+    $"http://localhost:4200/reset-password?token={rawToken}";
         await _emailService.SendAsync(
     user.Email,
     "Set Your Password",
@@ -141,6 +155,7 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
         request.CompanyId,
         user.Email,
         $"{request.FirstName} {request.LastName}",
+        request.RoleName,
          assignedBy),
     cancellationToken);
     
