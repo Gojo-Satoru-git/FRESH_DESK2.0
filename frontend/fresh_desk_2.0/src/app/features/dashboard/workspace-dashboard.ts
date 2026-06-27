@@ -16,7 +16,6 @@ import { catchError } from 'rxjs/operators';
 
 // Services
 import { DashboardService } from './services/dashboard.service';
-// Assuming you have this service somewhere, adjust path if needed:
 import { NotificationService } from './services/notification.service';
 
 // PBAC
@@ -26,7 +25,7 @@ import { PERMISSIONS } from '../../core/auth/permission.constants';
 Chart.register(...registerables);
 
 @Component({
-  selector: 'app-workspace-dashboard', // Renamed selector!
+  selector: 'app-workspace-dashboard',
   standalone: true,
   imports: [CommonModule, TitleCasePipe, HasPermissionDirective],
   template: `
@@ -62,7 +61,7 @@ Chart.register(...registerables);
       </div>
 
       <div
-        *appHasPermission="PERMISSIONS.DASHBOARD.VIEW_ADMIN"
+        *appHasPermission="PERMISSIONS.DASHBOARD.ADMIN"
         class="bg-primary-blue/5 border border-primary-blue/20 rounded-xl p-5 shadow-sm"
       >
         <div class="flex items-center justify-between mb-4">
@@ -95,7 +94,7 @@ Chart.register(...registerables);
       </div>
 
       <div
-        *appHasPermission="PERMISSIONS.DASHBOARD.VIEW_TEAM_LEAD"
+        *appHasPermission="PERMISSIONS.DASHBOARD.WRITE"
         class="bg-light-yellow/30 border border-yellow/40 rounded-xl p-5 shadow-sm"
       >
         <div class="flex items-center justify-between mb-2">
@@ -211,14 +210,12 @@ Chart.register(...registerables);
               >View details</a
             >
           </div>
-
           <div
             class="flex text-xs font-bold font-sans text-text-light uppercase tracking-wider border-b border-table-light-gray dark:border-gray-800 pb-2 mb-3"
           >
             <div class="flex-1">Group</div>
             <div>Open</div>
           </div>
-
           <div class="space-y-4 flex-1">
             @for (group of ticketGroups(); track group.name) {
               <div class="flex justify-between items-center group cursor-pointer">
@@ -244,7 +241,6 @@ Chart.register(...registerables);
           <p class="text-xs font-sans text-text-light dark:text-text-muted mb-6">
             Across helpdesk this month
           </p>
-
           <div class="grid grid-cols-2 gap-6 mb-6">
             <div>
               <p class="text-sm font-semibold font-sans text-text-light mb-1">Responses</p>
@@ -262,7 +258,6 @@ Chart.register(...registerables);
               </div>
             </div>
           </div>
-
           <div
             class="grid grid-cols-2 gap-6 mt-auto pt-6 border-t border-table-light-gray dark:border-gray-800"
           >
@@ -285,7 +280,6 @@ Chart.register(...registerables);
               To-do
             </h3>
           </div>
-
           <button
             class="w-full flex items-center justify-center gap-2 text-sm font-bold font-sans text-primary-blue hover:bg-table-light-gray dark:hover:bg-primary-blue/20 py-2.5 rounded-full transition-colors border border-dashed border-primary-blue/50 mb-4"
           >
@@ -299,7 +293,6 @@ Chart.register(...registerables);
             </svg>
             Add a to-do
           </button>
-
           <div class="space-y-3 flex-1 overflow-y-auto max-h-48">
             @for (task of todos(); track task.id) {
               <label
@@ -371,7 +364,6 @@ Chart.register(...registerables);
               </svg>
             </button>
           </div>
-
           <div class="p-0 overflow-y-auto flex-1">
             <table class="w-full text-sm text-left font-sans">
               <thead
@@ -428,7 +420,6 @@ Chart.register(...registerables);
               </tbody>
             </table>
           </div>
-
           <div
             class="px-6 py-4 border-t border-table-dark-gray dark:border-gray-800 flex justify-end gap-3 bg-table-light-gray dark:bg-gray-900/50"
           >
@@ -468,12 +459,11 @@ Chart.register(...registerables);
   `,
 })
 export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-  PERMISSIONS = PERMISSIONS; // Required for HTML directives
+  PERMISSIONS = PERMISSIONS;
 
   @ViewChild('trendChart') trendChartRef!: ElementRef<HTMLCanvasElement>;
   private chartInstance: Chart | null = null;
 
-  // Using the new DashboardService!
   private dashboardService = inject(DashboardService);
   private notificationService = inject(NotificationService, { optional: true });
   private router = inject(Router);
@@ -526,7 +516,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
     this.dashboardSub.unsubscribe();
     this.dashboardSub = new Subscription();
 
-    // Safely handle NotificationService if it's missing/optional
     const notifications$ = this.notificationService
       ? this.notificationService.getUnreadNotifications()
       : of([]);
@@ -539,7 +528,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
         next: ({ dashboard, notifications }) => {
           const activeLogs = notifications || [];
 
-          // Notifications Logic
           const latestInAppLog = activeLogs.find((log: any) => log.recipientEmail || '');
           if (latestInAppLog) {
             this.activeToastTicketId.set(latestInAppLog.ticketId);
@@ -558,7 +546,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
             }, 7000);
           }
 
-          // KPI Metrics Mapping
           this.kpiMetrics.set([
             {
               label: 'Total Tickets',
@@ -609,7 +596,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
             },
           ]);
 
-          // Performance Metrics Mapping
           if (dashboard.performance) {
             this.performanceMetrics.set([
               {
@@ -630,7 +616,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
             ]);
           }
 
-          // Lists Mapping
           this.ticketGroups.set(
             dashboard.groupMetrics?.length
               ? dashboard.groupMetrics
@@ -664,7 +649,6 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
     if (ticketId) {
       this.toastMessage.set(null);
       this.activeToastTicketId.set(null);
-      // FIXED ROUTING URL!
       this.router.navigate(['/workspace/tickets', ticketId]);
     }
   }
@@ -684,15 +668,9 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
     this.chartInstance = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: this.reportData().map((r) => r.time) || [
-          '8am',
-          '10am',
-          '12pm',
-          '2pm',
-          '4pm',
-          '6pm',
-          '8pm',
-        ],
+        labels: this.reportData().length
+          ? this.reportData().map((r) => r.time)
+          : ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm'],
         datasets: [
           {
             label: 'Today',

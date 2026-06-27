@@ -23,21 +23,19 @@ export const routes: Routes = [
   // UNIFIED WORKSPACE (Agents, Leads, Admins)
   // ==========================================
   {
-    path: 'workspace', // Changed from 'agent'
+    path: 'workspace',
     canActivate: [
       permissionGuard([
-        PERMISSIONS.DASHBOARD.VIEW_AGENT,
-        PERMISSIONS.DASHBOARD.VIEW_TEAM_LEAD,
-        PERMISSIONS.DASHBOARD.VIEW_ADMIN,
+        PERMISSIONS.DASHBOARD.READ,   // Replaced VIEW_AGENT
+        PERMISSIONS.DASHBOARD.WRITE,  // Replaced VIEW_TEAM_LEAD
+        PERMISSIONS.DASHBOARD.ADMIN,  // Replaced VIEW_ADMIN
       ]),
     ],
-    // Make sure this matches the exported class name in your workspace-layout.component.ts file
     loadComponent: () =>
       import('./layouts/workspace-layout.component').then((m) => m.WorkspaceLayoutComponent),
     children: [
       {
         path: 'dashboard',
-        // Make sure this points to the new unified dashboard we built!
         loadComponent: () =>
           import('./features/dashboard/workspace-dashboard').then(
             (m) => m.WorkspaceDashboardComponent,
@@ -45,7 +43,7 @@ export const routes: Routes = [
       },
       {
         path: 'tickets',
-        // Require at least ONE of these ticket read permissions to access the tickets module
+        // These matched your backend perfectly, so they stay the same!
         canActivate: [
           permissionGuard([
             PERMISSIONS.TICKET.READ_ASSIGNED,
@@ -95,9 +93,9 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
-        // Example: Restricting reports to Leads and Admins
+        // UPDATED: Now uses your actual Report permissions!
         canActivate: [
-          permissionGuard([PERMISSIONS.DASHBOARD.VIEW_TEAM_LEAD, PERMISSIONS.DASHBOARD.VIEW_ADMIN]),
+          permissionGuard([PERMISSIONS.REPORT.READ, PERMISSIONS.REPORT.READ_ALL]),
         ],
         loadComponent: () =>
           import('./features/reports/components/reports.component').then((m) => m.ReportsComponent),
@@ -106,8 +104,8 @@ export const routes: Routes = [
       // --- PBAC PROTECTED ADMIN ROUTES ---
       {
         path: 'admin/queues',
-        // GATEKEEPER: Only users with Admin View permissions can load this component
-        canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.VIEW_ADMIN])],
+        // UPDATED: Uses the new ADMIN constant
+        canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.ADMIN])],
         loadComponent: () =>
           import('./features/admin-panel/components/queue-master.component').then(
             (m) => m.QueueMasterComponent,
@@ -115,7 +113,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/routing-rules',
-        canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.VIEW_ADMIN])],
+        // UPDATED: Uses the new ADMIN constant
+        canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.ADMIN])],
         loadComponent: () =>
           import('./features/admin-panel/components/queue-routing-rules.component').then((m) => m.QueueRoutingRulesComponent),
       },
@@ -130,12 +129,13 @@ export const routes: Routes = [
   },
 
   // ==========================================
-  // CUSTOMER PORTAL (Untouched per instructions)
+  // CUSTOMER PORTAL
   // ==========================================
   {
     path: 'customer-portal',
-    canMatch: [permissionGuard([PERMISSIONS.DASHBOARD.VIEW_CUSTOMER])],
-    canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.VIEW_CUSTOMER])],
+    // Note: Make sure you add CUSTOMER: 'dashboard:customer' to your DASHBOARD object in permission.constants.ts!
+    canMatch: [permissionGuard([PERMISSIONS.DASHBOARD.CUSTOMER])],
+    canActivate: [permissionGuard([PERMISSIONS.DASHBOARD.CUSTOMER])],
     loadComponent: () =>
       import('./layouts/customer-layout/customer-layout.component').then(
         (m) => m.CustomerLayoutComponent,
