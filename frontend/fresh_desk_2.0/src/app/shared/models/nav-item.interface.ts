@@ -14,4 +14,5 @@ export interface NavItem {
     route: string;
     badge?: number | null;
   }[];
+  permissions?: string[];
 }
