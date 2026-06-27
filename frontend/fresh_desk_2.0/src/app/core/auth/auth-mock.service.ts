@@ -22,8 +22,8 @@ const mockUsers: MockUser[] = [
     lastName: 'Admin',
     fullName: 'Asha Admin',
     permissions: [
-      PERMISSIONS.DASHBOARD.VIEW_ADMIN,
-      PERMISSIONS.DASHBOARD.VIEW_AGENT,
+      PERMISSIONS.DASHBOARD.ADMIN,
+      PERMISSIONS.DASHBOARD.READ,
       PERMISSIONS.TICKET.READ_ALL,
       PERMISSIONS.TICKET.CREATE,
       PERMISSIONS.TICKET.UPDATE,
@@ -31,7 +31,7 @@ const mockUsers: MockUser[] = [
       PERMISSIONS.TICKET.ASSIGN,
       PERMISSIONS.TICKET.BULK_ASSIGN,
       PERMISSIONS.KB.PUBLISH,
-      PERMISSIONS.KB.MANAGE_FOLDERS
+      PERMISSIONS.KB.UPDATE,
     ],
     groups: ['group-admin'],
     companyId: null,
@@ -46,7 +46,7 @@ const mockUsers: MockUser[] = [
     lastName: 'Rao',
     fullName: 'Anika Rao',
     permissions: [
-      PERMISSIONS.DASHBOARD.VIEW_AGENT,
+      PERMISSIONS.DASHBOARD.READ,
       PERMISSIONS.TICKET.READ_ASSIGNED,
       PERMISSIONS.TICKET.READ_QUEUE,
       PERMISSIONS.TICKET.COMMENT,
@@ -54,7 +54,7 @@ const mockUsers: MockUser[] = [
       PERMISSIONS.TICKET.CREATE,
       PERMISSIONS.TICKET.ATTACHMENT_UPLOAD,
       PERMISSIONS.KB.READ,
-      PERMISSIONS.KB.CREATE // Can draft KB articles but not publish
+      PERMISSIONS.KB.CREATE,
     ],
     groups: ['group-support'],
     companyId: 'company-001',
@@ -69,7 +69,7 @@ const mockUsers: MockUser[] = [
     lastName: 'Lead',
     fullName: 'Kabir Lead',
     permissions: [
-      PERMISSIONS.DASHBOARD.VIEW_TEAM_LEAD,
+      PERMISSIONS.DASHBOARD.WRITE,
       PERMISSIONS.TICKET.READ_TEAM,
       PERMISSIONS.TICKET.READ_QUEUE,
       PERMISSIONS.TICKET.ASSIGN,
@@ -77,7 +77,7 @@ const mockUsers: MockUser[] = [
       PERMISSIONS.TICKET.COMMENT,
       PERMISSIONS.TICKET.RESOLVE,
       PERMISSIONS.KB.READ,
-      PERMISSIONS.KB.PUBLISH
+      PERMISSIONS.KB.PUBLISH,
     ],
     groups: ['group-support'],
     companyId: 'company-001',
@@ -92,12 +92,12 @@ const mockUsers: MockUser[] = [
     lastName: 'Iyer',
     fullName: 'Rohan Iyer',
     permissions: [
-      PERMISSIONS.DASHBOARD.VIEW_CUSTOMER,
+      PERMISSIONS.DASHBOARD.CUSTOMER,
       PERMISSIONS.TICKET.READ_COMPANY,
       PERMISSIONS.TICKET.CREATE,
       PERMISSIONS.TICKET.COMMENT,
       PERMISSIONS.TICKET.ATTACHMENT_UPLOAD,
-      PERMISSIONS.KB.READ
+      PERMISSIONS.KB.READ,
     ],
     groups: ['group-customer'],
     companyId: 'company-001',
@@ -122,7 +122,7 @@ export class MockAuthService extends AuthService {
         this.groups.set(mockUser?.groups ?? []);
         this.companyId.set(mockUser?.companyId ?? null);
         this.contactId.set(mockUser?.contactId ?? null);
-      })
+      }),
     );
   }
 

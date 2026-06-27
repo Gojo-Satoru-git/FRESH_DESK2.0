@@ -9,6 +9,6 @@ export class ApiDashboardService extends DashboardService {
   private http = inject(HttpClient);
 
   override getDashboard(): Observable<DashboardData> {
-    return this.http.get<DashboardData>(`${environment.apiBaseUrl}/api/dashboard/overview`);
+    return this.http.get<DashboardData>(`${environment.apiBaseUrl}/api/tickets/dashboard`);
   }
 }
