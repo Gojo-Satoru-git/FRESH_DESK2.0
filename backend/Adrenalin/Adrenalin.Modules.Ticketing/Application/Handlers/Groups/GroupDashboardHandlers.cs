@@ -1,9 +1,9 @@
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Groups;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
 
-namespace Adrenalin.Modules.Ticketing.Application.Handlers.Groups;
+using Adrenalin.Modules.Ticketing.Application.Queries.Groups;
 
 // ═══ GROUP DASHBOARD ═════════════════════════════════════════════════════════
 
@@ -37,37 +37,6 @@ public sealed class GetGroupDashboardQueryHandler
 }
 
 // ═══ GROUP QUEUE ═════════════════════════════════════════════════════════════
-
-public sealed class GetGroupQueueQueryHandler
-    : IRequestHandler<GetGroupQueueQuery, Result<GroupQueueResultDto>>
-{
-    private readonly ITicketDashboardRepository _dashboardRepo;
-
-    public GetGroupQueueQueryHandler(ITicketDashboardRepository dashboardRepo)
-    {
-        _dashboardRepo = dashboardRepo;
-    }
-
-    public async Task<Result<GroupQueueResultDto>> Handle(
-        GetGroupQueueQuery query, CancellationToken ct)
-    {
-        try
-        {
-            var hasAccess = await _dashboardRepo.IsGroupMemberOrAdminAsync(query.GroupId, query.ActorId, ct);
-            if (!hasAccess)
-                return Result<GroupQueueResultDto>.Failure("Access denied. You are not a member of this group.");
-
-            var queue = await _dashboardRepo.GetGroupQueueDataAsync(query.GroupId, query.QueueType, query.ActorId, query.Page, query.PageSize, ct);
-            if (queue is null)
-                return Result<GroupQueueResultDto>.Failure($"Group {query.GroupId} not found.");
-
-            return Result<GroupQueueResultDto>.Success(queue);
-        }
-        catch (Exception ex) { return Result<GroupQueueResultDto>.Failure(ex.Message); }
-    }
-}
-
-// ═══ LEAD DASHBOARD (MULTI-GROUP) ═══════════════════════════════════════════
 
 public sealed class GetLeadDashboardQueryHandler
     : IRequestHandler<GetLeadDashboardQuery, Result<LeadDashboardDto>>

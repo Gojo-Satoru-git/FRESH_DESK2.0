@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Relations;
 
 public sealed record SplitTicketRequest(
     string NewSubject,

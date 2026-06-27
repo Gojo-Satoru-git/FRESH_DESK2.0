@@ -1,4 +1,4 @@
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 public sealed record RoutingRuleHistoryDto(
     Guid Id,

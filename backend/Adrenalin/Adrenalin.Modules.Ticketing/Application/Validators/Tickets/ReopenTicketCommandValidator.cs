@@ -1,7 +1,7 @@
 using FluentValidation;
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
-namespace Adrenalin.Modules.Ticketing.Application.Validators;
+namespace Adrenalin.Modules.Ticketing.Application.Validators.Tickets;
 
 public sealed class ReopenTicketCommandValidator : AbstractValidator<ReopenTicketCommand>
 {

@@ -1,8 +1,10 @@
 using Adrenalin.Modules.Company.Application.Commands;
 using Adrenalin.Modules.Company.Application.DTOs;
 using Adrenalin.Modules.Company.Application.Queries;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
+using Adrenalin.Modules.Ticketing.Application.Queries.Routing;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Pagination;
 using Microsoft.AspNetCore.Authorization;
@@ -421,7 +423,7 @@ public sealed class CompaniesController : ControllerBase
     {
         var actorId = GetActorId();
         if (!actorId.HasValue) return Unauthorized();
-        var result = await _dispatcher.Send(new Adrenalin.Modules.Ticketing.Application.Queries.GetCompanyTicketMetricsQuery(id, actorId.Value), ct);
+        var result = await _dispatcher.Send(new GetCompanyTicketMetricsQuery(id, actorId.Value), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
     }
 

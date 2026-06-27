@@ -1,7 +1,14 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Comments;
 using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.Commands.Attachments;
+using Adrenalin.Modules.Ticketing.Application.Commands.Watchers;
+using Adrenalin.Modules.Ticketing.Application.Commands.Relations;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Attachments;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Relations;
+using Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
+using Adrenalin.Modules.Ticketing.Application.Queries.Attachments;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;

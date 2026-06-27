@@ -1,4 +1,4 @@
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 
@@ -16,4 +16,7 @@ public interface ITicketRoutingContextRepository
     Task<string?> GetCompanyNameAsync(Guid companyId, CancellationToken ct = default);
     Task<Dictionary<Guid, string>> GetCompanyNamesAsync(IEnumerable<Guid> companyIds, CancellationToken ct = default);
     Task<IReadOnlyList<CompanyDefaultRouteDto>> GetCompaniesWithDefaultGroupAsync(Guid groupId, CancellationToken ct = default);
+    Task<bool> IsUserLeadOfGroupAsync(Guid userId, Guid groupId, CancellationToken ct = default);
+    Task<IReadOnlyList<(Guid GroupId, string GroupName)>> GetGroupsLedByUserAsync(
+    Guid userId, CancellationToken ct = default);
 }

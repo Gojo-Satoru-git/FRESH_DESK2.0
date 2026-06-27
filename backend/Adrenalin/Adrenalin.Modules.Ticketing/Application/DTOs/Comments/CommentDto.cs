@@ -1,4 +1,6 @@
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Attachments;
+
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
 
 public sealed record CommentDto(
     Guid Id,

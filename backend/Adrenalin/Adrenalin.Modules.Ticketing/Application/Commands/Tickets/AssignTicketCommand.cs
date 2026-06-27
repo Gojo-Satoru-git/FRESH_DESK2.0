@@ -1,8 +1,8 @@
 ﻿using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
 public record AssignTicketCommand(
     Guid TicketId,

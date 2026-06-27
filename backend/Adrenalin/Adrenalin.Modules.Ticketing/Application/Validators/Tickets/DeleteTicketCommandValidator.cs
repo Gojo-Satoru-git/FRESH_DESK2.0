@@ -1,5 +1,5 @@
 using FluentValidation;
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
 namespace Adrenalin.Modules.Ticketing.Application.Validators.Tickets;
 

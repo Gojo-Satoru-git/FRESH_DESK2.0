@@ -1,4 +1,4 @@
-﻿namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+﻿namespace Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 
 public sealed record AssignTicketRequest(
     Guid AgentId,

@@ -1,7 +1,7 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 using FluentValidation;
 
-namespace Adrenalin.Modules.Ticketing.Application.Validators;
+namespace Adrenalin.Modules.Ticketing.Application.Validators.Tickets;
 
 public sealed class ChangeTicketStatusCommandValidator : AbstractValidator<ChangeTicketStatusCommand>
 {

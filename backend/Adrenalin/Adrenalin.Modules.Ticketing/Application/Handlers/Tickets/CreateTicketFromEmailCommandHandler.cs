@@ -137,12 +137,12 @@ public sealed class CreateTicketFromEmailCommandHandler : IRequestHandler<Create
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _dispatcher.Send(
-            new AssignTicketCommand(
-                TicketId: ticket.Id,
-                TriggeredBy: request.CreatedByUserId ?? Guid.Empty,
-                IsAutoAssignment: true),
-            cancellationToken);
+        //await _dispatcher.Send(
+        //    new AssignTicketCommand(
+        //        TicketId: ticket.Id,
+        //        TriggeredBy: request.CreatedByUserId ?? Guid.Empty,
+        //        IsAutoAssignment: true),
+        //    cancellationToken);
 
         _logger.LogInformation("Ticket {TicketId} created from EmailMessage {MessageId}", ticket.Id, emailMessage.Id);
 

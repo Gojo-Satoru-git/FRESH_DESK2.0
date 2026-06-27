@@ -2,7 +2,7 @@ using Adrenalin.SharedKernel.Mediator;
 using System;
 using System.Collections.Generic;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
 public sealed record CreateTicketCommand(
     string Title,

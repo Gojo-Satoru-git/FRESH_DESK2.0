@@ -1,7 +1,7 @@
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 
 public sealed record TicketDashboardDto(
-    int totalTickets,
+    int TotalTickets,
     int TotalActive,
     int InProgress,
     int PendingReply,

@@ -1,7 +1,7 @@
 using Adrenalin.SharedKernel.Mediator;
 using System;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
 public sealed record ResolveTicketCommand(
     Guid TicketId,

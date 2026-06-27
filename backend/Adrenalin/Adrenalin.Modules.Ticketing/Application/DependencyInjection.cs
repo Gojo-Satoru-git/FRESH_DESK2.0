@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<Adrenalin.Modules.Ticketing.Domain.Interfaces.ITicketRoutingEngine, Adrenalin.Modules.Ticketing.Application.Services.TicketRoutingEngine>();
         services.AddScoped<Adrenalin.Modules.Ticketing.Domain.Interfaces.IAgentAssignmentStrategy, Adrenalin.Modules.Ticketing.Application.Services.LeastLoadedAssignmentStrategy>();
         services.AddScoped<Adrenalin.Modules.Ticketing.Application.Services.AgentAssignmentStrategyFactory>();
+        services.AddScoped<Adrenalin.Modules.Ticketing.Domain.Interfaces.IAgentAssignmentStrategy,
+                    Adrenalin.Modules.Ticketing.Application.Services.FactorBasedAssignmentStrategy>();
 
         return services;
     }

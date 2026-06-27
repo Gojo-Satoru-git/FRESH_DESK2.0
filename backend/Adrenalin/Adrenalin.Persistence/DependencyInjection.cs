@@ -10,6 +10,7 @@ using Adrenalin.Modules.SLA.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Contracts;
 using Adrenalin.Modules.Notification.Application.IntegrationEvents;
+using Adrenalin.Persistence.Repositories.SLA;
 
 using Microsoft.Extensions.DependencyInjection;
 

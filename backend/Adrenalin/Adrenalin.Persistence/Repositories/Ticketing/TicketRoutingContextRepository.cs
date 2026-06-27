@@ -1,5 +1,5 @@
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 using Adrenalin.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -130,5 +130,29 @@ public sealed class TicketRoutingContextRepository : ITicketRoutingContextReposi
                 (cg, c) => new CompanyDefaultRouteDto(c.Id, c.Name)
             )
             .ToListAsync(ct);
+    }
+
+
+    public async Task<bool> IsUserLeadOfGroupAsync(Guid userId, Guid groupId, CancellationToken ct = default)
+    {
+        return await _db.UserGroups.AsNoTracking()
+            .AnyAsync(ug =>
+                ug.UserId == userId &&
+                ug.GroupId == groupId &&
+                ug.IsLead &&
+                !ug.IsDeleted, ct);
+    }
+
+    public async Task<IReadOnlyList<(Guid GroupId, string GroupName)>> GetGroupsLedByUserAsync(
+        Guid userId, CancellationToken ct = default)
+    {
+        var rows = await _db.UserGroups.AsNoTracking()
+            .Where(ug => ug.UserId == userId && ug.IsLead && !ug.IsDeleted)
+            .Join(_db.Groups.AsNoTracking().Where(g => !g.IsDeleted && g.IsActive),
+                ug => ug.GroupId, g => g.Id,
+                (ug, g) => new { g.Id, g.Name })
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.Id, r.Name)).ToList();
     }
 }

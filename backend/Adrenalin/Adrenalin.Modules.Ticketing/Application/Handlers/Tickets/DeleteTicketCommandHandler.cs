@@ -2,7 +2,7 @@ using Adrenalin.Modules.Ticketing.Domain.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 

@@ -54,11 +54,19 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
 
         builder.Property(e => e.AssignmentStrategy)
             .HasDefaultValue(0)
-            .HasComment("Auto-assignment strategy: 0=LeastLoaded, 1=RoundRobin, 2=SkillBased, 3=Manual. Extensible via IAgentAssignmentStrategy.")
+            .HasComment("Auto-assignment strategy: 0=LeastLoaded, 1=RoundRobin, 2=SkillBased, 3=Manual, 4=FactorBased (stubbed — always fails until Workflow module ships). Extensible via IAgentAssignmentStrategy.")
             .HasColumnName("assignment_strategy");
 
         builder.Property(e => e.FallbackGroupId)
             .HasColumnName("fallback_group_id");
+
+        // ── NEW: ticket-type specialization (v12 migration) ───────────────────
+        builder.Property(e => e.SupportedTicketTypes)
+            .HasColumnName("supported_ticket_types")
+            .HasColumnType("text[]")
+            .HasDefaultValueSql("'{}'")
+            .HasComment("TicketType enum names this group handles. Empty = any type. " +
+                        "See sql/v12_group_queue_and_factor_stub.sql.");
 
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         builder.Property(e => e.UpdatedBy).HasColumnName("updated_by");

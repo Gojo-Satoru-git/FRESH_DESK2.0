@@ -1,6 +1,6 @@
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 public sealed record RoutingRuleDto(
     Guid Id,

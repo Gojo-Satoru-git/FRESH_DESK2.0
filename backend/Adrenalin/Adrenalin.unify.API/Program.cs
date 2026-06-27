@@ -120,7 +120,7 @@ builder.Services.AddScoped<
 
 builder.Services.AddCustomDispatcher(
     typeof(Adrenalin.Modules.Auth.Application.Commands.RegisterUserCommand).Assembly,
-    typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly,
+    typeof(Adrenalin.Modules.Ticketing.Application.Commands.Tickets.CreateTicketCommand).Assembly,
     typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly,
     typeof(CreateContactForExternalUserCommand).Assembly,
     typeof(ExternalUserCreatedNotificationHandler).Assembly, 
@@ -137,7 +137,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBeh
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.Auth.Application.Validators.RegisterUserValidator).Assembly);
 builder.Services.AddValidatorsFromAssembly(
-    typeof(Adrenalin.Modules.Ticketing.Application.Commands.CreateTicketCommand).Assembly);
+    typeof(Adrenalin.Modules.Ticketing.Application.Commands.Tickets.CreateTicketCommand).Assembly);
 builder.Services.AddValidatorsFromAssembly(
     typeof(Adrenalin.Modules.KB.Application.Commands.CreateKbArticleCommand).Assembly);
 
@@ -258,6 +258,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "Adrenalin_";
 });
 builder.Services.AddSingleton<ICacheService, Adrenalin.Infrastructure.Cache.RedisCacheService>();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddSingleton<Adrenalin.Infrastructure.Storage.Providers.IFileStorageProvider, Adrenalin.Infrastructure.Storage.LocalFileStorageProvider>();
 builder.Services.AddSingleton<IFileStorageService, Adrenalin.Infrastructure.Storage.FileStorageResolver>();

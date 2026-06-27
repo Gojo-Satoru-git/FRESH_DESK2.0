@@ -1,8 +1,8 @@
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
 
-namespace Adrenalin.Modules.Ticketing.Application.Queries;
+namespace Adrenalin.Modules.Ticketing.Application.Queries.Routing;
 
 public sealed record GetRoutingRulesQuery(Guid? CompanyId = null)
     : IRequest<Result<IReadOnlyList<RoutingRuleDto>>>;

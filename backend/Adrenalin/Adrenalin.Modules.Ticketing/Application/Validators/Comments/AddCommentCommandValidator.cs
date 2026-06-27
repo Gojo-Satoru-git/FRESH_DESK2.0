@@ -1,7 +1,7 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Comments;
 using FluentValidation;
 
-namespace Adrenalin.Modules.Ticketing.Application.Validators;
+namespace Adrenalin.Modules.Ticketing.Application.Validators.Comments;
 
 public sealed class AddCommentCommandValidator : AbstractValidator<AddCommentCommand>
 {

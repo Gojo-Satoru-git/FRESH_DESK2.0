@@ -1,6 +1,6 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.Commands.Routing;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
+using Adrenalin.Modules.Ticketing.Application.Queries.Routing;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 

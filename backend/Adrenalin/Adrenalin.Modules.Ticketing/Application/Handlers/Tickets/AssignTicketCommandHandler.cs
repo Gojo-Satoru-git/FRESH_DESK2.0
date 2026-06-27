@@ -3,8 +3,8 @@ using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Results;
 using Adrenalin.SharedKernel.Contracts;
-using Adrenalin.Modules.Ticketing.Application.Commands;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 

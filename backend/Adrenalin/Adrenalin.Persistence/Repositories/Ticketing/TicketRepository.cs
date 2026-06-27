@@ -532,4 +532,42 @@ public sealed class TicketRepository : ITicketRepository
 			await _context.CustomerTiers.AddAsync(standardTier, cancellationToken);
 		}
 	}
+
+	public async Task<IReadOnlyList<Ticket>> GetQueuedTicketsForGroupAsync(
+		Guid groupId, CancellationToken ct = default)
+	{
+		var closedStatuses = new[] { TicketStatus.Resolved, TicketStatus.Closed };
+
+		return await _context.Tickets
+			.Where(t =>
+				t.GroupId == groupId &&
+				t.AssignedAgentId == null &&
+				!t.IsDeleted &&
+				!closedStatuses.Contains(t.Status))
+			// Urgent/High first, then oldest first within the same priority —
+			// matches the dispatcher triage order described in GroupQueueTicketDto.
+			.OrderByDescending(t => t.Priority)
+			.ThenBy(t => t.CreatedAt)
+			.ToListAsync(ct);
+	}
+
+	public async Task<IReadOnlyList<Ticket>> GetQueuedTicketsForGroupsAsync(
+		IEnumerable<Guid> groupIds, CancellationToken ct = default)
+	{
+		var ids = groupIds.ToList();
+		if (ids.Count == 0) return Array.Empty<Ticket>();
+
+		var closedStatuses = new[] { TicketStatus.Resolved, TicketStatus.Closed };
+
+		return await _context.Tickets
+			.Where(t =>
+				t.GroupId != null &&
+				ids.Contains(t.GroupId.Value) &&
+				t.AssignedAgentId == null &&
+				!t.IsDeleted &&
+				!closedStatuses.Contains(t.Status))
+			.OrderByDescending(t => t.Priority)
+			.ThenBy(t => t.CreatedAt)
+			.ToListAsync(ct);
+	}
 }

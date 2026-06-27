@@ -1,7 +1,7 @@
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Comments;
 
 public sealed record AddCommentCommand(
     Guid TicketId,

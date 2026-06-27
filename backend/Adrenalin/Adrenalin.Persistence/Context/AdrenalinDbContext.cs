@@ -71,6 +71,7 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
     public virtual DbSet<SlaPolicy> SlaPolicies { get; set; }
     public virtual DbSet<SlaTicket> SlaTickets { get; set; }
+    public virtual DbSet<Adrenalin.Modules.SLA.Domain.Entities.SlaStageConfig> SlaStageConfigs { get; set; }
     public virtual DbSet<SolutionType> SolutionTypes { get; set; }
     public virtual DbSet<StatusTransition> StatusTransitions { get; set; }
     public virtual DbSet<SubModule> SubModules { get; set; }

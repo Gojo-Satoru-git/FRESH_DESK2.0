@@ -2,7 +2,7 @@ using System;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 
 public sealed record UpdateTicketCommand(
     Guid TicketId,

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Attachments;
 
-namespace Adrenalin.Modules.Ticketing.Application.DTOs;
+namespace Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 
 public sealed record GetTicketByIdResponse(
     Guid Id,

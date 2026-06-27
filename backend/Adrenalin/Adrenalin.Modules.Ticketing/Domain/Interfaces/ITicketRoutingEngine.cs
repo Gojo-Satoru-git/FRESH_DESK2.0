@@ -1,4 +1,5 @@
 using Adrenalin.Modules.Ticketing.Domain.Entities;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 
@@ -12,7 +13,7 @@ namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 public interface ITicketRoutingEngine
 {
     Task<RoutingResult> RouteAsync(Ticket ticket, CancellationToken ct = default);
-    Task<Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto> SimulateAsync(Ticket ticket, CancellationToken ct = default);
+    Task<RoutingSimulationResultDto> SimulateAsync(Ticket ticket, CancellationToken ct = default);
 }
 
 /// <summary>

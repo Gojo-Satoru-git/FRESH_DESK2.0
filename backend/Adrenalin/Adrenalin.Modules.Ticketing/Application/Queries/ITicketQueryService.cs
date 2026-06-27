@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
+using Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
 using Adrenalin.SharedKernel.Pagination;
 
 namespace Adrenalin.Modules.Ticketing.Application.Queries;

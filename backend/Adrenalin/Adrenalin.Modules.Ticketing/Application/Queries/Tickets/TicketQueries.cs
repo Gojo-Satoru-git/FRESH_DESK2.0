@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Pagination;
 
-namespace Adrenalin.Modules.Ticketing.Application.Queries;
+namespace Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
 
 public sealed record GetMyTicketsQuery(Guid UserId, string? Status = null, string? Term = null, int Page = 1, int PageSize = 10) : IRequest<PagedResult<TicketListItemDto>>;
 

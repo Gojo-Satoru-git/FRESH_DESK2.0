@@ -1,5 +1,6 @@
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 namespace Adrenalin.Modules.Ticketing.Application.Services;
 
@@ -145,9 +146,9 @@ public sealed class TicketRoutingEngine : ITicketRoutingEngine
         return new RoutingResult(null, null, "None", "No routing rule or group mapping found for this company.");
     }
 
-    public async Task<Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto> SimulateAsync(Ticket ticket, CancellationToken ct = default)
+    public async Task<RoutingSimulationResultDto> SimulateAsync(Ticket ticket, CancellationToken ct = default)
     {
-        var traces = new List<Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto>();
+        var traces = new List<RoutingTraceDto>();
         
         // ── Tier 1: Explicit Company Routing Rules ───────────────────────────
         var rules = await _routingRules.GetByCompanyOrderedAsync(ticket.CompanyId, ct);
@@ -160,13 +161,13 @@ public sealed class TicketRoutingEngine : ITicketRoutingEngine
         {
             if (RuleMatches(rule, ticket, companyRegion))
             {
-                traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+                traces.Add(new RoutingTraceDto(
                     "CompanyExplicit", true, $"Matched explicit rule (Priority {rule.RulePriority})", rule.Id));
                 var agentId = await AutoAssignAgent(rule.GroupId, ct);
-                return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+                return new RoutingSimulationResultDto(
                     rule.GroupId, agentId, "CompanyExplicit", $"Matched explicit rule (Priority {rule.RulePriority})", traces.AsReadOnly());
             }
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "CompanyExplicit", false, $"Failed to match explicit rule (Priority {rule.RulePriority})", rule.Id));
         }
 
@@ -183,13 +184,13 @@ public sealed class TicketRoutingEngine : ITicketRoutingEngine
 
             if (categoryRule is not null)
             {
-                traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+                traces.Add(new RoutingTraceDto(
                     "CategoryMatch", true, $"Matched broader category/module rule for module {ticket.ModuleId}", categoryRule.Id));
                 var agentId = await AutoAssignAgent(categoryRule.GroupId, ct);
-                return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+                return new RoutingSimulationResultDto(
                     categoryRule.GroupId, agentId, "CategoryMatch", $"Matched category/module rule for module {ticket.ModuleId}", traces.AsReadOnly());
             }
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "CategoryMatch", false, $"No broad category/module rule found for module {ticket.ModuleId}"));
         }
 
@@ -202,14 +203,14 @@ public sealed class TicketRoutingEngine : ITicketRoutingEngine
                 var groupInfo = await _routingContext.GetGroupRoutingInfoAsync(groupId, ct);
                 if (groupInfo.HasValue && string.Equals(groupInfo.Value.RegionCode, companyRegion, StringComparison.OrdinalIgnoreCase))
                 {
-                    traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+                    traces.Add(new RoutingTraceDto(
                         "RegionMatch", true, $"Matched group {groupId} region ({groupInfo.Value.RegionCode}) with company region ({companyRegion})"));
                     var agentId = await AutoAssignAgent(groupId, ct);
-                    return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+                    return new RoutingSimulationResultDto(
                         groupId, agentId, "RegionMatch", $"Matched group {groupId} region with company region", traces.AsReadOnly());
                 }
             }
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "RegionMatch", false, $"No matching group region found for company region ({companyRegion})"));
         }
 
@@ -217,37 +218,37 @@ public sealed class TicketRoutingEngine : ITicketRoutingEngine
         var defaultRule = rules.FirstOrDefault(r => r.IsDefault);
         if (defaultRule is not null)
         {
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "Fallback", true, $"Used company default routing rule targeting group {defaultRule.GroupId}", defaultRule.Id));
             var agentId = await AutoAssignAgent(defaultRule.GroupId, ct);
-            return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+            return new RoutingSimulationResultDto(
                 defaultRule.GroupId, agentId, "Fallback", $"Used company default routing rule targeting group {defaultRule.GroupId}", traces.AsReadOnly());
         }
 
         var defaultGroupId = await _routingContext.GetCompanyDefaultGroupAsync(ticket.CompanyId, ct);
         if (defaultGroupId.HasValue)
         {
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "Fallback", true, $"Used company default group mapping {defaultGroupId.Value}"));
             var agentId = await AutoAssignAgent(defaultGroupId.Value, ct);
-            return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+            return new RoutingSimulationResultDto(
                 defaultGroupId.Value, agentId, "Fallback", $"Used company default group mapping", traces.AsReadOnly());
         }
 
         var anyGroupId = (await _routingContext.GetCompanyGroupsAsync(ticket.CompanyId, ct)).FirstOrDefault();
         if (anyGroupId != Guid.Empty)
         {
-            traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+            traces.Add(new RoutingTraceDto(
                 "Fallback", true, $"Used first available company group {anyGroupId}"));
             var agentId = await AutoAssignAgent(anyGroupId, ct);
-            return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+            return new RoutingSimulationResultDto(
                 anyGroupId, agentId, "Fallback", $"Used first available company group", traces.AsReadOnly());
         }
 
-        traces.Add(new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingTraceDto(
+        traces.Add(new RoutingTraceDto(
             "Fallback", false, $"No default rule, default group, or any mapped group found"));
 
-        return new Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto(
+        return new RoutingSimulationResultDto(
             null, null, "None", "No routing rule or group mapping found", traces.AsReadOnly());
     }
 

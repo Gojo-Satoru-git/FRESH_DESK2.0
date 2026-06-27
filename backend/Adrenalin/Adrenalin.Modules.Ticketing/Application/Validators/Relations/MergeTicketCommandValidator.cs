@@ -1,7 +1,7 @@
-﻿using Adrenalin.Modules.Ticketing.Application.Commands;
+﻿using Adrenalin.Modules.Ticketing.Application.Commands.Relations;
 using FluentValidation;
 
-namespace Adrenalin.Modules.Ticketing.Application.Validators;
+namespace Adrenalin.Modules.Ticketing.Application.Validators.Relations;
 
 public sealed class MergeTicketCommandValidator : AbstractValidator<MergeTicketCommand>
 {

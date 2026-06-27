@@ -1,10 +1,14 @@
 using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.Modules.Auth.Application.Queries;
-using Adrenalin.Modules.Ticketing.Application.Queries;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+
 using Adrenalin.Modules.Company.Application.Queries;
 using Adrenalin.Modules.Company.Application.DTOs;
+// Add these two lines (keep existing usings):
+using Adrenalin.Modules.Ticketing.Application.Queries.Groups;
+using Adrenalin.Modules.Ticketing.Application.Queries.Routing;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Groups;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -202,7 +206,7 @@ public sealed class GroupsController : ControllerBase
         var actorId = GetActorId();
         if (!actorId.HasValue) return Unauthorized();
 
-        var result = await _dispatcher.Send(new GetGroupQueueQuery(id, queueType, actorId.Value, page, pageSize), ct);
+        var result = await _dispatcher.Send(new GetGroupDashboardQueueQuery(id, queueType, actorId.Value, page, pageSize), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
     }
 

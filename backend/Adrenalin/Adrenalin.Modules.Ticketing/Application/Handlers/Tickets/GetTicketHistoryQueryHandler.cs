@@ -1,6 +1,6 @@
 using Adrenalin.Modules.Ticketing.Domain.Exceptions;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.SharedKernel.Mediator;

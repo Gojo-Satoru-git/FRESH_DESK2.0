@@ -1,6 +1,6 @@
 using Adrenalin.SharedKernel.Mediator;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Attachments;
 
 public sealed record UploadTicketAttachmentCommand(
     Guid TicketId,

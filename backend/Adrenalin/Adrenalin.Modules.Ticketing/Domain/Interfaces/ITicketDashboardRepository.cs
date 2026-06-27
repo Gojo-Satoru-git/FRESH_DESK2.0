@@ -1,5 +1,6 @@
-using Adrenalin.Modules.Ticketing.Application.Queries;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.Queries.Groups;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Groups;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 
 namespace Adrenalin.Modules.Ticketing.Domain.Interfaces;
 

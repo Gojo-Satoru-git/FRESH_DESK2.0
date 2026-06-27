@@ -1,7 +1,8 @@
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.Queries.Groups;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Groups;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
 using Adrenalin.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 

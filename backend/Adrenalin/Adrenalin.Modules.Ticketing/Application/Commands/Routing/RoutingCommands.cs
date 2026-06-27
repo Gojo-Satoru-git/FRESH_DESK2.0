@@ -1,8 +1,9 @@
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Results;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
 
-namespace Adrenalin.Modules.Ticketing.Application.Commands;
+namespace Adrenalin.Modules.Ticketing.Application.Commands.Routing;
 
 // ── Routing Rules ─────────────────────────────────────────────────────────────
 
@@ -60,4 +61,4 @@ public sealed record SimulateRoutingCommand(
     TicketPriority? Priority,
     TicketType? Type,
     string? Title,
-    string? Description) : IRequest<Result<Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto>>;
+    string? Description) : IRequest<Result<RoutingSimulationResultDto>>;

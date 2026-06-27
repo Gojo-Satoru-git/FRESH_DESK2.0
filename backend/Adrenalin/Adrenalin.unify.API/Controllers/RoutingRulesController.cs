@@ -1,6 +1,6 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.Commands.Routing;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Routing;
+using Adrenalin.Modules.Ticketing.Application.Queries.Routing;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -119,7 +119,7 @@ public sealed class RoutingRulesController : ControllerBase
     /// </summary>
     [HttpGet("{id:guid}/history")]
     [Authorize(Policy = "ticket:manage")]
-    [ProducesResponseType(typeof(IReadOnlyList<Adrenalin.Modules.Ticketing.Application.DTOs.RoutingRuleHistoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyList<RoutingRuleHistoryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHistory(Guid id, CancellationToken ct)
     {
@@ -132,7 +132,7 @@ public sealed class RoutingRulesController : ControllerBase
     /// </summary>
     [HttpPost("simulate")]
     [Authorize(Policy = "ticket:manage")]
-    [ProducesResponseType(typeof(Adrenalin.Modules.Ticketing.Application.DTOs.RoutingSimulationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RoutingSimulationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Simulate([FromBody] SimulateRoutingRequest req, CancellationToken ct)
     {

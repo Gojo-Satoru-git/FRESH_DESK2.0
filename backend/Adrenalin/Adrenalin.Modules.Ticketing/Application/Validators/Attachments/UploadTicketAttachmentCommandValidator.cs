@@ -1,9 +1,9 @@
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Attachments;
 using FluentValidation;
 using System.IO;
 using System.Linq;
 
-namespace Adrenalin.Modules.Ticketing.Application.Validators;
+namespace Adrenalin.Modules.Ticketing.Application.Validators.Attachments;
 
 public sealed class UploadTicketAttachmentCommandValidator : AbstractValidator<UploadTicketAttachmentCommand>
 {

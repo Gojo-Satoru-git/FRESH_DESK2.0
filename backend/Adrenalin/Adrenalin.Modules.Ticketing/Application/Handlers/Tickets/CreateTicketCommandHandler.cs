@@ -1,6 +1,6 @@
 using Adrenalin.SharedKernel.Mediator;
 using Adrenalin.SharedKernel.Interfaces;
-using Adrenalin.Modules.Ticketing.Application.Commands;
+using Adrenalin.Modules.Ticketing.Application.Commands.Tickets;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Enums;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
@@ -147,14 +147,14 @@ public sealed class CreateTicketCommandHandler
         await _ticketRepository.AddAsync(ticket, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _dispatcher.Send(
-            new AssignTicketCommand(
-                TicketId: ticket.Id,
-               TriggeredBy: createdByUserId
-          ?? request.ActorId
-          ?? Guid.Empty,
-                IsAutoAssignment: true),
-            cancellationToken);
+        //await _dispatcher.Send(
+        //    new AssignTicketCommand(
+        //        TicketId: ticket.Id,
+        //       TriggeredBy: createdByUserId
+        //  ?? request.ActorId
+        //  ?? Guid.Empty,
+        //        IsAutoAssignment: true),
+        //    cancellationToken);
 
         return ticket.Id;
     }

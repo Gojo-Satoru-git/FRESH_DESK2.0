@@ -1,5 +1,7 @@
-using Adrenalin.Modules.Ticketing.Application.DTOs;
-using Adrenalin.Modules.Ticketing.Application.Queries;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Tickets;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Comments;
+using Adrenalin.Modules.Ticketing.Application.DTOs.Attachments;
+using Adrenalin.Modules.Ticketing.Application.Queries.Tickets;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Domain.Entities;
 using Adrenalin.Modules.Ticketing.Domain.Exceptions;
