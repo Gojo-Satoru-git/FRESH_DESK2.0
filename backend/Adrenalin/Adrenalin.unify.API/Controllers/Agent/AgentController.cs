@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Adrenalin.EventBus;               // ◄ Where IEventBus lives
-using Adrenalin.EventBus.Events;        // ◄ Where CreateInternalUserIntegrationEvent lives
-using Adrenalin.Modules.Agent.Application.Commands; // ◄ Where CreateAgentCommand lives
+using Adrenalin.EventBus;               
+using Adrenalin.EventBus.Events;       
+using Adrenalin.Modules.Agent.Application.Commands; 
+using Microsoft.AspNetCore.Authorization;
 
 namespace Adrenalin.unify.API.Controllers.Agent;
 
@@ -11,7 +12,7 @@ namespace Adrenalin.unify.API.Controllers.Agent;
 [Route("api/[controller]")]
 public class AgentController : ControllerBase
 {
-    private readonly IEventBus _eventBus; // ◄ Typed properly instead of dynamic
+    private readonly IEventBus _eventBus; 
 
     public AgentController(IEventBus eventBus)
     {
@@ -19,6 +20,7 @@ public class AgentController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> InitiateAgentCreation([FromBody] CreateAgentCommand command)
     {
         var correlationId = Guid.NewGuid();

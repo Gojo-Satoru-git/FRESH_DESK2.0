@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Adrenalin.Modules.Auth.Domain.Enums;
 using Adrenalin.Modules.Auth.Application.Queries;
 using Adrenalin.SharedKernel.Interfaces;
+
 namespace Adrenalin.unify.API.Controllers
 {
     [Authorize(Policy = "user:create")]

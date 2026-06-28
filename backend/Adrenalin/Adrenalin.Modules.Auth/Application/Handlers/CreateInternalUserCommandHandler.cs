@@ -53,6 +53,10 @@ public class CreateInternalUserCommandHandler : IRequestHandler<CreateInternalUs
 
     public async Task<Guid> Handle(CreateInternalUserCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+        {
+            throw new UnauthorizedAccessException("Unauthenticated access is denied. Only system administrators can provision internal users.");
+        }
         var existing = await _users.GetByEmailAsync(request.Email, cancellationToken);
         if (existing is not null)
         {
@@ -85,9 +89,7 @@ public class CreateInternalUserCommandHandler : IRequestHandler<CreateInternalUs
             request.Email,
             request.Phone);
 
-        Guid adminId = (_currentUser.IsAuthenticated && _currentUser.UserId is not null)
-            ? _currentUser.UserId.Value
-            : user.Id; // System GUID fallback
+        Guid adminId = _currentUser.UserId.Value;
 
         await _users.AddAsync(user, cancellationToken);
 
