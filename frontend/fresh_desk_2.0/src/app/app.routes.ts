@@ -26,9 +26,11 @@ export const routes: Routes = [
     path: 'workspace',
     canActivate: [
       permissionGuard([
-        PERMISSIONS.DASHBOARD.READ,   // Replaced VIEW_AGENT
-        PERMISSIONS.DASHBOARD.WRITE,  // Replaced VIEW_TEAM_LEAD
-        PERMISSIONS.DASHBOARD.ADMIN,  // Replaced VIEW_ADMIN
+        PERMISSIONS.DASHBOARD.READ,
+        PERMISSIONS.DASHBOARD.WRITE,
+        PERMISSIONS.DASHBOARD.ADMIN,
+        PERMISSIONS.DASHBOARD.TEAMLEAD,
+        PERMISSIONS.DASHBOARD.MANAGER,
       ]),
     ],
     loadComponent: () =>
@@ -158,7 +160,7 @@ export const routes: Routes = [
       },
       {
         path: 'my-tickets',
-        canActivate: [permissionGuard([PERMISSIONS.TICKET.READ_COMPANY])],
+        canActivate: [permissionGuard([PERMISSIONS.TICKET.READ_COMPANY, PERMISSIONS.TICKET.READ_OWN])],
         loadComponent: () =>
           import('./features/customer-portal/my-tickets.component').then(
             (m) => m.MyTicketsComponent,

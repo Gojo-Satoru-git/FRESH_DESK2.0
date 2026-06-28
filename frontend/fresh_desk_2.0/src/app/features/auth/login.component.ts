@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { TicketService } from '../tickets/services/ticket.service';
+import { PERMISSIONS } from '../../core/auth/permission.constants';
 
 @Component({
   selector: 'app-login',
@@ -151,7 +152,17 @@ export class LoginComponent implements OnInit {
               
               console.log('✅ User metadata loaded, permissions:', this.authService.permissions());
               this.isLoading.set(false);
-              this.router.navigate(['/workspace/dashboard']);
+              if (this.authService.hasAnyPermission([
+                PERMISSIONS.DASHBOARD.READ,
+                PERMISSIONS.DASHBOARD.WRITE,
+                PERMISSIONS.DASHBOARD.ADMIN,
+                PERMISSIONS.DASHBOARD.TEAMLEAD,
+                PERMISSIONS.DASHBOARD.MANAGER
+              ])) {
+                this.router.navigate(['/workspace/dashboard']);
+              } else {
+                this.router.navigate(['/customer-portal']);
+              }
             },
             error: (err) => {
               this.isLoading.set(false);

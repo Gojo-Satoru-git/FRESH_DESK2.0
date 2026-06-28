@@ -127,14 +127,14 @@ export class MockTicketService extends TicketService {
 
   override searchTickets(opts: SearchTicketsParams = {}): Observable<PagedResult<TicketListItem>> {
     const filtered = this.tickets.filter((ticket) => {
-      const matchesTicketNumber =
-        !opts.ticketNumber ||
-        ticket.ticketNumber?.toLowerCase().includes(opts.ticketNumber.toLowerCase());
+      const matchesSearch =
+        !opts.search ||
+        ticket.ticketNumber?.toLowerCase().includes(opts.search.toLowerCase()) ||
+        ticket.title?.toLowerCase().includes(opts.search.toLowerCase());
       const matchesStatus = !opts.status || ticket.status === opts.status;
       const matchesAgent = !opts.assignedAgentId || ticket.assignedAgentId === opts.assignedAgentId;
-      const matchesCompany = !opts.companyId || ticket.companyId === opts.companyId;
 
-      return matchesTicketNumber && matchesStatus && matchesAgent && matchesCompany;
+      return matchesSearch && matchesStatus && matchesAgent;
     });
 
     return this.respond(

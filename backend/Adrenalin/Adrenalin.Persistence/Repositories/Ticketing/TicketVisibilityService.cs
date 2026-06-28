@@ -37,7 +37,7 @@ public sealed class TicketVisibilityService : ITicketVisibilityService
         }
 
         // 3. Group/Queue view (Team Lead / PMO)
-        if (permissions.Contains("ticket:manage_group"))
+        if (permissions.Contains("ticket:read_team") || permissions.Contains("ticket:read_queue"))
         {
             var userGroups = await _context.UserGroups
                 .Where(ug => ug.UserId == userId)
@@ -89,7 +89,7 @@ public sealed class TicketVisibilityService : ITicketVisibilityService
             .Where(ur => ur.UserId == userId)
             .Join(_context.RolePermissions, ur => ur.RoleId, rp => rp.RoleId, (ur, rp) => rp.PermissionId)
             .Join(_context.Set<Adrenalin.Modules.Auth.Domain.Entities.Permission>(), pid => pid, p => p.Id, (pid, p) => p.Resource + ":" + p.Action)
-            .AnyAsync(perm => perm == "ticket:manage" || perm == "ticket:manage_all" || perm == "system:admin" || perm == "ticket:manage_group", cancellationToken);
+            .AnyAsync(perm => perm == "ticket:manage" || perm == "ticket:manage_all" || perm == "system:admin" || perm == "ticket:read_team" || perm == "ticket:read_queue", cancellationToken);
             
         return hasInternalPerm;
     }

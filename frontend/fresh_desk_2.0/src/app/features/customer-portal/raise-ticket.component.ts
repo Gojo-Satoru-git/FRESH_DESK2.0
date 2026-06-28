@@ -168,8 +168,6 @@ export class RaiseTicketComponent implements OnInit {
       priority: this.ticketForm.value.priority,
       type: this.ticketForm.value.category,
       moduleName: this.ticketForm.value.module,
-      groupId: '466b8a16-7910-4e20-891f-59fbdb0ca009',
-      tags: [],
     };
 
     this.ticketService.createTicket(payload).subscribe({

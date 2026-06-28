@@ -29,13 +29,15 @@ public sealed class AddCommentCommandHandler : IRequestHandler<AddCommentCommand
         }
 
         var roles = _currentUserService.Roles.ToList();
-        var isAgent = roles.Contains("junior_agent", StringComparer.OrdinalIgnoreCase) || 
+        var isAgent = roles.Contains("junior_agent", StringComparer.OrdinalIgnoreCase) ||
                       roles.Contains("senior_agent", StringComparer.OrdinalIgnoreCase);
+        var isLead = roles.Any(r => new[] { "team_lead", "manager", "admin", "pmo" }
+            .Contains(r, StringComparer.OrdinalIgnoreCase));
 
         var modifiedBy = request.AuthorId ?? request.ContactId
             ?? throw new TicketDomainException("Either AuthorId or ContactId must be provided.");
 
-        if (isAgent && ticket.AssignedAgentId != modifiedBy)
+        if (isAgent && !isLead && ticket.AssignedAgentId != modifiedBy)
         {
             throw new TicketDomainException("Agents can only add comments to tickets assigned to them.");
         }

@@ -1070,48 +1070,30 @@ export class TicketDetailComponent implements OnInit {
                 );
                 this.loadingAgents.set(false);
               } else {
-                const nonLeads = members.filter((m: any) => {
+                // Team Lead assigning to agents in their group
+                const assignableMembers = members.filter((m: any) => {
+                  // Allow assigning to anyone in the group who is not a lead, OR themselves
                   const isLead = m.isLead === true || m.IsLead === true;
                   const memberId = m.userId ?? m.UserId;
-                  return !isLead && memberId !== userId;
+                  return !isLead || memberId === userId;
                 });
 
-                if (nonLeads.length === 0) {
+                if (assignableMembers.length === 0) {
                   this.agents.set([]);
                   this.loadingAgents.set(false);
                   return;
                 }
 
-                const roleCalls = nonLeads.map((m: any) =>
-                  this.ticketService.getUserWithRoles(m.userId ?? m.UserId).pipe(
-                    map((details: any) => {
-                      const roles: string[] = (details?.roles ?? []).map((r: any) =>
-                        (r.name ?? '').toLowerCase(),
-                      );
-                      const isAgent = roles.some((r) => r === 'agent' || r.endsWith('_agent'));
-                      return isAgent
-                        ? {
-                            id: m.userId ?? m.UserId,
-                            firstName: m.firstName ?? m.FirstName,
-                            lastName: m.lastName ?? m.LastName,
-                            email: m.email ?? m.Email,
-                          }
-                        : null;
-                    }),
-                    catchError(() => of(null)),
-                  ),
+                // Map directly to agents without fetching roles (avoids 403 for team leads)
+                this.agents.set(
+                  assignableMembers.map((m: any) => ({
+                    id: m.userId ?? m.UserId,
+                    firstName: m.firstName ?? m.FirstName,
+                    lastName: m.lastName ?? m.LastName,
+                    email: m.email ?? m.Email,
+                  })),
                 );
-
-                forkJoin(roleCalls).subscribe({
-                  next: (results) => {
-                    this.agents.set(results.filter(Boolean) as any[]);
-                    this.loadingAgents.set(false);
-                  },
-                  error: () => {
-                    this.agents.set([]);
-                    this.loadingAgents.set(false);
-                  },
-                });
+                this.loadingAgents.set(false);
               }
             },
             error: () => {

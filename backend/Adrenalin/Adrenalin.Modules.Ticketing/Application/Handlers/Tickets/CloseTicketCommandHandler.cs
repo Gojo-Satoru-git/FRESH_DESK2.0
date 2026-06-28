@@ -35,10 +35,16 @@ public sealed class CloseTicketCommandHandler : IRequestHandler<CloseTicketComma
             throw new TicketDomainException("Customers can only close their own tickets.");
         }
 
-        var userCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.ClosedBy, cancellationToken);
-        if (userCompanyId != ticket.CompanyId)
+        var isInternal = roles.Any(r => new[] { "admin", "team_lead", "manager", "pmo", "senior_agent", "junior_agent" }
+            .Contains(r, StringComparer.OrdinalIgnoreCase));
+
+        if (!isInternal)
         {
-            throw new TicketDomainException("User does not belong to the ticket's company.");
+            var userCompanyId = await _ticketRepository.GetUserCompanyIdAsync(request.ClosedBy, cancellationToken);
+            if (userCompanyId != ticket.CompanyId)
+            {
+                throw new TicketDomainException("User does not belong to the ticket's company.");
+            }
         }
 
         ticket.Close(request.ClosedBy, request.Notes);

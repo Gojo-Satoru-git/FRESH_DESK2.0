@@ -78,10 +78,13 @@ export class ApiTicketService extends TicketService {
     let params = new HttpParams()
       .set('page', (opts.page ?? 1).toString())
       .set('pageSize', (opts.pageSize ?? 20).toString());
-    if (opts.ticketNumber) params = params.set('ticketNumber', opts.ticketNumber);
-    if (opts.status) params = params.set('status', opts.status);
-    if (opts.assignedAgentId) params = params.set('assignedAgentId', opts.assignedAgentId);
-    if (opts.companyId) params = params.set('companyId', opts.companyId);
+    if (opts.search) params = params.set('Search', opts.search);
+    if (opts.status) params = params.set('Status', opts.status);
+    if (opts.assignedAgentId) params = params.set('AssignedAgentId', opts.assignedAgentId);
+    if (opts.groupId) params = params.set('GroupId', opts.groupId);
+    if (opts.priority) params = params.set('Priority', opts.priority);
+    if (opts.unassigned !== undefined) params = params.set('Unassigned', opts.unassigned.toString());
+    if (opts.breached !== undefined) params = params.set('Breached', opts.breached.toString());
     return this.http.get<PagedResult<TicketListItem>>(this.apiUrl, { params });
   }
 
@@ -132,12 +135,13 @@ export class ApiTicketService extends TicketService {
    */
   override assignTicket(
     id: string,
-    agentId: string,
+    agentId?: string,
     notes?: string,
+    groupId?: string,
   ): Observable<{ ticketId: string; agentId: string; message: string }> {
     return this.http.post<{ ticketId: string; agentId: string; message: string }>(
       `${this.apiUrl}/${id}/assign`,
-      { agentId, notes },
+      { agentId: agentId ?? null, groupId: groupId ?? null, notes: notes ?? null },
     );
   }
 

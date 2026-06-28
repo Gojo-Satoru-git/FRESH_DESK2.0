@@ -12,10 +12,13 @@ import {
 } from '../models/ticket.model';
 
 export interface SearchTicketsParams {
-  ticketNumber?: string;
-  status?: string;
+  groupId?: string;
   assignedAgentId?: string;
-  companyId?: string;
+  status?: string;
+  priority?: string;
+  unassigned?: boolean;
+  breached?: boolean;
+  search?: string;
   page?: number;
   pageSize?: number;
 }
@@ -45,8 +48,9 @@ export abstract class TicketService {
   abstract deleteTicket(id: string): Observable<{ ticketId: string; message: string }>;
   abstract assignTicket(
     id: string,
-    agentId: string,
+    agentId?: string,
     notes?: string,
+    groupId?: string,
   ): Observable<{ ticketId: string; agentId: string; message: string }>;
   abstract changeStatus(
     id: string,
