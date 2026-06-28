@@ -36,6 +36,7 @@
 		<ProjectReference Include="..\Adrenalin.Modules.Notification\Adrenalin.Modules.Notification.csproj" />
 		<ProjectReference Include="..\Adrenalin.Modules.AI\Adrenalin.Modules.AI.csproj" />
 		<ProjectReference Include="..\Adrenalin.Modules.Lookup\Adrenalin.Modules.Lookup.csproj" />
+		<ProjectReference Include="..\Adrenalin.Modules.Agent\Adrenalin.Modules.Agent.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

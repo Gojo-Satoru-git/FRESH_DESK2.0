@@ -36,6 +36,8 @@ using Adrenalin.Modules.Auth.Application.Notifications;
 using Adrenalin.Modules.SLA.Application;
 using Adrenalin.Persistence.Interceptors;
 using System.Threading.RateLimiting;
+using Adrenalin.Modules.Agent.Application.Handlers;  
+using Adrenalin.Modules.Auth.consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -271,8 +273,19 @@ builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.TicketCommentAddedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.TicketCommentAddedNotificationHandler>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin.EventBus.Events.SlaBreachedIntegrationEvent>, Adrenalin.Modules.Notification.Application.IntegrationEvents.SlaNotificationHandler>();
 
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<CreateInternalUserIntegrationEvent>, CreateInternalUserConsumer>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<UserIdentityProvisionedIntegrationEvent>, UserIdentityProvisionedHandler>();
+
 // ── 7. Auth infrastructure ───────────────────────────────────────────────────
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+// 1. Fix for Auth Consumer: Register the MediatR Command Handler class explicitly so the consumer can inject it
+builder.Services.AddScoped<Adrenalin.Modules.Auth.Application.Handlers.CreateInternalUserCommandHandler>();
+
+// 2. Fix for Agent Handler: Register your Agent Repository mapping cleanly 
+// (Ensure the interface namespace matches what UserIdentityProvisionedHandler expects)
+builder.Services.AddScoped<
+    Adrenalin.Modules.Agent.Application.Interfaces.IAgentRepository,
+    Adrenalin.Persistence.Repositories.AgentRepository>();
 
 // ── 8. Shared infrastructure ─────────────────────────────────────────────────
 builder.Services.AddStackExchangeRedisCache(options =>
