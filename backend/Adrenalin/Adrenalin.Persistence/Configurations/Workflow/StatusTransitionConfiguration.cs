@@ -36,9 +36,9 @@ public class StatusTransitionConfiguration : IEntityTypeConfiguration<StatusTran
         builder.Property(e => e.IsDeleted).HasColumnName("is_deleted");
         
         builder.Property(e => e.RequiresField).HasMaxLength(100).HasColumnName("requires_field");
-        
-        builder.Property(e => e.RequiresRole).HasMaxLength(80).HasColumnName("requires_role");
-        
+
+        builder.Property(e => e.RequiresRoleId).HasColumnName("requires_role_id");
+
         builder.Property(e => e.ToStatus).HasMaxLength(40).HasColumnName("to_status");
         
         builder.Ignore(e => e.RowVersion);
@@ -51,6 +51,10 @@ public class StatusTransitionConfiguration : IEntityTypeConfiguration<StatusTran
 
         builder.HasOne(d => d.Graph).WithMany(p => p.StatusTransitions).HasForeignKey(d => d.GraphId).HasConstraintName("status_transitions_graph_id_fkey");
 
-        builder.HasOne<Role>().WithMany().HasPrincipalKey(p => p.Name).HasForeignKey(d => d.RequiresRole).OnDelete(DeleteBehavior.Restrict).HasConstraintName("status_transitions_requires_role_fkey");
+        builder.HasOne<Adrenalin.Modules.Auth.Domain.Entities.Role>()
+        .WithMany()
+        .HasForeignKey(e => e.RequiresRoleId)
+        .OnDelete(DeleteBehavior.Restrict)
+        .HasConstraintName("status_transitions_requires_role_id_fkey");
     }
 }

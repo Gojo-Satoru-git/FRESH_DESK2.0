@@ -49,6 +49,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
     public virtual DbSet<GeoRegion> GeoRegions { get; set; }
     public virtual DbSet<Group> Groups { get; set; }
     public virtual DbSet<Holiday> Holidays { get; set; }
+    public virtual DbSet<WorkflowRole> WorkflowRoles { get; set; }
+    public virtual DbSet<UserWorkflowRole> UserWorkflowRoles { get; set; }
 
     // ── KnowledgeBase ─────────────────────────────────────────────────────────
     public virtual DbSet<KbArticle> KbArticles { get; set; }

@@ -11,7 +11,7 @@ public sealed class StatusTransition : SoftDeleteEntity
 
     public string ToStatus { get; private set; } = null!;
 
-    public string? RequiresRole { get; private set; }
+    public Guid? RequiresRoleId { get; private set; }
 
     public string? RequiresField { get; private set; }
 

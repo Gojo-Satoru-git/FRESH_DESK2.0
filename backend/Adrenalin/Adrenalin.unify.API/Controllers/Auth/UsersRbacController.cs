@@ -80,19 +80,18 @@ public sealed class UsersRbacController : ControllerBase
         var result = await _dispatcher.Send(new RemoveRoleFromUserCommand(id, req.RoleId, actorId.Value), ct);
         return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
     }
-
-    [HttpPut("{id:guid}/roles")]
+    [HttpPut("{id:guid}/access-level")]
     [Authorize(Policy = "user:manage")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> SetRoles(Guid id, [FromBody] SetRolesRequest req, CancellationToken ct)
+    public async Task<IActionResult> SetAccessLevel(Guid id, [FromBody] SetRolesRequest req, CancellationToken ct)
     {
         var actorId = GetActorId();
         if (!actorId.HasValue) return Unauthorized();
-        var result = await _dispatcher.Send(new SetUserRolesCommand(id, req.RoleIds, actorId.Value), ct);
+        var result = await _dispatcher.Send(new SetUserAccessLevelCommand(id, req.AccessLevelId, actorId.Value), ct);
         return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
-    }
 
+    }
     private Guid? GetActorId()
     {
         var sub = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -102,4 +101,4 @@ public sealed class UsersRbacController : ControllerBase
 }
 
 public sealed record RoleIdRequest(Guid RoleId);
-public sealed record SetRolesRequest(IReadOnlyList<Guid> RoleIds);
+public sealed record SetRolesRequest(Guid AccessLevelId);

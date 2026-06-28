@@ -34,5 +34,24 @@ public sealed class RolePermissionRepository : IRolePermissionRepository
         foreach (var rp in rows) rp.SoftDelete(actorId);
     }
 
+    public async Task<int> CountActiveRolesWithPermissionAsync(
+        string resource, string action, Guid? excludingRoleId, CancellationToken ct = default)
+    {
+        var query = _db.RolePermissions
+            .Include(rp => rp.Permission)
+            .Include(rp => rp.Role)
+            .Where(rp => !rp.IsDeleted
+                      && !rp.Permission.IsDeleted
+                      && !rp.Role.IsDeleted
+                      && rp.Role.IsActive
+                      && rp.Permission.Resource == resource
+                      && rp.Permission.Action == action);
+
+        if (excludingRoleId.HasValue)
+            query = query.Where(rp => rp.RoleId != excludingRoleId.Value);
+
+        return await query.Select(rp => rp.RoleId).Distinct().CountAsync(ct);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) => await _db.SaveChangesAsync(ct);
 }

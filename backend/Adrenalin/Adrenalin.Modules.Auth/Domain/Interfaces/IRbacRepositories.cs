@@ -28,6 +28,8 @@ public interface IRolePermissionRepository
 {
     Task<RolePermission?> GetAsync(Guid roleId, Guid permissionId, CancellationToken ct = default);
     Task<IReadOnlyList<RolePermission>> GetByRoleWithPermissionsAsync(Guid roleId, CancellationToken ct = default);
+    Task<int> CountActiveRolesWithPermissionAsync(
+    string resource, string action, Guid? excludingRoleId, CancellationToken ct = default);
     void Add(RolePermission rp);
     void Update(RolePermission rp);
     Task SoftDeleteByRoleAsync(Guid roleId, Guid actorId, CancellationToken ct = default);
@@ -38,6 +40,7 @@ public interface IRolePermissionRepository
 public interface IUserRoleRepository
 {
     Task<UserRole?> GetAsync(Guid userId, Guid roleId, CancellationToken ct = default);
+    Task<int> CountByRoleAsync(Guid roleId, CancellationToken ct = default);
     Task<UserRole?> GetIncludingDeletedAsync(Guid userId, Guid roleId, CancellationToken ct = default);
     Task<IReadOnlyList<UserRole>> GetByUserAsync(Guid userId, CancellationToken ct = default);
     void Add(UserRole userRole);
@@ -46,6 +49,7 @@ public interface IUserRoleRepository
     Task SoftDeleteByRoleAsync(Guid roleId, Guid actorId, CancellationToken ct = default);
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
+
 
 public interface IGroupRepository
 {

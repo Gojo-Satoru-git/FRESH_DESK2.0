@@ -12,7 +12,9 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         builder.ToTable("roles", "auth", tb => tb.HasComment("Named roles: junior_agent, team_lead, manager, admin, collaborator, pmo. System roles (is_system_role=true) cannot be deleted via admin UI."));
 
-        builder.HasIndex(e => e.Name, "uq_roles_name_exact").IsUnique();
+        builder.HasIndex(e => e.Name, "uq_roles_name_exact").IsUnique(false);
+
+        builder.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
 
         builder.Property(e => e.Id)
             .HasDefaultValueSql("gen_random_uuid()")

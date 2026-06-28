@@ -44,6 +44,7 @@ builder.Services.AddHealthChecks()
     .AddCheck<Adrenalin.unify.API.HealthChecks.RoutingHealthCheck>("RoutingHealthCheck");
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 
 dataSourceBuilder.MapEnum<TicketStatus>("ticket.ticket_status");
@@ -52,12 +53,20 @@ dataSourceBuilder.MapEnum<TicketSource>("ticket.ticket_source");
 dataSourceBuilder.MapEnum<RevocationReason>("auth.revocation_reason");
 dataSourceBuilder.EnableUnmappedTypes();
 
+// ✅ Configure the connection pool HERE, at the data source level
+dataSourceBuilder.ConnectionStringBuilder.MinPoolSize = 0;
+dataSourceBuilder.ConnectionStringBuilder.MaxPoolSize = 20;
+dataSourceBuilder.ConnectionStringBuilder.ConnectionIdleLifetime = 60;
+dataSourceBuilder.ConnectionStringBuilder.ConnectionPruningInterval = 10;
+dataSourceBuilder.ConnectionStringBuilder.KeepAlive = 10;
+dataSourceBuilder.ConnectionStringBuilder.TcpKeepAlive = true;
 
-dataSourceBuilder.MapEnum<RevocationReason>(
-    "auth.revocation_reason");
+
 var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddScoped<AuditStampInterceptor>();
 builder.Services.AddScoped<LookupCacheInvalidationInterceptor>();
+
 builder.Services.AddDbContext<AdrenalinDbContext>(
     (sp, options) =>
     {
@@ -69,6 +78,11 @@ builder.Services.AddDbContext<AdrenalinDbContext>(
                 .MapEnum<TicketPriority>("ticket_priority", "ticket")
                 .MapEnum<TicketSource>("ticket_source", "ticket")
                 .MapEnum<RevocationReason>("revocation_reason", "auth")
+                // ✅ Retry on transient failures (Neon cold starts)
+                .EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorCodesToAdd: null)
         );
 
         options.UseSnakeCaseNamingConvention();
@@ -77,7 +91,8 @@ builder.Services.AddDbContext<AdrenalinDbContext>(
             sp.GetRequiredService<AuditStampInterceptor>(),
             sp.GetRequiredService<LookupCacheInvalidationInterceptor>());
     });
-    builder.Services.AddRateLimiter(options =>
+
+builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("LoginPolicy", context =>
     RateLimitPartition.GetFixedWindowLimiter(

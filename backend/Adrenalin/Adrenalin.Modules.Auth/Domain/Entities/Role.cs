@@ -2,7 +2,7 @@ using Adrenalin.SharedKernel.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Entities;
 
-public sealed class Role : SoftDeleteEntity
+public sealed class Role : ActiveSoftDeleteEntity
 {
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -43,6 +43,24 @@ public sealed class Role : SoftDeleteEntity
         if (IsSystemRole) throw new InvalidOperationException("System roles cannot be deleted.");
         if (IsDeleted) throw new InvalidOperationException("Role is already deleted.");
         IsDeleted = true;
+        UpdatedBy = actorId;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>FR-RP-024 — entity-level state change only. Caller (handler) must verify
+    /// zero active agents hold this Access Level BEFORE calling this method.</summary>
+    public void DeactivateAccessLevel(Guid actorId)
+    {
+        if (IsDeleted) throw new InvalidOperationException("Cannot deactivate a deleted Access Level.");
+        Deactivate();
+        UpdatedBy = actorId;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>FR-RP-005-equivalent for Access Level — restores visibility in pickers.</summary>
+    public void ReactivateAccessLevel(Guid actorId)
+    {
+        Activate();
         UpdatedBy = actorId;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

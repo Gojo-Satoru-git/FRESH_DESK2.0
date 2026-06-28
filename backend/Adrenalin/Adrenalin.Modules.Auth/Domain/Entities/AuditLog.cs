@@ -29,4 +29,27 @@ public sealed class AuditLog
     public Guid? SessionId { get; private set; }
 
     public User? ChangedByNavigation { get; private set; }
+
+    public static AuditLog Create(
+        string schemaName,
+        string tableName,
+        Guid recordId,
+        string action,
+        Guid? changedBy,
+        string? oldValues,
+        string? newValues)
+    {
+        return new AuditLog
+        {
+            Id = Guid.NewGuid(),
+            SchemaName = schemaName,
+            TableName = tableName,
+            RecordId = recordId,
+            Action = action,
+            ChangedBy = changedBy,
+            OldValues = oldValues,
+            NewValues = newValues,
+            ChangedAt = DateTime.UtcNow,
+        };
+    }
 }

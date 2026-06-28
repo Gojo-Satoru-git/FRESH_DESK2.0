@@ -8,7 +8,6 @@
   <ItemGroup>
     <Folder Include="Application\Commands\" />
     <Folder Include="Application\DTOs\" />
-    <Folder Include="Application\Handlers\" />
     <Folder Include="Application\Queries\" />
     <Folder Include="Application\Validators\" />
     <Folder Include="Domain\Entities\" />

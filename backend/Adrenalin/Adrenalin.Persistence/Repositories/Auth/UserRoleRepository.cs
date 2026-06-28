@@ -40,4 +40,8 @@ public sealed class UserRoleRepository : IUserRoleRepository
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) => await _db.SaveChangesAsync(ct);
+
+    public async Task<int> CountByRoleAsync(Guid roleId, CancellationToken ct = default)
+        => await _db.UserRoles.IgnoreQueryFilters()
+            .CountAsync(ur => ur.RoleId == roleId && !ur.IsDeleted, ct);
 }

@@ -1,17 +1,17 @@
 using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.Modules.Company.Domain.Interfaces;
+using Adrenalin.Modules.Notification.Application.IntegrationEvents;
+using Adrenalin.Modules.SLA.Domain.Interfaces;
 using Adrenalin.Modules.Ticketing.Domain.Interfaces;
 using Adrenalin.Persistence.Context;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.Persistence.Repositories.Auth;
 using Adrenalin.Persistence.Repositories.KnowledgeBase;
-using Adrenalin.SharedKernel.Interfaces;
-using Adrenalin.Modules.SLA.Domain.Interfaces;
-using Adrenalin.SharedKernel.Mediator;
-using Adrenalin.SharedKernel.Contracts;
-using Adrenalin.Modules.Notification.Application.IntegrationEvents;
 using Adrenalin.Persistence.Repositories.SLA;
-
+using Adrenalin.Persistence.Repositories.Workflow;
+using Adrenalin.SharedKernel.Contracts;
+using Adrenalin.SharedKernel.Interfaces;
+using Adrenalin.SharedKernel.Mediator;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Adrenalin.Persistence;
@@ -32,6 +32,11 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IUserGroupRepository, UserGroupRepository>();
+
+        services.AddScoped<IWorkflowRoleRepository, WorkflowRoleRepository>();
+        services.AddScoped<IUserWorkflowRoleRepository, UserWorkflowRoleRepository>();
+        services.AddScoped<IAuditLogWriter, AuditLogWriter>();
+        services.AddScoped<IStageRoleReferenceChecker, NotBuiltYetStageRoleReferenceChecker>();
 
         // ── SLA ─────────────────────────────────────────────────────────
 
@@ -77,6 +82,8 @@ public static class PersistenceServiceCollectionExtensions
 
         // ── Workflow ──────────────────────────────────────────────────────────
         services.AddScoped<IWorkflowValidator, WorkflowValidator>();
+        services.AddScoped<Adrenalin.Modules.Workflow.Domain.Interfaces.IRoleNameLookup,
+            Adrenalin.Persistence.Repositories.Workflow.RoleNameLookup>();
 
         return services;
     }

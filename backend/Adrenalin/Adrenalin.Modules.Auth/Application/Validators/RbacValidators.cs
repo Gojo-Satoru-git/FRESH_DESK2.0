@@ -105,13 +105,13 @@ public sealed class RemoveRoleFromUserCommandValidator : AbstractValidator<Remov
     }
 }
 
-public sealed class SetUserRolesCommandValidator : AbstractValidator<SetUserRolesCommand>
+public sealed class SetUserAccessLevelCommandValidator : AbstractValidator<SetUserAccessLevelCommand>
 {
-    public SetUserRolesCommandValidator()
+    public SetUserAccessLevelCommandValidator()
     {
         RuleFor(x => x.UserId).NotEmpty();
-        RuleFor(x => x.RoleIds).NotNull()
-            .Must(ids => ids.All(id => id != Guid.Empty)).WithMessage("All role IDs must be valid.");
+        RuleFor(x => x.AccessLevelId).NotNull()
+            .Must(id => id != Guid.Empty).WithMessage("Access level ID must be valid.");
         RuleFor(x => x.ActorId).NotEmpty();
     }
 }

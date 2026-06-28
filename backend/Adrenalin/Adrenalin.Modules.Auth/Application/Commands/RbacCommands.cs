@@ -3,6 +3,12 @@ using Adrenalin.SharedKernel.Results;
 
 namespace Adrenalin.Modules.Auth.Application.Commands;
 
+public static class LockoutGuardConstants
+{
+    public const string LOCKOUT_RESOURCE = "role"; // CONFIRM against real seed data
+    public const string LOCKOUT_ACTION = "write";  // CONFIRM against real seed data
+}
+
 // ── Roles ─────────────────────────────────────────────────────────────────────
 public sealed record CreateRoleCommand(string Name, string? Description, Guid ActorId)
     : IRequest<Result<Guid>>;
@@ -12,6 +18,18 @@ public sealed record UpdateRoleCommand(Guid RoleId, string Name, string? Descrip
 
 public sealed record DeleteRoleCommand(Guid RoleId, Guid ActorId)
     : IRequest<Result>;
+public sealed record DeactivateRoleCommand(
+    Guid RoleId,
+    Guid ActorId
+) : IRequest<Result>;
+
+public sealed record CloneRoleCommand(
+    Guid SourceRoleId,
+    string NewRoleName,
+    string? NewRoleDescription,
+    Guid ActorId
+) : IRequest<Result<Guid>>;
+
 
 // ── Permissions ───────────────────────────────────────────────────────────────
 public sealed record CreatePermissionCommand(string Resource, string Action,
@@ -19,6 +37,12 @@ public sealed record CreatePermissionCommand(string Resource, string Action,
 
 public sealed record DeletePermissionCommand(Guid PermissionId, Guid ActorId)
     : IRequest<Result>;
+
+public sealed record CopyPermissionsFromRoleCommand(
+    Guid SourceRoleId,
+    Guid TargetRoleId,
+    Guid ActorId
+) : IRequest<Result>;
 
 // ── Role ↔ Permission ─────────────────────────────────────────────────────────
 public sealed record GrantPermissionToRoleCommand(Guid RoleId, Guid PermissionId, Guid ActorId)
@@ -37,8 +61,11 @@ public sealed record AssignRoleToUserCommand(Guid UserId, Guid RoleId, Guid Acto
 public sealed record RemoveRoleFromUserCommand(Guid UserId, Guid RoleId, Guid ActorId)
     : IRequest<Result>;
 
-public sealed record SetUserRolesCommand(Guid UserId, IReadOnlyList<Guid> RoleIds, Guid ActorId)
-    : IRequest<Result>;
+public sealed record SetUserAccessLevelCommand(
+        Guid UserId,
+        Guid AccessLevelId, // formerly "RoleId" — renamed to match FS-05 terminology
+        Guid ActorId
+    ) : IRequest<Result>;
 
 // ── Groups ────────────────────────────────────────────────────────────────────
 public sealed record CreateGroupCommand(string Name, string? RegionCode, string? TierCode,
