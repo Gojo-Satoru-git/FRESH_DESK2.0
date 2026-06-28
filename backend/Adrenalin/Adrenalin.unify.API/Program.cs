@@ -301,8 +301,13 @@ builder.Services.AddScoped<
 // ── 9. Controllers + OpenAPI ─────────────────────────────────────────────────
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
-    options.JsonSerializerOptions.Converters.Add(
-        new System.Text.Json.Serialization.JsonStringEnumConverter()));
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNamingPolicy =
+            System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
