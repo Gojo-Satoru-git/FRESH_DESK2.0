@@ -110,8 +110,8 @@ public sealed class TicketsController : ControllerBase
         CancellationToken ct)
     {
         var actorId = GetActorId();
-        var agentId = Guid.Parse(
-            User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        //var agentId = Guid.Parse(
+        //    User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var command = new AssignTicketCommand(
              TicketId: ticketId,
@@ -145,9 +145,10 @@ public sealed class TicketsController : ControllerBase
     }
 
     public record AssignTicketRequest(
-        Guid TriggeredBy,
         Guid? AgentId,
-        Guid? GroupId, string? Notes = null);
+        Guid? GroupId,
+        Guid TriggeredBy = default,
+        string? Notes = null);
 
     [HttpPost("bulk-assign")]
     [Authorize(Policy = "ticket:assign")]
@@ -438,7 +439,7 @@ public sealed class TicketsController : ControllerBase
     }
 
     [HttpPost("{ticketId:guid}/resolve")]
-    [Authorize(Policy = "ticket:update")]
+    [Authorize(Policy = "ticket:resolve")]
     public async Task<IActionResult> Resolve(Guid ticketId, [FromBody] ResolveTicketRequest request)
     {
         var actorId = GetActorId();
