@@ -962,13 +962,27 @@ export class TicketDetailComponent implements OnInit {
     const t = this.ticket();
     if (!t) return [];
     const current = t.status.toLowerCase();
-    const transitions = VALID_TRANSITIONS[current] ?? [];
+    let transitions = [...(VALID_TRANSITIONS[current] ?? [])];
+
+    // Team leads can directly resolve if not already resolved/closed
+    if (
+      this.currentUserRole() === 'team_lead' &&
+      current !== 'resolved' &&
+      current !== 'closed'
+    ) {
+      if (!transitions.includes('Resolved')) {
+        transitions.push('Resolved');
+      }
+    }
+
     if (this.isCustomer()) {
       return transitions.includes('Closed')
         ? transitions
         : [...transitions, ...(current === 'resolved' ? ['Closed'] : [])];
     }
-    return transitions.filter((s) => s !== 'Closed');
+    
+    // Non-customers cannot Reopen or Close
+    return transitions.filter((s) => s !== 'Closed' && s !== 'Reopened');
   });
 
   isCustomer = computed(() => this.currentUserRole() === 'customer');
@@ -983,7 +997,8 @@ export class TicketDetailComponent implements OnInit {
     const t = this.ticket();
     if (!t) return false;
     const s = t.status.toLowerCase();
-    return !this.isCustomer() && (s === 'resolved' || s === 'closed');
+    // Only customer can reopen
+    return this.isCustomer() && (s === 'resolved' || s === 'closed');
   });
 
   constructor(
