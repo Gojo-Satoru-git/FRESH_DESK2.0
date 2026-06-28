@@ -1,3 +1,4 @@
+using Adrenalin.Modules.Auth.Application.DTOs;
 using Adrenalin.Modules.Auth.Domain.Entities;
 
 namespace Adrenalin.Modules.Auth.Domain.Interfaces
@@ -29,6 +30,8 @@ namespace Adrenalin.Modules.Auth.Domain.Interfaces
         Task<IReadOnlyList<string>> GetEffectivePermissionsAsync(
             Guid userId,
             CancellationToken cancellationToken);
+        Task<IReadOnlyList<LockedUserDto>> GetLockedUsersAsync(
+    CancellationToken cancellationToken);
         
     }
 }

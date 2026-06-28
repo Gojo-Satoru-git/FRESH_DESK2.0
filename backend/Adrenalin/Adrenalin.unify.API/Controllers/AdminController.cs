@@ -68,6 +68,33 @@ public async Task<IActionResult> CreateExternalUser(
         UserId = userId
     });
 }
+[Authorize(Policy = "user:unlock")]
+[HttpPost("users/{userId:guid}/unlock")]
+public async Task<IActionResult> UnlockUser(
+    Guid userId,
+    CancellationToken cancellationToken)
+{
+    await _dispatcher.Send(
+        new UnlockUserCommand(userId),
+        cancellationToken);
+
+    return Ok(new
+   
+    {
+        Message = "User account unlocked successfully."
+    });
+}
+[Authorize(Policy = "user:unlock")]
+[HttpGet("users/locked")]
+public async Task<IActionResult> GetLockedUsers(
+    CancellationToken cancellationToken)
+{
+    var users = await _dispatcher.Send(
+        new GetLockedUsersQuery(),
+        cancellationToken);
+
+    return Ok(users);
+}
 
     }
 }

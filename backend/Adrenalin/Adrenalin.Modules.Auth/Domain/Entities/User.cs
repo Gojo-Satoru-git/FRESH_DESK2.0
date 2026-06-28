@@ -107,8 +107,8 @@ public void RecordFailedLogin()
      if (FailedLoginAttempts >= AuthConstants.MaxFailedAttempts)
     {
         LockoutEnd =
-            DateTimeOffset.UtcNow.AddMinutes(
-                AuthConstants.LockoutMinutes);
+    DateTimeOffset.UtcNow.AddHours(
+        AuthConstants.LockoutHours);
 
         FailedLoginAttempts = 0;
     }
@@ -121,8 +121,22 @@ public void RecordSuccessfulLogin()
 }
 public bool IsLockedOut()
 {
-    return LockoutEnd.HasValue &&
-           LockoutEnd > DateTimeOffset.UtcNow;
+    if (!LockoutEnd.HasValue)
+        return false;
+
+    if (LockoutEnd <= DateTimeOffset.UtcNow)
+    {
+        LockoutEnd = null;
+        FailedLoginAttempts = 0;
+        return false;
+    }
+
+    return true;
+}
+public void Unlock()
+{
+    FailedLoginAttempts = 0;
+    LockoutEnd = null;
 }
     }
 

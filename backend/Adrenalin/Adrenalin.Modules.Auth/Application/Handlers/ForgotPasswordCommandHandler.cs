@@ -6,6 +6,7 @@ using Adrenalin.Modules.Auth.Application.Commands;
 using Adrenalin.Modules.Auth.Domain.Constants;
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Modules.Auth.Domain.Interfaces;
+using Adrenalin.SharedKernel.Exceptions;
 using Adrenalin.SharedKernel.Interfaces;
 using Adrenalin.SharedKernel.Mediator;
 
@@ -42,6 +43,11 @@ namespace Adrenalin.Modules.Auth.Application.Handlers
         {
             return true;
         }
+        if (user.IsLockedOut())
+{
+    throw new ValidationException(
+        $"Your account is locked until {user.LockoutEnd:yyyy-MM-dd HH:mm} UTC. Password reset is disabled while the account is locked. Please contact Support.");
+}
          var rawToken =
             Guid.NewGuid().ToString();
 

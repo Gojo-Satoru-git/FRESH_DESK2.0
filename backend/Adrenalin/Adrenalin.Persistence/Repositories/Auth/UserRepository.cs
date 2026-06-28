@@ -2,6 +2,7 @@ using Adrenalin.Modules.Auth.Domain.Interfaces;
 using Adrenalin.Modules.Auth.Domain.Entities;
 using Adrenalin.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using Adrenalin.Modules.Auth.Application.DTOs;
 
 namespace Adrenalin.Persistence.Repositories;
 
@@ -99,6 +100,21 @@ public sealed class UserRepository : IUserRepository
 {
     return await _db.RefreshTokens
         .Where(x => x.UserId == userId)
+        .ToListAsync(cancellationToken);
+}
+public async Task<IReadOnlyList<LockedUserDto>> GetLockedUsersAsync(
+    CancellationToken cancellationToken)
+{
+    return await _db.Users
+        .Where(u => u.LockoutEnd != null &&
+                    u.LockoutEnd > DateTimeOffset.UtcNow)
+        .Select(u => new LockedUserDto(
+            u.Id,
+            u.Email,
+            u.FirstName,
+            u.LastName,
+            u.LockoutEnd,
+            u.FailedLoginAttempts))
         .ToListAsync(cancellationToken);
 }
 

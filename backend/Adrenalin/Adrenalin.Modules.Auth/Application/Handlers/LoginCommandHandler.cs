@@ -64,7 +64,7 @@ public sealed class LoginCommandHandler
         user.LockoutEnd!.Value - DateTimeOffset.UtcNow;
 
     throw new ValidationException(
-        $"Account locked. Try again in {(int)Math.Ceiling(remaining.TotalMinutes)} minute(s).");
+        $"Your account is locked until {user.LockoutEnd:yyyy-MM-dd HH:mm} UTC. Please contact Support or wait until the lock expires.");
 }
         var isValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
 
