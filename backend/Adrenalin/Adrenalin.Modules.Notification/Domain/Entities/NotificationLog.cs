@@ -5,7 +5,7 @@ namespace Adrenalin.Modules.Notification.Domain.Entities;
 
 public sealed class NotificationLog : BaseEntity
 {
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
 
     public Guid? TicketId { get; set; }
 

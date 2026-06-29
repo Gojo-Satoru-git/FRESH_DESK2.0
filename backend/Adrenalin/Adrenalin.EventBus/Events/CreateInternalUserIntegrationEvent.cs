@@ -4,6 +4,8 @@ namespace Adrenalin.EventBus.Events;
 
 public record CreateInternalUserIntegrationEvent(
     Guid CorrelationId,
+    Guid AdminId,
+    string AdminEmail,
     string Email,
     string FirstName,
     string LastName,

@@ -11,6 +11,8 @@ namespace Adrenalin.Modules.Auth.Application.Commands
     string FirstName,
     string LastName,
     string Phone,
-    string RoleName
+    string RoleName,
+    Guid AdminId,
+    bool IsSystemCall = false
 ) : IRequest<Guid>;
 }

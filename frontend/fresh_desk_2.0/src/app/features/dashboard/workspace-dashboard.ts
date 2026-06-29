@@ -512,6 +512,8 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
     }
   }
 
+  private toastedNotificationIds = new Set<string>();
+
   loadDashboardData() {
     this.dashboardSub.unsubscribe();
     this.dashboardSub = new Subscription();
@@ -528,18 +530,26 @@ export class WorkspaceDashboardComponent implements OnInit, AfterViewInit, OnDes
         next: ({ dashboard, notifications }) => {
           const activeLogs = notifications || [];
 
-          const latestInAppLog = activeLogs.find((log: any) => log.recipientEmail || '');
-          if (latestInAppLog) {
-            this.activeToastTicketId.set(latestInAppLog.ticketId);
-            const isSlaBreach = ['teamlead', 'manager', 'agent'].some((role) =>
-              (latestInAppLog.recipientEmail || '').includes(role),
-            );
-            const alertTitle = isSlaBreach ? '⚠️ SLA Violation Alert' : '🎫 Helpdesk Update';
-            const alertBody = isSlaBreach
-              ? `Active SLA breach tracked on Ticket #${latestInAppLog.ticketNumber || 'Unknown'}.`
-              : `New log activity recorded for recipient: ${latestInAppLog.recipientEmail}`;
+          // ✅ Since the backend handles the 'pending' filter state, 
+          // index 0 is guaranteed to be a brand-new, un-toasted notification alert.
+          const latestInAppLog = activeLogs[0];
 
-            this.toastMessage.set(`${alertTitle}: ${alertBody}`);
+          if (latestInAppLog && latestInAppLog.id) {
+            this.activeToastTicketId.set(latestInAppLog.ticketId || null);
+
+            const logContent = (latestInAppLog.message || '').toLowerCase();
+            const isAlert = latestInAppLog.isFailedDelivery || logContent.includes('crashed');
+            const alertTitle = isAlert ? '⚠️ Helpdesk Alert' : '🎫 Helpdesk Update';
+
+            // 1. Render the toast layout message element
+            this.toastMessage.set(`${alertTitle}: ${latestInAppLog.message}`);
+
+            // 2. ✅ Fire markAsRead instantly. On the next periodic background poll/refresh, 
+            // the backend will drop it from the /unread data loop, preventing reload spam!
+            if (this.notificationService) {
+              this.notificationService.markAsRead(latestInAppLog.id).subscribe();
+            }
+
             setTimeout(() => {
               this.toastMessage.set(null);
               this.activeToastTicketId.set(null);

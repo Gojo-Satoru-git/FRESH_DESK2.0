@@ -20,27 +20,34 @@ namespace Adrenalin.unify.API.Controllers
     public sealed class AdminController: ControllerBase
     {
         private readonly IDispatcher _dispatcher;
-        
+        private readonly ICurrentUserService _currentUserService;
 
-    public AdminController(
-        IDispatcher dispatcher)
+        public AdminController(
+        IDispatcher dispatcher, ICurrentUserService currentUserService)
     {
         _dispatcher = dispatcher;
+            _currentUserService= currentUserService;
        
     }
     [HttpPost("internal-users")]
     public async Task<IActionResult> CreateInternalUser(
         CreateInternalUserRequestDTO request,
+
         CancellationToken cancellationToken)
     {
-        var userId =
+            var adminId = _currentUserService.UserId; // Or whatever your injected current user service field name is here
+            if (!adminId.HasValue)
+            {
+                return Unauthorized("Admin context session not found.");
+            }
+            var userId =
             await _dispatcher.Send(
                 new CreateInternalUserCommand(
                     request.Email,
                     request.FirstName,
                     request.LastName,
                     request.Phone,
-                 request.RoleName),
+                 request.RoleName, adminId.Value, IsSystemCall: false),
                 cancellationToken);
 
         return Ok(new

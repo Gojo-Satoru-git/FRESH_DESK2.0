@@ -140,7 +140,8 @@ public class AdrenalinDbContext : DbContext, IUnitOfWork
        
         modelBuilder.Entity<SlaTicket>().Ignore(s => s.CreatedBy);
         modelBuilder.Entity<SlaTicket>().Ignore(s => s.UpdatedBy);
-
+        modelBuilder.Entity<Adrenalin.Modules.Notification.Domain.Entities.NotificationLog>()
+        .Ignore(n => n.CompanyId);
         modelBuilder.HasSequence("ticket_number_seq", "ticket");
     }
 

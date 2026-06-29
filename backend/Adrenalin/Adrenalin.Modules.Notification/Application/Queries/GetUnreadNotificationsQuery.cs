@@ -8,11 +8,8 @@ using Adrenalin.Modules.Notification.Domain.Interfaces;
 
 namespace Adrenalin.Modules.Notification.Application.Queries;
 
-// 1. Define the Query Structure contract
-// ⚡ FIXED: Added a parameter slot to accept the requesting agent's email string context
 public record GetUnreadNotificationsQuery(string RecipientEmail) : IRequest<List<NotificationLog>>;
 
-// 2. Define the Query Handler Execution Layer
 public sealed class GetUnreadNotificationsQueryHandler
     : IRequestHandler<GetUnreadNotificationsQuery, List<NotificationLog>>
 {
@@ -23,10 +20,13 @@ public sealed class GetUnreadNotificationsQueryHandler
         _repository = repository;
     }
 
-    public Task<List<NotificationLog>> Handle(GetUnreadNotificationsQuery query, CancellationToken ct)
+    public async Task<List<NotificationLog>> Handle(GetUnreadNotificationsQuery query, CancellationToken ct)
     {
-        // ⚡ FIXED: Notification Center is not implemented yet. 
-        // Return an empty list to avoid querying the NotificationLog table (which is for email logs).
-        return Task.FromResult(new List<NotificationLog>());
+        // ✅ Read real live audit traces from the database logs repository table context
+        // This filters down to logs sent to the active authenticated admin that haven't failed.
+        var logs = await _repository.GetUnreadLogsAsync(query.RecipientEmail, ct);
+
+        return logs.Where(n => !n.IsFailedDelivery)
+            .ToList() ?? new List<NotificationLog>();
     }
 }

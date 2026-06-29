@@ -4,6 +4,7 @@ namespace Adrenalin.EventBus.Events;
 
 public record UserIdentityProvisionedIntegrationEvent(
     Guid CorrelationId,
+    string AdminEmail,
     Guid UserId,
     string Email,
     string DisplayName,

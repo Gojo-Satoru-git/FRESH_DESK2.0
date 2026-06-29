@@ -27,32 +27,47 @@ public class CreateInternalUserConsumer : IIntegrationEventHandler<CreateInterna
 
     public async Task HandleAsync(CreateInternalUserIntegrationEvent @event, CancellationToken cancellationToken)
     {
-        var internalCommand = new CreateInternalUserCommand(
-            @event.Email,
-            @event.FirstName,
-            @event.LastName,
-            @event.Phone ?? string.Empty,
-            @event.RoleName
-        );
+        try
+        {
+            var internalCommand = new CreateInternalUserCommand(
+                @event.Email,
+                @event.FirstName,
+                @event.LastName,
+                @event.Phone ?? string.Empty,
+                @event.RoleName,
+                @event.AdminId,
+                IsSystemCall: true
+            );
 
-        Guid newUserId = await _authHandler.Handle(internalCommand, cancellationToken);
+            Guid newUserId = await _authHandler.Handle(internalCommand, cancellationToken);
 
-        // ✅ Safely persist the new identity state through the interface contract layer
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            // ✅ Safely persist the new identity state through the interface contract layer
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var successEvent = new UserIdentityProvisionedIntegrationEvent(
-            @event.CorrelationId,
-            newUserId,
-            @event.Email,
-            $"{@event.FirstName} {@event.LastName}",
-            @event.ShiftFactorValueId,
-            @event.Timezone,
-            @event.ShiftStart,
-            @event.ShiftEnd,
-            @event.WorkingDays,
-            @event.MaxConcurrentTickets
-        );
+            var successEvent = new UserIdentityProvisionedIntegrationEvent(
+                @event.CorrelationId,
+                @event.AdminEmail,
+                newUserId,
+                @event.Email,
+                $"{@event.FirstName} {@event.LastName}",
+                @event.ShiftFactorValueId,
+                @event.Timezone,
+                @event.ShiftStart,
+                @event.ShiftEnd,
+                @event.WorkingDays,
+                @event.MaxConcurrentTickets
+            );
 
-        await _eventBus.PublishAsync(successEvent);
+            await _eventBus.PublishAsync(successEvent);
+        }
+        catch (Exception ex)
+        {
+           
+            await _eventBus.PublishAsync(new AgentProvisioningFailedIntegrationEvent(
+                @event.CorrelationId,
+                @event.AdminEmail,
+                $"Identity setup failed: {ex.Message}"
+            ));
+        }
     }
 }

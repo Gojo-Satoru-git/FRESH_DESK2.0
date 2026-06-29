@@ -25,6 +25,7 @@ using System.Text;
 using Adrenalin.Persistence.Repositories;
 using Adrenalin.unify.API.Middlewares;
 using Adrenalin.Infrastructure.Email;
+using Adrenalin.Modules.Notification.Application.Consumers;
 using Adrenalin.Persistence.Repositories.Auth;
 using Adrenalin.Modules.Company.Domain.Interfaces;
 using Adrenalin.EventBus;
@@ -275,6 +276,9 @@ builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<Adrenalin
 
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<CreateInternalUserIntegrationEvent>, CreateInternalUserConsumer>();
 builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<UserIdentityProvisionedIntegrationEvent>, UserIdentityProvisionedHandler>();
+// ── Fix for Notification Module Integration Event Handlers ───────────────────
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<AgentProvisioningCompletedIntegrationEvent>, AgentProvisioningCompletedConsumer>();
+builder.Services.AddScoped<Adrenalin.EventBus.IIntegrationEventHandler<AgentProvisioningFailedIntegrationEvent>, AgentProvisioningFailedConsumer>();
 
 // ── 7. Auth infrastructure ───────────────────────────────────────────────────
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
